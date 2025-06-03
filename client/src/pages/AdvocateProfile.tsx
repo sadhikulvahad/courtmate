@@ -13,7 +13,7 @@ import {
   Phone,
   Mail,
   Clock,
-//   FileText,
+  //   FileText,
   Briefcase,
   Bookmark,
   ChevronLeft,
@@ -21,8 +21,13 @@ import {
 import { findUser } from "@/api/user/userApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { Advocate, AvailabilityTableProps, BadgeProps, RatingStarsProps, Review, ReviewProps } from "@/types/Types";
-
+import {
+  Advocate,
+  BadgeProps,
+  RatingStarsProps,
+  Review,
+  ReviewProps,
+} from "@/types/Types";
 
 // Reuse the RatingStars component from your list page
 const RatingStars = ({ rating }: RatingStarsProps) => {
@@ -193,36 +198,36 @@ const AdvocateProfile = () => {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [isSaved, setIsSaved] = useState<boolean>(false);
   // Mock data for similar advocates - in a real app, you'd fetch this
-//   const [similarAdvocates, setSimilarAdvocates] = useState<Advocate[]>([]);
+  //   const [similarAdvocates, setSimilarAdvocates] = useState<Advocate[]>([]);
 
   // Mock reviews - in a real app, you'd fetch these
   const [reviews, setReviews] = useState<Review[]>([
-//     {
-//       id: 1,
-//       name: "Michael Johnson",
-//       rating: 5,
-//       date: "2 weeks ago",
-//       comment:
-//         "Excellent advocate! Helped me resolve my case efficiently and professionally.",
-//       avatar: "/api/placeholder/40/40",
-//     },
-//     {
-//       id: 2,
-//       name: "Sarah Williams",
-//       rating: 4.5,
-//       date: "1 month ago",
-//       comment: "Very knowledgeable and responsive. Would definitely recommend.",
-//       avatar: "/api/placeholder/40/40",
-//     },
-//     {
-//       id: 3,
-//       name: "David Martinez",
-//       rating: 5,
-//       date: "2 months ago",
-//       comment:
-//         "Outstanding service. The advocate was thorough and explained everything clearly.",
-//       avatar: "/api/placeholder/40/40",
-//     },
+    //     {
+    //       id: 1,
+    //       name: "Michael Johnson",
+    //       rating: 5,
+    //       date: "2 weeks ago",
+    //       comment:
+    //         "Excellent advocate! Helped me resolve my case efficiently and professionally.",
+    //       avatar: "/api/placeholder/40/40",
+    //     },
+    //     {
+    //       id: 2,
+    //       name: "Sarah Williams",
+    //       rating: 4.5,
+    //       date: "1 month ago",
+    //       comment: "Very knowledgeable and responsive. Would definitely recommend.",
+    //       avatar: "/api/placeholder/40/40",
+    //     },
+    //     {
+    //       id: 3,
+    //       name: "David Martinez",
+    //       rating: 5,
+    //       date: "2 months ago",
+    //       comment:
+    //         "Outstanding service. The advocate was thorough and explained everything clearly.",
+    //       avatar: "/api/placeholder/40/40",
+    //     },
   ]);
 
   const { token } = useSelector((state: RootState) => state.auth);
@@ -245,15 +250,14 @@ const AdvocateProfile = () => {
 
     fetchAdvocate();
   }, []);
-  console.log(advocate)
   const handleSave = () => {
     setIsSaved(!isSaved);
     // In a real app, you'd save this to the user's profile
   };
 
-//   const handleViewSimilarProfile = (advocateId: string) => {
-//     navigate(`/advocates/${advocateId}`);
-//   };
+  //   const handleViewSimilarProfile = (advocateId: string) => {
+  //     navigate(`/advocates/${advocateId}`);
+  //   };
 
   const getCategoryColor = (category: string): BadgeProps["color"] => {
     const categories: Record<string, BadgeProps["color"]> = {
@@ -266,14 +270,14 @@ const AdvocateProfile = () => {
     return categories[category] || "indigo";
   };
 
-    if (isLoading || !advocate) {
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <NavBar />
-          <Loader />
-        </div>
-      );
-    }
+  if (isLoading || !advocate) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <NavBar />
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -537,9 +541,7 @@ const AdvocateProfile = () => {
                         <div className="p-2 bg-gray-100 rounded-full mr-3">
                           <Phone size={16} className="text-gray-600" />
                         </div>
-                        <span className="text-gray-700">
-                          {advocate?.phone}
-                        </span>
+                        <span className="text-gray-700">{advocate?.phone}</span>
                       </div>
 
                       <div className="flex items-center">
@@ -610,8 +612,8 @@ const AdvocateProfile = () => {
                       </h3>
                       <p className="text-gray-600">Legal Partners LLP, Delhi</p>
                       <p className="mt-2 text-gray-600">
-                        Handled various cases related to {advocate?.category} law
-                        and client consultation.
+                        Handled various cases related to {advocate?.category}{" "}
+                        law and client consultation.
                       </p>
                     </div>
 
@@ -825,8 +827,10 @@ const AdvocateProfile = () => {
                   </div>
 
                   <div className="mt-6">
-                    <button className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center"
-                    onClick={()=> navigate(`/booking/${advocate.id}`)}>
+                    <button
+                      className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center"
+                      onClick={() => navigate(`/booking/${advocate.id}`)}
+                    >
                       <Calendar size={18} className="mr-2" />
                       Schedule a Consultation
                     </button>
@@ -845,8 +849,10 @@ const AdvocateProfile = () => {
               </div>
               <div className="p-5">
                 <div className="space-y-3">
-                  <button className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center"
-                  onClick={() => navigate(`/booking/${id}`)}>
+                  <button
+                    className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center"
+                    onClick={() => navigate(`/booking/${id}`)}
+                  >
                     <Calendar size={18} className="mr-2" />
                     Book Appointment
                   </button>

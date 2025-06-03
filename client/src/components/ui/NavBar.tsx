@@ -67,7 +67,8 @@ const NavBar = () => {
         </div>
 
         {/* Only visible on md and above */}
-        <div className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer">
+        <div className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
+        onClick={() => navigate('/services')}>
           Services
         </div>
 

@@ -12,7 +12,6 @@ export class forgotPasswordSendMail{
     ){}
     async execute (email : string){
         const existingUser = await this.userRepository.findByEmail(email)
-        console.log(existingUser)
         if(!existingUser || !existingUser.isActive || !existingUser.isVerified){
             return {success : false, error: 'Invalid Email, May be you dont have an account'}
         }

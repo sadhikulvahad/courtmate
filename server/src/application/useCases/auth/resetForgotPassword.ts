@@ -9,7 +9,6 @@ export class ResetForgotPassword{
     ){}
 
     async execute (password :string, email:string){
-        console.log(email,'email')
         const existingUser = await this.userRepository.findByEmail(email)
 
         if(!existingUser){

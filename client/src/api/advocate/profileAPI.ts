@@ -34,7 +34,6 @@ export const profileUpdate = async (form: FormData, token: string): Promise<Axio
                 }
             }
         )
-        console.log(response)
         return response
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

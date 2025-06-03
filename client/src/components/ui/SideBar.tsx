@@ -4,13 +4,15 @@ import {
   faHome,
   faUser,
   faSignOutAlt,
-  faHistory,
+  // faHistory,
   faBookmark,
   faInfoCircle,
   faEnvelope,
   faList,
   faCog,
   faSignIn,
+  faBookBookmark,
+  faMessage,
 } from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -55,8 +57,10 @@ const SideBar: React.FC<SideBarProps> = ({ closeSidebar }) => {
         { name: "Profile", icon: faUser, path: "/profile" },
         { name: "Home", icon: faHome, path: "/" },
         { name: "My Activity", icon: faCog, path: "*" },
+        {name: "My Bookings", icon: faBookBookmark, path: '/bookings'},
+        {name: "Messages", icon: faMessage, path: '/chat'},
         { name: "Saved Advocates", icon: faBookmark, path: "*" },
-        { name: "History", icon: faHistory, path: "*" },
+        // { name: "History", icon: faHistory, path: "*" },
         {
           name: "Logout",
           icon: faSignOutAlt,

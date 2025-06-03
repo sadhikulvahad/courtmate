@@ -127,10 +127,8 @@ const AdvocateList = () => {
   const fetchAdvocates = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log("Fetching advocates with params:", apiParams);
 
       const response = await getAllUserAdvocates(apiParams);
-      console.log("Backend response:", response);
 
       setAdvocates(response.advocates || []);
       setTotalItems(response.pagination?.totalItems || 0);
@@ -175,7 +173,6 @@ const AdvocateList = () => {
   ]);
 
   const handleFilterChange = useCallback((filters: FilterOptions) => {
-    console.log("Filters changed:", filters);
     setCurrentFilters(filters);
   }, []);
 

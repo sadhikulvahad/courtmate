@@ -47,7 +47,6 @@ export class AuthController {
 
     async refreshToken(req: Request, res: Response) {
         const refreshToken = req.cookies?.refreshToken;
-        console.log(refreshToken, 'refresh')
         if (!refreshToken) {
             return res.status(401).json({ error: "Refresh token required" });
         }
@@ -61,13 +60,11 @@ export class AuthController {
             });
         }
 
-        const isProd = process.env.NODE_ENV === "production";
-
         // 1) reset the refresh cookie
         res.cookie("refreshToken", result.refreshToken, {
             httpOnly: true,
             secure: true,
-            sameSite: isProd ? "none" : "lax",
+            sameSite: "none",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
@@ -168,7 +165,6 @@ export class AuthController {
 
     async handleLogin(req: Request, res: Response) {
         try {
-            const isProd = process.env.NODE_ENV === 'production';
 
             const { email, password } = req.body
             if (!email || !password) {
@@ -237,9 +233,7 @@ export class AuthController {
     async forgotResetPassword(req: Request, res: Response) {
         try {
             const { password, email } = req.body
-            console.log(password, email)
             const result = await this.ResetForgotPassword.execute(password, email)
-            console.log(result, "result")
             if (!result.success) {
                 return res.status(400).json({ success: false, error: result.error })
             }
@@ -255,7 +249,6 @@ export class AuthController {
         try {
             
         } catch (error) {
-            console.log("Error in loggin out controller", error)
             res.status(500).json({success: false, error : 'Server Error'})
         }
     }

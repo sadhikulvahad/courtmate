@@ -236,25 +236,26 @@ export interface BadgeProps {
 }
 
 export interface Slot {
-  _id: string;
+  id: string;
   date: Date;
   time: Date;
   isAvailable: boolean;
 }
 
 export interface Booking {
-  _id: string;
-  user: { name: string; email: string };
+  id: string;
+  advocate: { name: string; email: string, id: string, phone: string };
   date: Date;
   time: Date;
   status: "confirmed" | "pending" | "cancelled" | "postponed";
   notes?: string;
   postponeReason?: string;
+  isAvailable?: boolean
 }
 
 
 export interface RecurringRule {
-  id: string;
+  _id: string;
   description: string;
   startDate: string;
   endDate: string;
@@ -271,3 +272,4 @@ export interface CalendarDate {
   isSelected: boolean;
   hasSlots: boolean;
 }
+

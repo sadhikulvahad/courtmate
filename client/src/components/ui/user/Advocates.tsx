@@ -1,9 +1,42 @@
-import React, { useRef } from "react";
-import { advocateData } from "./datas/advocateData";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Star } from "lucide-react";
+import { AdvocateProps } from "@/types/Types";
+import Loader from "../Loading";
+import { getAllAdminAdvocates } from "@/api/admin/advocatesApi";
+import { useNavigate } from "react-router-dom";
 
 const Advocates: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [advocates, setAdvocates] = useState<AdvocateProps[]>([]);
+  const navigate = useNavigate();
+
+  const fetchAdvocates = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await getAllAdminAdvocates();
+      console.log(response);
+
+      const filteredAdvocates = response?.data.advocates.filter(
+        (ad: AdvocateProps) => {
+          if (!ad.isBlocked && ad.isAdminVerified === "Accepted") {
+            return ad;
+          }
+        }
+      );
+      setAdvocates(filteredAdvocates || []);
+    } catch (error) {
+      console.error("Error fetching advocates:", error);
+      setAdvocates([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAdvocates();
+  }, []);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollContainerRef.current) {
@@ -18,9 +51,15 @@ const Advocates: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
     <div className="py-16 bg-white px-4 md:px-10 lg:px-28 mx-auto">
-      <div className="text-2xl font-poppins font-bold flex justify-center items-center text-gray-800" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.25)' }}>
+      <div
+        className="text-2xl font-poppins font-bold flex justify-center items-center text-gray-800"
+        style={{ textShadow: "1px 1px 2px rgba(0, 0, 0, 0.25)" }}
+      >
         <span>TOP RATED ADVOCATES</span>
       </div>
 
@@ -47,7 +86,7 @@ const Advocates: React.FC = () => {
             className="flex gap-6 pb-4 overflow-x-auto scrollbar-hide snap-x"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {advocateData.map((advocate, index) => (
+            {advocates.map((advocate, index) => (
               <div
                 key={index}
                 className="flex-shrink-0 w-full max-w-xs snap-start md:max-w-sm"
@@ -55,7 +94,9 @@ const Advocates: React.FC = () => {
                 <div className="overflow-hidden bg-white rounded-lg shadow-md">
                   <div className="h-48 overflow-hidden bg-gray-200">
                     <img
-                      src={advocate.image}
+                      src={`${import.meta.env.VITE_API_URL}/uploads/${
+                        advocate.profilePhoto
+                      }`}
                       alt={advocate.name}
                       className="object-cover w-full h-full transition-transform hover:scale-105"
                     />
@@ -64,7 +105,7 @@ const Advocates: React.FC = () => {
                   <div className="p-4">
                     <h3 className="mb-1 text-xl font-bold">{advocate.name}</h3>
                     <p className="mb-2 text-sm text-gray-600">
-                      {advocate.specialty}
+                      {advocate.category}
                     </p>
 
                     <div className="flex items-center justify-between">
@@ -72,16 +113,19 @@ const Advocates: React.FC = () => {
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         <span className="font-medium">{advocate.rating}</span>
                         <span className="text-sm text-gray-500">
-                          ({advocate.reviewCount} reviews)
+                          ({advocate.experience} Experience)
                         </span>
                       </div>
 
                       <div className="flex items-center px-3 py-1 text-white bg-gray-900 rounded-full">
-                        ${advocate.hourlyRate}
+                        {advocate.barCouncilRegisterNumber}
                       </div>
                     </div>
 
-                    <button className="w-full py-2 mt-4 text-center text-white transition-colors bg-gray-800 rounded hover:bg-gray-700">
+                    <button
+                      className="w-full py-2 mt-4 text-center text-white transition-colors bg-gray-800 rounded hover:bg-gray-700"
+                      onClick={() => navigate(`/adProfile/${advocate.id}`)}
+                    >
                       Book Now
                     </button>
                   </div>

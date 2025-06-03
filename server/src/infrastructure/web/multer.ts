@@ -62,13 +62,11 @@ const fileFilter = (
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    console.log(`Storing file: ${file.originalname} (${file.mimetype})`);
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
     const finalName = `${Date.now()}-${sanitizedName}`;
-    console.log(`Saving as: ${finalName}`);
     cb(null, finalName);
   }
 });

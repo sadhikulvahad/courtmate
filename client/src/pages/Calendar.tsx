@@ -12,16 +12,38 @@ import {
   endOfMonth,
   isToday,
   format,
+  isBefore,
+  isValid,
+  parse,
 } from "date-fns";
 import { RootState } from "@/redux/store";
 import { findUser } from "@/api/user/userApi";
-import { AdvocateProps, Booking, CalendarDate, RecurringRule, Slot } from "@/types/Types";
+import {
+  AdvocateProps,
+  Booking,
+  CalendarDate,
+  RecurringRule,
+  Slot,
+} from "@/types/Types";
 import AdvocateProfileHeader from "@/components/Calendar/AdvocateProfileHeader";
 import ViewToggle from "@/components/Calendar/ViewToggle";
 import UserBookingsView from "@/components/Calendar/UserBookingsView";
 import PostponeDialog from "@/components/Calendar/PostponeDialog";
 import UserBookingView from "@/components/Calendar/UserBookingView";
 import NavBar from "@/components/ui/NavBar";
+import {
+  addCustomSlot,
+  addRecurringRule,
+  createPayment,
+  // bookSlot,
+  getBookings,
+  getRecurringRules,
+  getSlots,
+  postPoneBooking,
+} from "@/api/Booking";
+import { toast } from "sonner";
+import axios from "axios";
+import BookingSlotDialog from "@/components/Calendar/BookingSlotDialog";
 
 const predefinedSlots = [
   { id: 1, time: "09:00", label: "9:00 AM" },
@@ -40,10 +62,14 @@ const AdvocateProfilePage = () => {
   const navigate = useNavigate();
   const { user, token } = useSelector((state: RootState) => state.auth);
 
-  const [currentView, setCurrentView] = useState<"calendar" | "bookings">("calendar");
+  const [currentView, setCurrentView] = useState<"calendar" | "bookings">(
+    "calendar"
+  );
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [advocate, setAdvocate] = useState<AdvocateProps | undefined>(undefined);
+  const [advocate, setAdvocate] = useState<AdvocateProps | undefined>(
+    undefined
+  );
   const [availableSlots, setAvailableSlots] = useState<Slot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [loading, setLoading] = useState(false);
@@ -52,17 +78,52 @@ const AdvocateProfilePage = () => {
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
   const [calendarDates, setCalendarDates] = useState<CalendarDate[]>([]);
   const [recurringRules, setRecurringRules] = useState<RecurringRule[]>([]);
+  const [bookingSlotDialog, setBookingSlotDialog] = useState(false);
 
   const isAdvocate = user && (!id || user.id === id);
 
-  const generateSlotsFromRules = (rules: RecurringRule[], startDate: Date, endDate: Date) => {
+  const validateDate = (
+    date: Date | string,
+    allowToday: boolean = false
+  ): boolean => {
+    const parsedDate = typeof date === "string" ? new Date(date) : date;
+    if (!isValid(parsedDate)) return false;
+    const today = startOfDay(new Date());
+    return allowToday
+      ? !isBefore(parsedDate, today)
+      : isBefore(today, parsedDate);
+  };
+
+  const validateTimeSlot = (timeSlot: string): boolean => {
+    return (
+      /^\d{2}:\d{2}$/.test(timeSlot) &&
+      predefinedSlots.some((slot) => slot.time === timeSlot)
+    );
+  };
+
+  const generateSlotsFromRules = (
+    rules: RecurringRule[],
+    startDate: Date,
+    endDate: Date
+  ) => {
     const slots: Slot[] = [];
     const days = eachDayOfInterval({ start: startDate, end: endDate });
 
     rules.forEach((rule) => {
+      if (
+        !validateDate(rule.startDate, true) ||
+        !validateDate(rule.endDate) ||
+        !validateTimeSlot(rule.timeSlot)
+      ) {
+        toast.warning(`Invalid rule: ${rule._id}`, rule);
+        return;
+      }
       days.forEach((day) => {
-        if (rule.daysOfWeek.includes(day.getDay())) {
-          if (new Date(rule.startDate) <= day && new Date(rule.endDate) >= day) {
+        if (rule.daysOfWeek.includes(day.getDay()) && validateDate(day)) {
+          if (
+            new Date(rule.startDate) <= day &&
+            new Date(rule.endDate) >= day
+          ) {
             const isException = rule.exceptions?.some((exception) =>
               isSameDay(new Date(exception), day)
             );
@@ -71,7 +132,7 @@ const AdvocateProfilePage = () => {
               const slotDate = new Date(day);
               slotDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
               slots.push({
-                _id: `slot-${rule.id}-${format(day, "yyyyMMdd")}`,
+                id: `slot-${rule._id}-${format(day, "yyyyMMdd")}`,
                 date: day,
                 time: slotDate,
                 isAvailable: true,
@@ -86,65 +147,41 @@ const AdvocateProfilePage = () => {
 
   useEffect(() => {
     const fetchAdvocate = async () => {
-      const advocateId = id ? id : user?.id as string;
+      const advocateId = id ? id : (user?.id as string);
 
       try {
-        setLoading(true);
+        setLoading(false);
         const data = await findUser(advocateId, token);
-        setAdvocate(data);
+        setAdvocate(data.data.user);
 
-        const rules: RecurringRule[] = data.availabilityRules || [
-          {
-            id: "rule-1",
-            description: "Every Monday at 9:00 AM",
-            startDate: "2025-01-01",
-            endDate: "2025-12-31",
-            frequency: "weekly",
-            daysOfWeek: [1],
-            timeSlot: "09:00",
-            exceptions: [],
-          },
-        ];
-        setRecurringRules(rules);
+        const rules = await getRecurringRules(advocateId, token);
+        setRecurringRules(rules?.data.rules);
 
         const monthStart = startOfMonth(currentMonth);
-        const monthEnd = endOfMonth(currentMonth);
-        const generatedSlots = generateSlotsFromRules(rules, monthStart, monthEnd);
+        // const monthEnd = endOfMonth(currentMonth);
+        const slots = await getSlots(
+          advocateId,
+          format(monthStart, "yyyy-MM-dd"),
+          token
+        );
 
-        const customSlots: Slot[] = [];
-        for (let i = 1; i < 8; i++) {
-          const date = new Date(2025, 4, 22 + i);
-          if (date.getDay() === 0 || date.getDay() === 6) continue;
-          customSlots.push({
-            _id: `slot-${i}-1`,
-            date: date,
-            time: new Date(date.setHours(9, 0, 0, 0)),
-            isAvailable: true,
-          });
-          customSlots.push({
-            _id: `slot-${i}-2`,
-            date: date,
-            time: new Date(date.setHours(14, 0, 0, 0)),
-            isAvailable: true,
-          });
-        }
-        setAvailableSlots([...generatedSlots, ...customSlots]);
+        setAvailableSlots(slots.data);
 
         generateCalendarDates(currentMonth);
-
-        if (user) {
-          const mockBookings: Booking[] = [
-            {
-              _id: "booking-1",
-              user: { name: "John Doe", email: "john@example.com" },
-              date: new Date(2025, 4, 22),
-              time: new Date(2025, 4, 22, 10, 0),
-              status: "confirmed",
-              notes: "Initial consultation",
-            },
-          ];
-          setUserBookings(mockBookings);
+        console.log(isAdvocate);
+        let bookings;
+        if (user?.role === "user") {
+          bookings = await getBookings(user.id, token);
+          setUserBookings(bookings?.data.bookings);
+        } else if (isAdvocate) {
+          const formattedMonth = `${currentMonth.getFullYear()}-${String(
+            currentMonth.getMonth() + 1
+          ).padStart(2, "0")}`;
+          console.log(user.id);
+          bookings = await getSlots(user.id, formattedMonth, token);
+          setUserBookings(bookings?.data);
         }
+        console.log(bookings, "hehehe");
       } catch (error) {
         console.error("Error fetching advocate data:", error);
       } finally {
@@ -177,7 +214,9 @@ const AdvocateProfilePage = () => {
         date: date,
         isToday: isToday(date),
         isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
-        hasSlots: availableSlots.some((slot) => isSameDay(new Date(slot.date), date) && slot.isAvailable),
+        hasSlots: availableSlots.some(
+          (slot) => isSameDay(new Date(slot.date), date) && slot.isAvailable
+        ),
       })),
     ];
 
@@ -199,7 +238,10 @@ const AdvocateProfilePage = () => {
   };
 
   const handleDateSelect = (date: Date | null) => {
-    console.log("Selected date:", date);
+    if (date && !validateDate(date, true)) {
+      toast.error("Selected date is invalid or in the past.");
+      return;
+    }
     setSelectedDate(date);
     setSelectedSlot(null);
   };
@@ -219,62 +261,155 @@ const AdvocateProfilePage = () => {
   };
 
   const handleSlotSelect = (slot: Slot) => {
-    console.log("Selected slot:", slot);
+    const slotDate = new Date(slot.date);
+    const slotTime = new Date(slot.time);
+
+    if (!validateDate(slotDate, true)) {
+      toast.error("Selected slot date is invalid or in the past.");
+      return;
+    }
+
+    const now = new Date();
+    if (slotTime <= now) {
+      toast.error("Selected slot time is in the past.");
+      return;
+    }
+
     setSelectedSlot(slot);
   };
 
   const handleBookSlot = async () => {
     if (!user) {
-      navigate("/login?redirect=" + encodeURIComponent(window.location.pathname));
+      navigate("/login");
       return;
     }
+
     if (!selectedSlot) {
-      alert("Please select a slot.");
+      toast.error("Please select a slot.");
+      return;
+    }
+
+    setBookingSlotDialog(true);
+    // try {
+    //   const booking = await bookSlot(
+    //     advocate!.id,
+    //     selectedSlot.id,
+    //     user.id,
+    //     "Booked via user interface",
+    //     token
+    //   );
+
+    //   setUserBookings([booking.data, ...userBookings]);
+
+    //   setAvailableSlots(
+    //     availableSlots.map((slot) =>
+    //       slot.id === selectedSlot.id ? { ...slot, isAvailable: false } : slot
+    //     )
+    //   );
+
+    //   toast.success("Appointment booked successfully!"); // Fix: was toast.error
+    //   setSelectedSlot(null);
+    //   generateCalendarDates(currentMonth);
+    // } catch (error: unknown) {
+    //   console.error("Booking error details:", error);
+    //   toast.error(`Failed to book slot, "Please try again"}`);
+    // }
+  };
+
+  const handleProceedToPayment = async () => {
+    try {
+
+      const response = await createPayment(advocate?.id, selectedSlot?.id)
+
+      console.log(response)
+
+      const data = response.data.url
+      if (data.url) {
+        window.location.href = data.url; 
+      } else {
+        throw new Error("Stripe session URL not found");
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+      toast.error("Something went wrong while initiating payment");
+    }
+  };
+
+  const handleAddCustomSlot = async (slotDate: Date) => {
+    if (!validateDate(slotDate)) {
+      toast.error("Custom slot date is invalid or in the past.");
+      return;
+    }
+    const [hours, minutes] = format(slotDate, "HH:mm").split(":");
+    const timeSlot = `${hours}:${minutes}`;
+    if (!validateTimeSlot(timeSlot)) {
+      toast.error("Custom slot time is invalid or outside predefined slots.");
+      return;
+    }
+    try {
+      const slot = {
+        date: format(slotDate, "yyyy-MM-dd"),
+        time: timeSlot,
+      };
+      const newSlot = await addCustomSlot(advocate!.id, slot, token);
+      if (newSlot.status === 201) {
+        setAvailableSlots([...availableSlots, newSlot.data]);
+        generateCalendarDates(currentMonth);
+        toast.success("Slot created Successfully");
+      } else {
+        toast.error("Slot created Successfully");
+      }
+    } catch (error) {
+      console.error("Error adding custom slot:", error);
+      toast.error("Failed to add slot. Please try again.");
+    }
+  };
+
+  const handleAddRecurringRule = async (rule: RecurringRule) => {
+    if (!validateDate(rule.startDate, true) || !validateDate(rule.endDate)) {
+      toast.error(
+        "Recurring rule start or end date is invalid or in the past."
+      );
+      return;
+    }
+    if (new Date(rule.startDate) > new Date(rule.endDate)) {
+      toast.error("End date must be after start date.");
+      return;
+    }
+    if (!validateTimeSlot(rule.timeSlot)) {
+      toast.error("Recurring rule time slot is invalid.");
+      return;
+    }
+    if (
+      !rule.daysOfWeek.length ||
+      rule.daysOfWeek.some((day) => day < 0 || day > 6)
+    ) {
+      toast.error("Invalid days of week.");
       return;
     }
 
     try {
-      const newBooking: Booking = {
-        _id: `booking-${Date.now()}`,
-        user: { name: user.name, email: user.email },
-        date: selectedSlot.date,
-        time: selectedSlot.time,
-        status: "confirmed",
-        notes: "Booked via user interface",
-      };
-      setUserBookings([...userBookings, newBooking]);
-      setAvailableSlots(
-        availableSlots.map((slot) =>
-          slot._id === selectedSlot._id ? { ...slot, isAvailable: false } : slot
-        )
-      );
-      alert("Appointment booked successfully!");
-      setSelectedSlot(null);
-      generateCalendarDates(currentMonth);
+      const newRule = await addRecurringRule(advocate!.id, rule, token);
+
+      if (newRule.status === 201) {
+        toast.success("Created successfully");
+        setRecurringRules([...recurringRules, newRule.data]);
+        const monthStart = startOfMonth(currentMonth);
+        const monthEnd = endOfMonth(currentMonth);
+        const newSlots = generateSlotsFromRules(
+          [newRule.data],
+          monthStart,
+          monthEnd
+        );
+        setAvailableSlots([...availableSlots, ...newSlots]);
+        generateCalendarDates(currentMonth);
+      } else {
+        toast.error("Something went wrong");
+      }
     } catch (error) {
-      console.error("Error booking slot:", error);
-      alert("Failed to book slot. Please try again.");
+      console.error("Error adding recurring rule:", error);
+      toast.error("Failed to add rule. Please try again.");
     }
-  };
-
-  const handleAddCustomSlot = (slotDate: Date) => {
-    const newSlot: Slot = {
-      _id: `custom-slot-${Date.now()}`,
-      date: slotDate,
-      time: slotDate,
-      isAvailable: true,
-    };
-    setAvailableSlots([...availableSlots, newSlot]);
-    generateCalendarDates(currentMonth);
-  };
-
-  const handleAddRecurringRule = (rule: RecurringRule) => {
-    setRecurringRules([...recurringRules, rule]);
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    const newSlots = generateSlotsFromRules([rule], monthStart, monthEnd);
-    setAvailableSlots([...availableSlots, ...newSlots]);
-    generateCalendarDates(currentMonth);
   };
 
   const handlePostpone = (booking: Booking) => {
@@ -282,34 +417,79 @@ const AdvocateProfilePage = () => {
     setShowPostponeDialog(true);
   };
 
-  const handlePostponeConfirm = (date: string, time: string, reason: string) => {
+  const handlePostponeConfirm = async (
+    date: string,
+    time: string,
+    reason?: string
+  ) => {
     if (!selectedBooking) return;
-    setUserBookings(
-      userBookings.map((booking) =>
-        booking._id === selectedBooking._id
-          ? {
-              ...booking,
-              date: new Date(date),
-              time: new Date(`${date}T${time}`),
-              status: "postponed",
-              postponeReason: reason,
-            }
-          : booking
-      )
+
+    const parsedDate = parse(date, "yyyy-MM-dd", new Date());
+    const parsedTime = parse(
+      `${date}T${time}`,
+      "yyyy-MM-dd'T'HH:mm",
+      new Date()
     );
-    setShowPostponeDialog(false);
-    setSelectedBooking(null);
+
+    if (!validateDate(parsedDate) || !validateDate(parsedTime)) {
+      toast.error("Postponed date or time is invalid or in the past.");
+      return;
+    }
+
+    if (!validateTimeSlot(time)) {
+      toast.error("Postponed time is invalid or outside predefined slots.");
+      return;
+    }
+
+    try {
+      const response = await postPoneBooking(
+        date,
+        time,
+        reason!,
+        selectedBooking.id,
+        token
+      );
+
+      if (response.status === 200) {
+        setUserBookings(
+          userBookings.map((booking) =>
+            booking.id === selectedBooking.id
+              ? {
+                  ...booking,
+                  date: parsedDate,
+                  time: parsedTime,
+                  status: "postponed",
+                  postponeReason: reason || "Postponed by user",
+                }
+              : booking
+          )
+        );
+        setShowPostponeDialog(false);
+        setSelectedBooking(null);
+        toast.success("Slot postponed successfully!");
+      }
+    } catch (error: unknown) {
+      console.log(error);
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(
+          error.response.data.error ||
+            "There is a problem in postponing your slot"
+        );
+      } else {
+        toast.error("There is a problem in postponing your slot");
+      }
+    }
   };
 
   const handleCancelBooking = (bookingId: string) => {
     setUserBookings(
       userBookings.map((booking) =>
-        booking._id === bookingId ? { ...booking, status: "cancelled" } : booking
+        booking.id === bookingId ? { ...booking, status: "cancelled" } : booking
       )
     );
     setAvailableSlots(
       availableSlots.map((slot) =>
-        slot._id === bookingId ? { ...slot, isAvailable: true } : slot
+        slot.id === bookingId ? { ...slot, isAvailable: true } : slot
       )
     );
     generateCalendarDates(currentMonth);
@@ -344,7 +524,9 @@ const AdvocateProfilePage = () => {
     <div className="min-h-screen bg-gray-50">
       {user?.role !== "advocate" && <NavBar />}
       <div className="container mx-auto max-w-6xl px-4 py-8">
-        {user?.role !== "advocate" && <AdvocateProfileHeader advocate={advocate} />}
+        {user?.role !== "advocate" && (
+          <AdvocateProfileHeader advocate={advocate} />
+        )}
         <ViewToggle
           currentView={currentView}
           isAdvocate={isAdvocate}
@@ -359,7 +541,7 @@ const AdvocateProfilePage = () => {
             selectedSlot={selectedSlot}
             predefinedSlots={predefinedSlots}
             isAdvocate={isAdvocate}
-            recurringRules={recurringRules}
+            recurringRules={recurringRules || []}
             onDateSelect={handleDateSelect}
             onPreviousMonth={handlePreviousMonth}
             onNextMonth={handleNextMonth}
@@ -374,6 +556,7 @@ const AdvocateProfilePage = () => {
             bookings={userBookings}
             onPostpone={handlePostpone}
             onCancel={handleCancelBooking}
+            isAdvocate={isAdvocate}
           />
         )}
       </div>
@@ -383,6 +566,14 @@ const AdvocateProfilePage = () => {
           booking={selectedBooking}
           onClose={() => setShowPostponeDialog(false)}
           onPostpone={handlePostponeConfirm}
+        />
+      )}
+      {bookingSlotDialog && selectedSlot && (
+        <BookingSlotDialog
+          bookingDetails={selectedSlot}
+          onClose={() => setBookingSlotDialog(false)}
+          onProceedToPayment={handleProceedToPayment}
+          advocate={advocate}
         />
       )}
     </div>

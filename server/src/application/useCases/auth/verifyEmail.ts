@@ -21,7 +21,6 @@ export class verifyEmail {
 
             const isvalidToken = await this.tokenRepository.verifyToken(token)
 
-            console.log(isvalidToken,'sld;fjkghdhjfk')
             if (!isvalidToken) {
                 return { success: false, error: 'Invalid token' }
             }

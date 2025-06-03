@@ -1,33 +1,67 @@
 import React from "react";
 import { serviceData } from "./datas/serviceData";
-// import { Scale } from 'lucide-react';
+import NavBar from "../NavBar";
+import { useLocation } from "react-router-dom";
 
 const Services: React.FC = () => {
+  const location = useLocation();
   return (
-    <div className="py-16 bg-white px-4 md:px-10 lg:px-28 mx-auto">
-      <div className="text-2xl font-poppins font-bold flex justify-center items-center text-gray-800" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.25)' }}>
-        <span>OUR SERVICES</span>
-      </div>
-      <div className="flex justify-center items-center mt-6">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 pt-6 ">
+    <>
+      {location.pathname === "/services" && <NavBar />}
+      <div className="py-16 bg-white px-4 md:px-10 lg:px-28 mx-auto">
+        {/* Title Section */}
+        <div className="text-2xl font-bold text-center text-gray-800 mb-8">
+          OUR LEGAL SERVICES
+        </div>
+
+        {/* Services Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {serviceData.map((service, index) => (
-            <div key={index} className="card group w-full bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition-shadow duration-300 border border-gray-200">
-              <div className="flex items-start justify-between">
+            <div
+              key={index}
+              className="bg-white border rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300"
+            >
+              <div className="flex items-start gap-4">
+                <div className="text-3xl">{service.icon}</div>
                 <div>
-                  <h3 className="mb-2 text-xl font-bold">{service.title}</h3>
-                  <p className="mb-4 text-md text-gray-600">
-                    {service.description}
-                  </p>
+                  <h3 className="text-xl font-semibold mb-2">
+                    {service.title}
+                  </h3>
+                  <p className="text-gray-600 mb-3">{service.description}</p>
+                  <ul className="text-sm text-gray-700 list-disc list-inside space-y-1">
+                    {service.bullets?.map((point, idx) => (
+                      <li key={idx}>{point}</li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              {/* <button className="w-full py-1 mt-2 text-sm text-center transition-colors border border-gray-300 rounded hover:bg-gray-100">
-                Details
-              </button> */}
+              <div className="mt-4 text-right">
+                <button className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-md">
+                  Book Now
+                </button>
+              </div>
             </div>
           ))}
         </div>
+
+        {/* Call to Action */}
+        <div className="text-center mt-16 bg-blue-50 py-12 rounded-lg">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            Need Legal Help?
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Get in touch with us today for professional and confidential legal
+            support.
+          </p>
+          <a
+            href="/contact"
+            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+          >
+            Contact Us
+          </a>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

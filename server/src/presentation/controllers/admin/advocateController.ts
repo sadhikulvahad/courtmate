@@ -16,7 +16,7 @@ export class AdvocateController {
     private readonly UpdateAdvocateStatus: UpdateAdvocateStatus
     private readonly NotificationService?: NotificationService
     private readonly emailService: NodemailerEmailService
-    private readonly GetAllUserAdvocates : GetAllUserAdvocates
+    private readonly GetAllUserAdvocates: GetAllUserAdvocates
 
     constructor() {
         const userRepository = new UserRepositoryImplement()
@@ -42,7 +42,6 @@ export class AdvocateController {
             if (!result.success) {
                 return res.status(404).json({ success: false, error: result.error })
             }
-            console.log(result)
             res.status(200).json({
                 success: true,
                 message: result.message,
@@ -60,22 +59,22 @@ export class AdvocateController {
     async getUserAdvocates(req: Request, res: Response) {
         try {
             const filters: AdvocateFilterOptions = {
-      page: Number(req.query.page) || 1,
-      limit: Number(req.query.limit) || 5,
-      searchTerm: req.query.searchTerm?.toString(),
-      activeTab: req.query.activeTab?.toString() || 'all',
-      categories: req.query.categories?.toString().split(','),
-      location: req.query.location?.toString(),
-      minExperience: Number(req.query.minExperience) || undefined,
-      maxExperience: Number(req.query.maxExperience) || undefined,
-      languages: req.query.languages?.toString().split(','),
-      minRating: Number(req.query.minRating) || undefined,
-      availability: req.query.availability?.toString().split(','),
-      specializations: req.query.specializations?.toString().split(','),
-      certifications: req.query.certifications?.toString().split(','),
-      sortBy: req.query.sortBy?.toString() as 'rating' | 'experience' | 'createdAt' || 'rating',
-      sortOrder: req.query.sortOrder?.toString() as 'asc' | 'desc' || 'desc'
-    };
+                page: Number(req.query.page) || 1,
+                limit: Number(req.query.limit) || 5,
+                searchTerm: req.query.searchTerm?.toString(),
+                activeTab: req.query.activeTab?.toString() || 'all',
+                categories: req.query.categories?.toString().split(','),
+                location: req.query.location?.toString(),
+                minExperience: Number(req.query.minExperience) || undefined,
+                maxExperience: Number(req.query.maxExperience) || undefined,
+                languages: req.query.languages?.toString().split(','),
+                minRating: Number(req.query.minRating) || undefined,
+                availability: req.query.availability?.toString().split(','),
+                specializations: req.query.specializations?.toString().split(','),
+                certifications: req.query.certifications?.toString().split(','),
+                sortBy: req.query.sortBy?.toString() as 'rating' | 'experience' | 'createdAt' || 'rating',
+                sortOrder: req.query.sortOrder?.toString() as 'asc' | 'desc' || 'desc'
+            };
 
             // Handle activeTab filters
             // switch (filters.activeTab) {

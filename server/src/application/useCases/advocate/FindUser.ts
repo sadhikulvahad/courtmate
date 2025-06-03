@@ -17,7 +17,6 @@ export class FindUser {
         if(!user){
             return {success: false, error: "User not found"}
         }
-        console.log(user)
         return {success : true, message: 'User found', user: user}
     }
 }

@@ -10,7 +10,6 @@ export class RefreshTokenUseCase {
 
   async execute(refreshToken: string) {
     try {
-      console.log('hola')
       const decoded = await this.tokenService.verifyRefreshToken(refreshToken);
       const user = await this.userRepository.findById(decoded.userId)
       if (!user) throw new Error("User not found");

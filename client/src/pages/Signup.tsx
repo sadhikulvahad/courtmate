@@ -134,7 +134,6 @@ export function Signup() {
 
       try {
         const response = await signupUser(updatedSignupDetails);
-        console.log(response, "klasudh");
         if (response?.status == 201 || response?.status == 202) {
           setShowModal(true);
           toast.success(response.data.message);
@@ -210,7 +209,6 @@ export function Signup() {
   const handleGoogleSignup = () => {
     // const role = 'user'
     const response = initiateGoogleAuth();
-    console.log(response, "res");
   };
 
   const handleForgotButton = () => {

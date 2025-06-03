@@ -9,7 +9,6 @@ export const signupUser = async (userData: object) => {
         "Content-Type": "application/json",
       },
     });
-    console.log(response, 'kjahs')
     return response
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {

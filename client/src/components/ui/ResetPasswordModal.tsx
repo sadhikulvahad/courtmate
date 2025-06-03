@@ -53,7 +53,6 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
         currentPassword,
         newPassword
       );
-      console.log(response);
       if (response?.data.success) {
         toast.success(response.data.message || "Password changed successfully");
         onClose();

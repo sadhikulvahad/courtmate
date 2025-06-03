@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { UserRepositoryImplement } from "../../../infrastructure/dataBase/repositories/userRepository";
 import { GetAdvocateDetails } from "../../../application/useCases/advocate/GetDatails";
 import { UpdateAdvocateProfile } from "../../../application/useCases/advocate/updateAdvocateProfile";
-import path from "path";
 import { NotificationRepositoryImplements } from "../../../infrastructure/dataBase/repositories/NotificationRepository";
 import { NotificationService } from "../../../infrastructure/services/notificationService";
 import { FindUser } from "../../../application/useCases/advocate/FindUser";
@@ -48,7 +47,6 @@ export class advProfileController {
             if (!result?.success) {
                 return res.status(400).json({ success: false, error: result?.error })
             }
-            console.log(result.user)
             return res.status(200).json({ success: true, message: 'Data collected successfully', user: result?.user })
         } catch (error) {
             console.error("Error from advocate profile controller, get details", error)

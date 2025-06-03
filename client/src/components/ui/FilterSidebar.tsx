@@ -76,7 +76,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       };
     }
 
-    console.log("Sidebar: Filter changed", { category, value, updatedFilters });
     setFilters(updatedFilters);
     onFilterChange(updatedFilters);
   };
@@ -93,7 +92,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       certifications: [],
     };
 
-    console.log("Sidebar: Resetting filters");
     setFilters(resetValues);
     onFilterChange(resetValues);
   };
