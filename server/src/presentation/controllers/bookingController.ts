@@ -6,13 +6,15 @@ import { NotificationRepositoryImplements } from "../../infrastructure/dataBase/
 import { NotificationService } from "../../infrastructure/services/notificationService";
 import { VerifyRoom } from "../../application/useCases/Booking/VerifyRoom";
 import { Postpone } from "../../application/useCases/Booking/Postpone";
+import { GetBookingThisHourUseCase } from "../../application/useCases/Booking/GetBook";
 
 export class BookingController {
   constructor(
     private BookSlot: BookSlot,
     private getBookings: GetBookSlot,
     private VerifyRoom: VerifyRoom,
-    private Postpone: Postpone
+    private Postpone: Postpone,
+    private GetBook: GetBookingThisHourUseCase
   ) { }
 
   async getBookSlot(req: Request, res: Response) {
@@ -39,24 +41,6 @@ export class BookingController {
     } catch (error: any) {
       console.error("Error fetching bookings:", error);
       return res.status(500).json({ message: "Server error" });
-    }
-  }
-
-  async bookSlot(req: Request, res: Response) {
-    const user = req.user as { id: string; role: string; name: string } | undefined;
-    const io = req.app.get("io");
-    try {
-      const { advocateId, slotId, userId, notes } = req.body;
-      if (!advocateId || !slotId || !userId) {
-        return res.status(400).json({ message: "advocateId, slotId, and userId are required" });
-      }
-
-      const notificationRepo = new NotificationRepositoryImplements();
-      const notificationService = new NotificationService(notificationRepo, io);
-      const booking = await this.BookSlot.execute(advocateId, slotId, userId, notes, user, notificationService);
-      res.status(201).json(booking.toJSON());
-    } catch (error: any) {
-      res.status(500).json({ message: "Server error" });
     }
   }
 
@@ -88,7 +72,6 @@ export class BookingController {
     try {
       const { roomId } = req.params;
       const user = req.user as { id: string; role: string; name: string } | undefined;
-
       if (!user) {
         return res.status(401).json({ isAuthorized: false, message: "Unauthorized: No user session" });
       }
@@ -101,4 +84,40 @@ export class BookingController {
       return res.status(500).json({ isAuthorized: false, message: "Server error" });
     }
   }
+
+  async getBook(req: Request, res: Response) {
+    try {
+      const { advocateId, userId } = req.query;
+
+      if (!advocateId || !userId) {
+        return res.status(400).json({ status: false, error: 'Missing advocateId or userId' });
+      }
+
+      const result = await this.GetBook.execute(advocateId as string, userId as string);
+
+      if (!result) {
+        return res.status(400).json({ status: false, error: 'There is no Booking at this time' });
+      }
+      res.status(200).json({ status: true, message: "Booking Found", booking: result });
+    } catch (error) {
+      console.error("Error getBook:", error);
+      return res.status(500).json({ status: false, message: "Server error" });
+    }
+  }
+
+  async callHistory(req: Request, res: Response) {
+    try {
+      const user = req.user as { id: string; role: string; name: string } | undefined;
+
+      if(!user){
+        return res.status(400).json({ status: false, error: 'Missing advocateId or userId' });
+      }
+
+      const result = await this
+    } catch (error) {
+      console.error("Error getHistory:", error);
+      return res.status(500).json({ status: false, message: "Server error" });
+    }
+  }
+
 }

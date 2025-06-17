@@ -16,7 +16,6 @@ const Advocates: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await getAllAdminAdvocates();
-      console.log(response);
 
       const filteredAdvocates = response?.data.advocates.filter(
         (ad: AdvocateProps) => {

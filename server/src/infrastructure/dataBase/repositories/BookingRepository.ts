@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
 import { BookingProps } from "../../../domain/types/EntityProps";
@@ -31,15 +32,17 @@ export class BookingRepositoryImplements implements BookingRepository {
   }
 
   async findByRoomId(roomId: string): Promise<Booking | null> {
-    const booking = await BookingModel.findOne({ roomId })
-      .populate("userId", "name email")
-      .populate("advocateId", "name email phone")
+    console.log(roomId)
+    const booking = await BookingModel.findOne({ roomId: roomId })
       .lean()
       .exec();
+
+    console.log(booking); // for debugging
 
     if (!booking) {
       return null;
     }
+
     return Booking.fromDB(booking);
   }
 
@@ -67,6 +70,34 @@ export class BookingRepositoryImplements implements BookingRepository {
     if (!bookings || bookings.length === 0) return null;
 
     return bookings.map(booking => Booking.fromDB(booking));
+  }
+
+  async getBook(advocateId: Types.ObjectId, userId: Types.ObjectId): Promise<Booking | null> {
+    const now = new Date();
+
+    const startOfHour = new Date(now);
+    startOfHour.setMinutes(0, 0, 0);
+
+    const endOfHour = new Date(now);
+    endOfHour.setMinutes(59, 59, 999);
+
+    const booking = await BookingModel.findOne({
+      advocateId,
+      userId,
+      time: {
+        $gte: startOfHour,
+        $lte: endOfHour,
+      },
+    }).lean()
+    return booking ? Booking.fromDB(booking) : null;
+  }
+
+
+  async findBySlotId(id: string): Promise<Booking | null> {
+    const booking = await BookingModel.findOne({ slotId: id }).lean()
+    if (!booking) return null;
+
+    return Booking.fromDB(booking);
   }
 
 }

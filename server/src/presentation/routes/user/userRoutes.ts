@@ -17,12 +17,21 @@ const tokenService = new JwtTokenService()
 const refreshToken = new RefreshTokenUseCase(tokenService, userRepository)
 const auth = createAuthMiddleware(tokenService, refreshToken)
 
-router.put('/toggleUser', auth , (req: Request, res: Response) => {
-    userController.toggleUserisBlocked(req, res)}
+router.put('/toggleUser', auth, (req: Request, res: Response) => {
+    userController.toggleUserisBlocked(req, res)
+}
 );
 
-router.put('/resetPassword', auth,  (req: Request, res: Response) => {
-    userController.resetPassword(req,res)
+router.put('/resetPassword', auth, (req: Request, res: Response) => {
+    userController.resetPassword(req, res)
+})
+
+router.put('/toggleSave/:advocateId', auth, (req: Request, res: Response) => {
+    userController.toggleSaveAdvocate(req, res)
+})
+
+router.get('/savedAdvocates', auth, (req: Request, res: Response) => {
+    userController.getSavedAdvocates(req, res)
 })
 
 

@@ -57,29 +57,39 @@ const NavBar = () => {
       {/* Main navigation items with responsive visibility */}
       <div className="hidden md:flex py-4 items-center gap-2 md:gap-6 lg:gap-12 text-xs md:text-sm lg:text-lg">
         {/* Always visible on md and lg screens */}
-        <div className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
-        onClick={() => navigate('/')}>
+        <div
+          className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           Home
         </div>
-        <div className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
-        onClick={() => navigate('/advocates')}>
+        <div
+          className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
+          onClick={() => navigate("/advocates")}
+        >
           Advocates
         </div>
 
         {/* Only visible on md and above */}
-        <div className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
-        onClick={() => navigate('/services')}>
+        <div
+          className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
+          onClick={() => navigate("/services")}
+        >
           Services
         </div>
 
         {/* Only visible on lg and above */}
-        <div className="hidden lg:block hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer">
+        {/* <div className="hidden lg:block hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer">
           Category
-        </div>
-        <div className="hidden lg:block hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer">
+        </div> */}
+        <div
+          className="hidden lg:block hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
+          onClick={() => navigate("/aboutUs")}
+        >
           About Us
         </div>
-        <div className="hidden lg:block hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer">
+        <div className="hidden lg:block hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
+        onClick={() => navigate('/contactUs')}>
           Contact Us
         </div>
       </div>
@@ -106,11 +116,7 @@ const NavBar = () => {
           onClick={toggleSidebar}
         >
           <p className="">
-            {isAuthenticated ? (
-              icon
-            ) : (
-              <FontAwesomeIcon icon={faUser} />
-            )}
+            {isAuthenticated ? icon : <FontAwesomeIcon icon={faUser} />}
           </p>
         </div>
       </div>

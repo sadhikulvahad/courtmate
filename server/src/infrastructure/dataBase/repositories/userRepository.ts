@@ -59,7 +59,7 @@ export class UserRepositoryImplement implements UserRepository {
         const query: FilterQuery<User> = {
             role: 'advocate',
             isAdminVerified: { $in: ['Accepted'] },
-            isBlocked : false
+            isBlocked: false
         };
 
         // Search term filter
@@ -181,6 +181,27 @@ export class UserRepositoryImplement implements UserRepository {
         return this.toDomainEntity(updatedUser);
     }
 
+    async getSavedAdvocates(userId: string): Promise<User[]> {
+        const user = await userModel
+            .findById(userId)
+            .populate({
+                path: "savedAdvocates",
+                select: "name email role profilePhoto category", // remove match temporarily
+            });
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        console.log("Populated savedAdvocates:", user.savedAdvocates);
+
+        const validAdvocates = (user.savedAdvocates || []).filter(
+            (adv: any) => adv?.name && adv?.email && adv?.role
+        );
+
+        return validAdvocates.map((adv: any) => this.toDomainEntity(adv));
+    }
+
     private toDomainEntity(mongooseUser: UserProps): User {
         return new User({
             _id: mongooseUser?._id?.toString(),
@@ -211,7 +232,7 @@ export class UserRepositoryImplement implements UserRepository {
             age: mongooseUser.age,
             DOB: mongooseUser.DOB,
             onlineConsultation: mongooseUser.onlineConsultation,
-            savedAdvocates: mongooseUser.savedAdvocates
+            savedAdvocates: mongooseUser.savedAdvocates ?? []
         });
     }
 

@@ -2,6 +2,7 @@ import { addDays, endOfDay, isEqual, startOfDay } from "date-fns";
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
 import { SlotRepository } from "../../../domain/interfaces/SlotRepository";
+import { BookingStatus } from "../../../domain/types/EntityProps";
 
 
 export class Postpone {
@@ -31,7 +32,7 @@ export class Postpone {
         })
 
         const matchedSlot = slots.find(slot => {
-            const slotTime = new Date(slot.time); 
+            const slotTime = new Date(slot.time);
             return isEqual(slotTime, selectedDateTime);
         })
 
@@ -54,10 +55,19 @@ export class Postpone {
         const updated = await this.bookingRepository.findByBookId(bookId);
 
         matchedSlot.markAsBooked()
-        await this.slotRepository.update(matchedSlot)
+        await this.slotRepository.update(matchedSlot.id, {
+            ...matchedSlot.toJSON(),
+            status: matchedSlot.toJSON().status as BookingStatus,
+        });
 
-        existingSlot?.markASAvailable()
-        await this.slotRepository.update(existingSlot!)
+        if (existingSlot) {
+            existingSlot.markASAvailable();
+
+            await this.slotRepository.update(existingSlot.id, {
+                ...existingSlot.toJSON(),
+                status: existingSlot.toJSON().status as BookingStatus,
+            });
+        }
 
         return updated
     }

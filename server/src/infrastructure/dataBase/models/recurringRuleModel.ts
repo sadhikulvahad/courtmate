@@ -7,7 +7,7 @@ const recurringRuleSchema = new Schema<RecurringRuleProps>({
   description: { type: String, required: true },
   startDate: { type: String, required: true },
   endDate: { type: String, required: true },
-  frequency: { type: String, enum: ['daily', 'weekly', 'monthly'], required: true },
+  frequency: { type: String, enum: ['weekly', 'monthly'], required: true },
   daysOfWeek: { type: [Number], required: true },
   timeSlot: { type: String, required: true },
   exceptions: { type: [Date], default: [] },

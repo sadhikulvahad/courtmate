@@ -1,7 +1,6 @@
 
-
-import { Outlet } from 'react-router-dom'
-import AdvocateAdminSidebar from '../AdvocateAdminSidebar'
+import { Outlet } from "react-router-dom";
+import AdvocateAdminSidebar from "../AdvocateAdminSidebar";
 
 const Layout = () => {
   return (
@@ -13,7 +12,7 @@ const Layout = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;

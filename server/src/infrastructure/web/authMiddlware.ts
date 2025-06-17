@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { JwtTokenService } from "../services/jwt";
 import { RefreshTokenUseCase } from "../../application/useCases/auth/refreshTokenUseCase";
 import { UserProps } from "../../domain/types/EntityProps";
+import userModel from "../dataBase/models/userModel";
 
 
 
@@ -17,6 +18,11 @@ export const createAuthMiddleware = (
                 try {
                     const decoded = tokenService.verifyToken(accessToken);
                     req.user = decoded;
+                    const user = await userModel.findById(decoded.id);
+                    if (!user || user.isBlocked) {
+                        res.status(403).json({ message: "Account is blocked" });
+                        return;
+                    }
                     return next();
                 } catch (error) {
                     if (error instanceof Error && error.name !== 'TokenExpiredError') {
@@ -51,6 +57,12 @@ export const createAuthMiddleware = (
             // 5. Verify and set user from new access token
             const newDecoded = tokenService.verifyToken(result.accessToken!);
             req.user = newDecoded;
+
+            const user = await userModel.findById(newDecoded.id);
+            if (!user || user.isBlocked) {
+                res.status(403).json({ message: "Account is blocked" });
+                return;
+            }
 
             next();
         } catch (error) {

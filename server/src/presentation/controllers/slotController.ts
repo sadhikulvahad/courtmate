@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
 import { GetSlots } from '../../application/useCases/slots/GetSlot';
 import { AddSlot } from '../../application/useCases/slots/AddSlot';
+import { PostponeSlot } from '../../application/useCases/slots/PostponeSlot';
 
 export class SlotController {
   constructor(
     private GetSlots: GetSlots,
-    private AddSlot: AddSlot
+    private AddSlot: AddSlot,
+    private postponeSlotUseCase : PostponeSlot
   ) { }
 
   async getSlots(req: Request, res: Response) {
@@ -23,7 +25,6 @@ export class SlotController {
 
   async addSlot(req: Request, res: Response) {
     try {
-      console.log(req.body)
       const { advocateId, date, time } = req.body;
       if (!advocateId || !date || !time) {
         return res.status(400).json({ message: 'advocateId, date, and time are required' });
@@ -33,9 +34,34 @@ export class SlotController {
         date: new Date(date),
         time: new Date(`${date}T${time}`),
         isAvailable: true,
-        status : 'confirmed'
+        status: 'confirmed',
       });
       res.status(201).json(slot.toJSON());
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  }
+
+  async postponeSlot(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { date, time, reason } = req.body;
+      const user = req.user as { id: string; role: string; name: string } | undefined;
+
+      if (!user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      if (!date || !time) {
+        return res.status(400).json({ message: 'Date and time are required' });
+      }
+
+      const slot = await this.postponeSlotUseCase.execute(id, user.id, {
+        date,
+        time,
+        reason,
+      });
+
+      res.status(200).json(slot.toJSON());
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }

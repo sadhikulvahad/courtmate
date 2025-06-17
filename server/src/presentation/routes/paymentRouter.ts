@@ -34,7 +34,7 @@ router.post('/create-checkout-session', authMiddleware, (req: Request, res: Resp
 
 router.post(
     "/webhook",
-    express.raw({ type: "application/json" }), // Stripe requires raw body
+    express.raw({ type: "application/json" }),
     (req: Request, res: Response) => {
         paymentControllerInstance.handleStripeWebhook(req, res);
     }

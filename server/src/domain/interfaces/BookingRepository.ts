@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { Booking } from "../entities/Booking";
 import { BookingProps } from "../types/EntityProps";
 
@@ -7,4 +8,5 @@ export interface BookingRepository {
   findByRoomId(roomId: string): Promise<Booking | null>;
   findByBookId(bookId: string): Promise<Booking | null>
   updateBooking(bookId: string, update: Partial<BookingProps>): Promise<Booking | null>;
+  getBook(advocateId: Types.ObjectId, userId : Types.ObjectId):Promise<Booking | null>
 }

@@ -66,15 +66,15 @@ export class Booking {
   }
 
   get advocateId(): string {
-    return this.props.advocateId.toString();
+    return this.props.advocateId?.toString?.() ?? '';
   }
 
   get userId(): string {
-    return this.props.userId.toString();
+    return this.props.userId?.toString?.() ?? '';
   }
 
   get slotId(): string {
-    return this.props.slotId.toString();
+    return this.props.slotId?.toString?.() ?? '';
   }
 
   get date(): Date {
@@ -110,6 +110,7 @@ export class Booking {
   }
 
   toJSON() {
+
     return {
       id: this.id,
       advocateId: this.advocateId,
@@ -126,12 +127,16 @@ export class Booking {
       roomId: this.roomId
     };
   }
+
 }
 
 function isPopulatedAdvocate(
-  advocate: Types.ObjectId | { _id: string; name: string; email: string; phone?: string } | string
+  advocate: Types.ObjectId | { _id: string; name: string; email: string; phone?: string } | string | undefined
 ): advocate is { _id: string; name: string; email: string; phone?: string } {
-  return typeof advocate !== 'string' &&
+  return (
+    advocate !== null &&
+    typeof advocate === 'object' &&
     'name' in advocate &&
-    'email' in advocate;
+    'email' in advocate
+  );
 }

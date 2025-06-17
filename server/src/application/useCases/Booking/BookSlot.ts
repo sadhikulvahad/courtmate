@@ -2,7 +2,7 @@ import { addDays, endOfDay, isBefore, isValid, startOfDay } from "date-fns";
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
 import { SlotRepository } from "../../../domain/interfaces/SlotRepository";
-import { BookingProps } from "../../../domain/types/EntityProps";
+import { BookingProps, BookingStatus } from "../../../domain/types/EntityProps";
 import { NotificationService } from "../../../infrastructure/services/notificationService";
 import { Types } from "mongoose";
 import { format } from 'date-fns';
@@ -18,6 +18,7 @@ export class BookSlot {
     advocateId: string,
     slotId: string,
     userId: string,
+    usrname: string,
     notes?: string,
     user?: {
       id: string,
@@ -53,7 +54,7 @@ export class BookSlot {
       time: slot.time,
       status: 'confirmed',
       notes,
-      roomId : `room-${uuidv4()}`
+      roomId: `room-${uuidv4()}`
     };
     const booking = Booking.fromDB(bookingProps);
     const savedBooking = await this.bookingRepository.create(booking);
@@ -74,14 +75,17 @@ export class BookSlot {
     await notificationService?.sendNotification({
       recieverId: new Types.ObjectId(advocateId),
       senderId: new Types.ObjectId(userId),
-      message: `${user?.name} wants to book your slot on ${formattedDateTime}`,
+      message: `${usrname} wants to book your slot on ${formattedDateTime}`,
       read: false,
       type: 'Notification',
       createdAt: new Date()
     })
 
     slot.markAsBooked()
-    await this.slotRepository.update(slot)
+    await this.slotRepository.update(slot.id, {
+      ...slot.toJSON(),
+      status: slot.toJSON().status as BookingStatus,
+    });
 
     return savedBooking;
   }

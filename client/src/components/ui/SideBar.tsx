@@ -8,7 +8,7 @@ import {
   faBookmark,
   faInfoCircle,
   faEnvelope,
-  faList,
+  // faList,
   faCog,
   faSignIn,
   faBookBookmark,
@@ -56,10 +56,10 @@ const SideBar: React.FC<SideBarProps> = ({ closeSidebar }) => {
     ? [
         { name: "Profile", icon: faUser, path: "/profile" },
         { name: "Home", icon: faHome, path: "/" },
-        { name: "My Activity", icon: faCog, path: "*" },
+        { name: "My Activity", icon: faCog, path: "/activity" },
         {name: "My Bookings", icon: faBookBookmark, path: '/bookings'},
         {name: "Messages", icon: faMessage, path: '/chat'},
-        { name: "Saved Advocates", icon: faBookmark, path: "*" },
+        { name: "Saved Advocates", icon: faBookmark, path: "/savedAdvocate" },
         // { name: "History", icon: faHistory, path: "*" },
         {
           name: "Logout",
@@ -82,13 +82,13 @@ const SideBar: React.FC<SideBarProps> = ({ closeSidebar }) => {
           hideOnLg: true,
           path: "*",
         },
-        {
-          name: "Category",
-          icon: faList,
-          hideOnMd: false,
-          hideOnLg: true,
-          path: "*",
-        },
+        // {
+        //   name: "Category",
+        //   icon: faList,
+        //   hideOnMd: false,
+        //   hideOnLg: true,
+        //   path: "*",
+        // },
         {
           name: "About Us",
           icon: faInfoCircle,

@@ -1,9 +1,8 @@
-// src/components/Calendar/UserBookingsView.tsx
+// Enhanced UserBookingsView.tsx with simple slot indicators and no past dates
 import { useState } from "react";
 import { format, isSameDay, isBefore, startOfDay } from "date-fns";
 import { CalendarDate, Slot, RecurringRule } from "@/types/Types";
 import { toast } from "sonner";
-
 
 interface UserBookingsViewProps {
   currentMonth: Date;
@@ -21,7 +20,6 @@ interface UserBookingsViewProps {
   onBookSlot: () => void;
   onAddCustomSlot: (slotDate: Date) => void;
   onAddRecurringRule: (rule: RecurringRule) => void;
-
 }
 
 const UserBookingsView = ({
@@ -44,7 +42,7 @@ const UserBookingsView = ({
   const [newSlotDate, setNewSlotDate] = useState("");
   const [newSlotTime, setNewSlotTime] = useState("");
   const [newRule, setNewRule] = useState({
-    frequency: "weekly" as "daily" | "weekly" | "monthly",
+    frequency: "weekly" as "weekly" | "monthly",
     daysOfWeek: [] as number[],
     timeSlot: "",
     startDate: "",
@@ -52,19 +50,15 @@ const UserBookingsView = ({
     description: "",
   });
 
-  console.log(recurringRules);
-
   const handleDateClick = (date: Date) => {
     const today = startOfDay(new Date());
     const clickedDate = startOfDay(date);
 
-    // Check if the clicked date is in the past
     if (isBefore(clickedDate, today)) {
       toast.error("Cannot select dates in the past.");
       return;
     }
 
-    // If date is valid, select it
     onDateSelect(date);
   };
 
@@ -125,6 +119,24 @@ const UserBookingsView = ({
     <div className="space-y-6">
       {!isAdvocate && (
         <div className="rounded bg-white p-6 shadow">
+          {/* Calendar Legend */}
+          <div className="flex flex-wrap items-center justify-between mb-4 gap-4">
+            <div className="flex items-center space-x-4 text-sm">
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-green-100 border-2 border-green-400 rounded"></div>
+                <span>Available Slots</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                <span>Selected</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-blue-500 rounded"></div>
+                <span>Today</span>
+              </div>
+            </div>
+          </div>
+
           <div className="flex justify-between mb-4">
             <button
               onClick={onPreviousMonth}
@@ -142,11 +154,12 @@ const UserBookingsView = ({
               Next
             </button>
           </div>
+
           <div className="grid grid-cols-7 gap-2">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div
                 key={day}
-                className="text-center font-semibold text-gray-600"
+                className="text-center font-semibold text-gray-600 py-2"
               >
                 {day}
               </div>
@@ -158,6 +171,15 @@ const UserBookingsView = ({
               const isSelected =
                 date.date && selectedDate && isSameDay(date.date, selectedDate);
 
+              // Skip rendering past dates
+              if (isPastDate) {
+                return (
+                  <div key={index} className="p-3 text-center min-h-[50px]">
+                    {/* Empty cell for past dates */}
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={index}
@@ -166,29 +188,43 @@ const UserBookingsView = ({
                       handleDateClick(date.date);
                     }
                   }}
-                  className={`p-2 text-center rounded relative transition-colors
-                ${isSelected ? "bg-blue-500 text-white" : ""}
-                ${date.isToday ? "border-2 border-blue-500" : ""}
-                ${
-                  date.hasSlots && !isSelected
-                    ? "bg-green-50 border border-green-200"
-                    : ""
-                }
-                  ${
-                    isPastDate && !isSelected ? "bg-gray-100 text-gray-400" : ""
-                  }
-                  ${!date.day ? "cursor-default bg-gray-50" : "cursor-pointer"}
-                  ${
-                    !isPastDate && date.day && !isSelected
-                      ? "hover:bg-gray-100"
-                      : ""
-                  }
-                    ${isPastDate && date.day ? "cursor-not-allowed" : ""}
-                    `}
+                  className={`p-3 text-center rounded-lg relative transition-all duration-200 min-h-[50px] flex flex-col items-center justify-center
+                    ${isSelected ? "bg-blue-500 text-white shadow-lg scale-105" : ""}
+                    ${date.isToday && !isSelected ? "border-2 border-blue-500 bg-blue-50" : ""}
+                    ${
+                      date.hasSlots && !isSelected
+                        ? "bg-green-100 border-2 border-green-400 hover:bg-green-200"
+                        : ""
+                    }
+                    ${!date.day ? "cursor-default" : ""}
+                    ${
+                      date.day && !isSelected
+                        ? "hover:bg-gray-100 cursor-pointer"
+                        : ""
+                    }
+                    ${date.hasSlots ? "transform hover:scale-105" : ""}
+                  `}
                 >
-                  {date.day || ""}
+                  <span className={`font-medium ${isSelected ? "text-white" : ""}`}>
+                    {date.day || ""}
+                  </span>
+                  
+                  {/* Simple slot indicator - just a single dot */}
                   {date.hasSlots && date.day && (
-                    <span className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-green-500 rounded-full" />
+                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          isSelected ? "bg-white" : "bg-green-500"
+                        }`}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Today indicator for non-selected dates */}
+                  {date.isToday && !isSelected && (
+                    <div className="absolute top-1 right-1">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    </div>
                   )}
                 </div>
               );
@@ -197,6 +233,7 @@ const UserBookingsView = ({
         </div>
       )}
 
+      {/* Rest of your existing code for advocate view and slots selection */}
       {isAdvocate && (
         <>
           <div className="rounded bg-white p-6 shadow">
@@ -242,16 +279,12 @@ const UserBookingsView = ({
                   onChange={(e) =>
                     setNewRule({
                       ...newRule,
-                      frequency: e.target.value as
-                        | "daily"
-                        | "weekly"
-                        | "monthly",
+                      frequency: e.target.value as "weekly" | "monthly",
                     })
                   }
                   className="rounded border p-2 w-full"
                 >
                   <option value="weekly">Weekly</option>
-                  <option value="daily">Daily</option>
                   <option value="monthly">Monthly</option>
                 </select>
               </div>
@@ -410,13 +443,12 @@ const UserBookingsView = ({
                   onClick={() => {
                     onSlotSelect(slot);
                   }}
-                  className={`p-2 rounded border
+                  className={`p-3 rounded-lg border-2 transition-all duration-200 font-medium
                     ${
                       selectedSlot?.id === slot.id
-                        ? "bg-blue-500 text-white border-blue-500"
-                        : "bg-gray-100 border-gray-300"
-                    }
-                    hover:bg-blue-100 transition-colors`}
+                        ? "bg-blue-500 text-white border-blue-500 shadow-lg scale-105"
+                        : "bg-green-50 border-green-300 text-green-800 hover:bg-green-100 hover:border-green-400"
+                    }`}
                 >
                   {format(slot.time, "h:mm a")}
                 </button>
@@ -425,15 +457,17 @@ const UserBookingsView = ({
               (slot) =>
                 isSameDay(new Date(slot.date), selectedDate) && slot.isAvailable
             ).length === 0 && (
-              <p className="text-gray-500">No slots available for this date.</p>
+              <p className="text-gray-500 col-span-full text-center py-8">
+                No slots available for this date.
+              </p>
             )}
           </div>
           {selectedSlot && (
             <button
               onClick={onBookSlot}
-              className="mt-4 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+              className="mt-6 w-full rounded-lg bg-blue-500 px-6 py-3 text-white font-medium hover:bg-blue-600 transition-colors duration-200 shadow-md hover:shadow-lg"
             >
-              Book Selected Slot
+              Book Selected Slot - {format(selectedSlot.time, "h:mm a")}
             </button>
           )}
         </div>

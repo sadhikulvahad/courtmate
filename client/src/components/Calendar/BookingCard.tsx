@@ -7,14 +7,15 @@ interface BookingCardProps {
   booking: Booking;
   onPostpone: (booking: Booking) => void;
   onCancel: (bookingId: string) => void;
+  isAdvocate: boolean | null;
 }
 
 const BookingCard: React.FC<BookingCardProps> = ({
   booking,
   onPostpone,
-  onCancel,
+  // onCancel,
+  // isAdvocate,
 }) => {
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "confirmed":
@@ -70,18 +71,18 @@ const BookingCard: React.FC<BookingCardProps> = ({
                 </span>
               </div>
             </div>
-            {booking?.advocate?.name ? (
-              <div
-                className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center ${getStatusColor(
-                  booking?.status
-                )}`}
-              >
-                {getStatusIcon(booking?.status)}
-                <span className="capitalize">{booking?.status}</span>
-              </div>
-            ) : (
+            {/* {booking?.advocate?.name ? ( */}
+            <div
+              className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center ${getStatusColor(
+                booking?.status
+              )}`}
+            >
+              {getStatusIcon(booking?.status)}
+              <span className="capitalize">{booking?.status}</span>
+            </div>
+            {/* ) : (
               ""
-            )}
+            )} */}
           </div>
 
           <div className="mt-3 border-t border-gray-100 pt-3">
@@ -120,23 +121,25 @@ const BookingCard: React.FC<BookingCardProps> = ({
           {/* Actions */}
           {(booking.status === "confirmed" ||
             booking.status === "pending" ||
-            (!booking.advocate?.name &&
-              new Date(booking.date) > new Date())) && (
-            <div className="mt-4 flex justify-end space-x-2">
-              <button
-                onClick={() => onPostpone(booking)}
-                className="px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded hover:bg-blue-100 transition-colors"
-              >
-                Postpone
-              </button>
-              <button
-                onClick={() => onCancel(booking.id)}
-                className="px-3 py-1 bg-red-50 text-red-600 text-sm rounded hover:bg-red-100 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
+            (!booking.advocate?.name && new Date(booking.date) > new Date())) &&
+            booking.status !== "postponed" && (
+              <div className="mt-4 flex justify-end space-x-2">
+                <button
+                  onClick={() => onPostpone(booking)}
+                  className="px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded hover:bg-blue-100 transition-colors"
+                >
+                  Postpone
+                </button>
+                {/* {isAdvocate ? (
+                  <button
+                    onClick={() => onCancel(booking.id)}
+                    className="px-3 py-1 bg-red-50 text-red-600 text-sm rounded hover:bg-red-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                ) : null} */}
+              </div>
+            )}
         </div>
       </div>
     </>

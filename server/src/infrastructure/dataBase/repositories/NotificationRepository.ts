@@ -13,7 +13,7 @@ export class NotificationRepositoryImplements implements NotificationRepository 
     }
 
     async findByRecieverId(id: string): Promise<Notification[]> {
-        const Notificaiton = await NotificationModel.find({ recieverId: id })
+        const Notificaiton = await NotificationModel.find({ recieverId: id }).sort({createdAt : -1})
         const notification = Notificaiton.map((not) => this.newNotification(not))
         return notification
     }

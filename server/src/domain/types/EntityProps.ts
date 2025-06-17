@@ -47,7 +47,7 @@ export type NotificationProps = {
   createdAt: Date;
 }
 
-export type BookingStatus = 'confirmed' | 'pending' | 'cancelled' | 'postponed' | 'expired' ;
+export type BookingStatus = 'confirmed' | 'pending' | 'cancelled' | 'postponed' | 'expired';
 
 export interface BookingProps {
   _id?: string;
@@ -75,29 +75,68 @@ export interface SlotProps {
   date: Date;
   time: Date;
   isAvailable: boolean;
-  status : BookingStatus
+  status: BookingStatus
+  postponeReason ?: string
 }
-export type Frequency = 'daily' | 'weekly' | 'monthly';
+export type Frequency = 'weekly' | 'monthly';
 
 export interface RecurringRuleProps {
   _id?: string;
   advocateId: Types.ObjectId | string;
   description: string;
-  startDate: string; // ISO string, e.g., "2025-01-01"
+  startDate: string;
   endDate: string;
   frequency: Frequency;
-  daysOfWeek: number[]; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  timeSlot: string; // e.g., "09:00"
+  daysOfWeek: number[];
+  timeSlot: string;
   exceptions?: Date[];
 }
 
 export interface PaymentProps {
-  _id ?: string
+  _id?: string
   sessionId: string
-  userId : Types.ObjectId
-  advocateId : Types.ObjectId
+  userId: Types.ObjectId
+  advocateId: Types.ObjectId
   slotId: Types.ObjectId
-  bookId : string
-  amount : number | null
-  status : string
+  bookId: string
+  amount: number | null
+  status: string
+}
+
+export interface Participant {
+  userId: Types.ObjectId;
+  role: string;
+}
+
+export interface ConversationProps {
+  _id?: string | Types.ObjectId;
+  participants: Participant[];
+  startedAt: Date;
+  lastMessage?: Types.ObjectId;
+}
+
+export interface MessageProps {
+  _id?: string;
+  conversationId: Types.ObjectId | string;
+  senderId: Types.ObjectId | string;
+  receiverId: Types.ObjectId | string;
+  content: string;
+  senderName: string;
+  timeStamp: Date;
+  status: "sent" | "delivered" | "read";
+  attachments?: {
+    fileUrl: string;
+    fileName?: string;
+    fileType?: "image" | "file";
+  }[];
+}
+
+export interface ReviewProps {
+  _id?: string
+  userId: Types.ObjectId | string
+  advocateId: Types.ObjectId | string
+  review: string
+  rating: number
+  createdAt: Date
+  isDeleted ?: boolean
 }

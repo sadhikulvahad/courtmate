@@ -123,7 +123,8 @@ const userSchema = new Schema<UserProps>(
         },
         savedAdvocates :{
             type : [Types.ObjectId],
-            default :[]
+            default :[],
+            ref: 'User'
         }
     },
     {timestamps: true}

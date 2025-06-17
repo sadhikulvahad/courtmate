@@ -9,7 +9,8 @@ const slotSchema = new Schema<SlotProps>(
     date: { type: Date, required: true },
     time: { type: Date, required: true },
     isAvailable: { type: Boolean, required: true },
-    status : {type: String, required : true}
+    status : {type: String, required : true},
+    postponeReason: { type: String },
   },
   { timestamps: true },
 );

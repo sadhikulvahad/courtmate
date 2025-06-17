@@ -10,6 +10,7 @@ import { MongooseSlotRepository } from '../../infrastructure/dataBase/repositori
 import { GetBookSlot } from '../../application/useCases/Booking/GetBookSlot';
 import { VerifyRoom } from '../../application/useCases/Booking/VerifyRoom';
 import { Postpone } from '../../application/useCases/Booking/Postpone';
+import { GetBookingThisHourUseCase } from '../../application/useCases/Booking/GetBook';
 const router = Router();
 
 const tokenService = new JwtTokenService()
@@ -23,11 +24,8 @@ const slot = new BookSlot(bookingRepository, slotRepository)
 const getBookingSlot = new GetBookSlot(bookingRepository)
 const verifyRoom = new VerifyRoom(bookingRepository)
 const postpone = new Postpone(bookingRepository, slotRepository)
-const bookingController = new BookingController(slot, getBookingSlot, verifyRoom, postpone)
-
-router.post('/', authMiddleware, (req: Request, res: Response) => {
-    bookingController.bookSlot(req,res)
-})
+const getBook = new GetBookingThisHourUseCase(bookingRepository)
+const bookingController = new BookingController(slot, getBookingSlot, verifyRoom, postpone,getBook)
 
 router.get('/', authMiddleware, (req: Request, res: Response) => {
     bookingController.getBookSlot(req,res)
@@ -41,7 +39,13 @@ router.get('/verify/:roomId', authMiddleware, (req:Request, res: Response) => {
     bookingController.verifyRoom(req,res)
 })
 
+router.get('/getBook', authMiddleware, (req: Request, res: Response) => {
+    bookingController.getBook(req,res)
+})
 
+router.get('/callHistory', authMiddleware, (req:Request, res: Response) => {
+    bookingController.callHistory(req,res)
+})
 
 
 export default router

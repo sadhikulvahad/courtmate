@@ -12,7 +12,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import ProtectedRoute from "./components/protectedRoute";
 import Home from "./pages/Home";
 import ForgotPassword from "./pages/ForgotPassword";
-import DashBoard from "./pages/DashBoard";
+// import DashBoard from "./pages/DashBoard";
 import Users from "./components/ui/admin/Users";
 import Layout from "./components/ui/admin/Layout";
 import Advocates from "./components/ui/admin/Advocates";
@@ -30,6 +30,15 @@ import Services from "./components/ui/user/Services";
 import VideoCallWrapper from "./components/VideoCallWrapper";
 import PaymentPages from "./pages/SuccessOrFailPage";
 import Chat from "./pages/Chat";
+import AdvocateReviewsPage from "./pages/Review&Rating";
+import CaseTracker from "./pages/CaseTrack";
+import SavedAdvocates from "./pages/SavedAdvocates";
+import AboutPage from "./pages/AboutUs";
+import ContactPage from "./pages/ContactUs";
+import AdvocateSettings from "./pages/Settings";
+import MyActivityPage from "./pages/CallHistory";
+import Dashboard from "./components/ui/advocate/Dashboard";
+import AdminDashboard from "./pages/AdminDashBoard";
 // import Loader from "./components/ui/Loading";
 
 export const socket = io("http://localhost:8080", {
@@ -52,7 +61,9 @@ function App() {
 
     socket.on("notification", (data) => {
       console.log("notification", data);
-      toast(data.message);
+      if (data.userId === user.id) {
+        toast(data.message);
+      }
     });
 
     return () => {
@@ -88,14 +99,24 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/adProfile/:id" element={<AdvocateProfile />} />
             <Route path="/booking/:id" element={<BookingPlatform />} />
-            <Route path="/dashboard" element={<DashBoard />} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/success/:status" element={<PaymentPages />} />
             <Route path="/cancel/:status" element={<PaymentPages />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/video/:roomId" element={<VideoCallWrapper />} />
+            <Route path="/savedAdvocate" element={<SavedAdvocates />} />
+            <Route path="/aboutUs" element={<AboutPage />} />
+            <Route path="/contactUs" element={<ContactPage />} />
+            <Route path="/activity" element={<MyActivityPage />} />
+
             <Route element={<Layout />}>
+              <Route
+                path="/dashboard"
+                element={
+                  user?.role === "advocate" ? <Dashboard /> : <AdminDashboard />
+                }
+              />
               <Route path="/users" element={<Users />} />
               <Route path="/AdAdvocates" element={<Advocates />} />
               <Route path="/notification" element={<Notification />} />
@@ -104,6 +125,12 @@ function App() {
                 path="/advocate/appointments"
                 element={<BookingPlatform />}
               />
+              <Route
+                path="/advocate/reviews"
+                element={<AdvocateReviewsPage />}
+              />
+              <Route path="/advocate/cases" element={<CaseTracker />} />
+              <Route path="/advocate/settings" element={<AdvocateSettings />} />
             </Route>
           </Route>
 

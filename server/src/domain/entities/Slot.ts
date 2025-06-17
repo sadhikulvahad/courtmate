@@ -52,6 +52,10 @@ export class Slot {
     return this.props.status
   }
 
+  get postponeReason() : string | undefined {
+    return this.props.postponeReason
+  }
+
   markAsBooked(): void {
     this.props.isAvailable = false;
   }
@@ -60,6 +64,25 @@ export class Slot {
     this.props.isAvailable = true
   }
 
+  markAsExpired(): void {
+    this.props.isAvailable = false;
+    this.props.status = 'expired';
+  }
+
+  postpone(newDate: Date, newTime: Date, reason?: string): void {
+    if (!isValid(newDate) || !isValid(newTime)) {
+      throw new Error('Invalid new date or time');
+    }
+    if (isBefore(newDate, startOfDay(new Date())) || isBefore(newTime, new Date())) {
+      throw new Error('New date and time must be in the future');
+    }
+    this.props.date = newDate;
+    this.props.time = newTime;
+    this.props.status = 'postponed';
+    this.props.postponeReason = reason;
+  }
+
+
   toJSON() {
     return {
       id: this.id,
@@ -67,7 +90,8 @@ export class Slot {
       date: this.date,
       time: this.time,
       isAvailable: this.isAvailable,
-      status: this.status
+      status: this.status,
+      postponeReason : this.postponeReason
     };
   }
 }

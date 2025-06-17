@@ -8,9 +8,7 @@ export class PaymentUsecase {
   async execute(bookingData: PaymentProps): Promise<Payment> {
     try {
       const payment = Payment.create(bookingData);
-      console.log(payment, "p[ayment 2")
       const savedPayment = await this.paymentRepository.create(payment);
-      console.log(savedPayment, "saved apyament")
       return savedPayment;
     } catch (error) {
       throw new Error("Failed to create payment: " + (error as Error).message);

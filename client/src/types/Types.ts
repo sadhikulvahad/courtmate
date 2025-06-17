@@ -146,13 +146,18 @@ export interface Availability {
 
 
 export interface Review {
-  id: number;
-  name: string;
+  id: number | string;
+  review: string;
   rating: number;
   date: string;
-  comment: string;
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+  };
   avatar?: string;
 }
+
 
 
 export interface SimilarAdvocateCardProps {
@@ -162,10 +167,6 @@ export interface SimilarAdvocateCardProps {
 
 export interface AvailabilityTableProps {
   availability: Availability;
-}
-
-export interface ReviewProps {
-  review: Review;
 }
 
 export interface BadgeProps {
@@ -249,6 +250,7 @@ export interface Booking {
   time: Date;
   status: "confirmed" | "pending" | "cancelled" | "postponed";
   notes?: string;
+  roomId?: string;
   postponeReason?: string;
   isAvailable?: boolean
 }
@@ -257,9 +259,11 @@ export interface Booking {
 export interface RecurringRule {
   _id: string;
   description: string;
+  rule?: string
+  interval?: number
   startDate: string;
   endDate: string;
-  frequency: "daily" | "weekly" | "monthly";
+  frequency: "weekly" | "monthly";
   daysOfWeek: number[]; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   timeSlot: string; // e.g., "09:00"
   exceptions?: Date[];
@@ -273,3 +277,28 @@ export interface CalendarDate {
   hasSlots: boolean;
 }
 
+export interface Message {
+  _id: string
+  conversationId: string
+  senderId: string
+  content: string
+  timeStamp: Date
+  status: 'sent' | 'delivered' | 'read'
+  attachments?: {
+    fileUrl: string;
+    fileName?: string;
+    fileType?: "image" | "file";
+  }[] | undefined;
+}
+
+export interface Review {
+  advocateId: string
+  rating: number
+  review: string
+  _id: string
+  userId: {
+    email: string
+    name: string
+    _id: string
+  }
+}

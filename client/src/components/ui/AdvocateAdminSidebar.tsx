@@ -41,15 +41,15 @@ const AdvocateAdminSidebar = () => {
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     ...(user?.role === "advocate"
       ? [
-          { icon: MessageSquare, label: "Messages", path: "/messages" },
+          { icon: MessageSquare, label: "Messages", path: "/chat" },
           {
             icon: Calendar,
             label: "Appointments",
             path: "/advocate/appointments",
           },
-          { icon: Settings, label: "Settings", path: "/settings" },
-          { icon: Star, label: "Ratings and Reviews", path: "/rating" },
-          { icon: Briefcase, label: "Cases", path: "/cases" },
+          { icon: Settings, label: "Settings", path: "/advocate/settings" },
+          { icon: Star, label: "Ratings and Reviews", path: "/advocate/reviews" },
+          { icon: Briefcase, label: "Cases", path: "/advocate/cases" },
           { icon: UserCircle, label: "Profile", path: "/advocate/adProfile" },
         ]
       : []),

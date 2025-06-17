@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "@/components/ui/NavBar";
 import Loader from "@/components/ui/Loading";
@@ -18,16 +18,14 @@ import {
   Bookmark,
   ChevronLeft,
 } from "lucide-react";
-import { findUser } from "@/api/user/userApi";
+import { findUser, GetSavedAdvocates, toggleSaveAdvocate } from "@/api/user/userApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import {
-  Advocate,
-  BadgeProps,
-  RatingStarsProps,
-  Review,
-  ReviewProps,
-} from "@/types/Types";
+import { Advocate, BadgeProps, RatingStarsProps, Review } from "@/types/Types";
+import { toast } from "sonner";
+import { CreateConversation } from "@/api/chatApi";
+import RatingAndReview from "@/components/Review";
+import { findReviews } from "@/api/advocate/profileAPI";
 
 // Reuse the RatingStars component from your list page
 const RatingStars = ({ rating }: RatingStarsProps) => {
@@ -71,166 +69,28 @@ const Badge = ({ children, color = "gray" }: BadgeProps) => {
   );
 };
 
-// Review component
-const ReviewComponent = ({ review }: ReviewProps) => {
-  return (
-    <div className="border-b border-gray-100 pb-4 mb-4 last:border-0">
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-          <img
-            src={review.avatar || "/api/placeholder/40/40"}
-            alt={review.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="flex-1">
-          <div className="flex justify-between items-center mb-1">
-            <h4 className="font-medium text-gray-800">{review.name}</h4>
-            <span className="text-xs text-gray-500">{review.date}</span>
-          </div>
-          <RatingStars rating={review.rating} />
-          <p className="text-sm text-gray-600 mt-2">{review.comment}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// const AvailabilityTable = ({ availability }: AvailabilityTableProps) => {
-//   const days = [
-//     "Monday",
-//     "Tuesday",
-//     "Wednesday",
-//     "Thursday",
-//     "Friday",
-//     "Saturday",
-//     "Sunday",
-//   ];
-
-//   return (
-//     <div className="border rounded-lg overflow-hidden">
-//       <table className="w-full text-sm">
-//         <thead className="bg-gray-50">
-//           <tr>
-//             <th className="px-4 py-2 text-left font-medium text-gray-600">
-//               Day
-//             </th>
-//             <th className="px-4 py-2 text-left font-medium text-gray-600">
-//               Hours
-//             </th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {days.map((day) => {
-//             const dayLower = day.toLowerCase() as keyof typeof availability;
-//             return (
-//               <tr key={day} className="border-t border-gray-100">
-//                 <td className="px-4 py-3 font-medium">{day}</td>
-//                 <td className="px-4 py-3">
-//                   {availability?.[dayLower] ? (
-//                     <span className="text-green-600">
-//                       {availability[dayLower]}
-//                     </span>
-//                   ) : (
-//                     <span className="text-gray-400">Not Available</span>
-//                   )}
-//                 </td>
-//               </tr>
-//             );
-//           })}
-//         </tbody>
-//       </table>
-//     </div>
-//   );
-// };
-
-// const SimilarAdvocateCard = ({
-//   advocate,
-//   onViewProfile,
-// }: SimilarAdvocateCardProps) => {
-//   return (
-//     <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
-//       <div className="flex items-center gap-3 mb-3">
-//         <div className="w-12 h-12 rounded-full overflow-hidden">
-//           <img
-//             src={`${import.meta.env.VITE_API_URL}/uploads/${
-//               advocate.profilePhoto
-//             }`}
-//             alt={advocate.name}
-//             className="w-full h-full object-cover"
-//           />
-//         </div>
-//         <div>
-//           <h4 className="font-semibold text-gray-800">{advocate.name}</h4>
-//           <p className="text-xs text-gray-500">{advocate.typeOfAdvocate}</p>
-//         </div>
-//       </div>
-//       <div className="flex justify-between items-center">
-//         <Badge color="indigo">{advocate.category}</Badge>
-//         {advocate.rating && <RatingStars rating={advocate.rating} />}
-//       </div>
-//       <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
-//         <MapPin size={12} className="text-gray-400" />
-//         <span>
-//           {advocate.address?.city}, {advocate.address?.state}
-//         </span>
-//       </div>
-//       <button
-//         onClick={() => onViewProfile(advocate.id)}
-//         className="w-full mt-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors"
-//       >
-//         View Profile
-//       </button>
-//     </div>
-//   );
-// };
-
-interface RouteParams {
-  id: string;
-  [key: string]: string;
+interface Ad {
+  _id: string;
+  id?: string;
 }
 
 const AdvocateProfile = () => {
-  const { id } = useParams<RouteParams>();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [advocate, setAdvocate] = useState<Advocate | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
-  const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [savedAdvocates, setSavedAdvocates] = useState<string[]>([]);
   // Mock data for similar advocates - in a real app, you'd fetch this
   //   const [similarAdvocates, setSimilarAdvocates] = useState<Advocate[]>([]);
 
   // Mock reviews - in a real app, you'd fetch these
-  const [reviews, setReviews] = useState<Review[]>([
-    //     {
-    //       id: 1,
-    //       name: "Michael Johnson",
-    //       rating: 5,
-    //       date: "2 weeks ago",
-    //       comment:
-    //         "Excellent advocate! Helped me resolve my case efficiently and professionally.",
-    //       avatar: "/api/placeholder/40/40",
-    //     },
-    //     {
-    //       id: 2,
-    //       name: "Sarah Williams",
-    //       rating: 4.5,
-    //       date: "1 month ago",
-    //       comment: "Very knowledgeable and responsive. Would definitely recommend.",
-    //       avatar: "/api/placeholder/40/40",
-    //     },
-    //     {
-    //       id: 3,
-    //       name: "David Martinez",
-    //       rating: 5,
-    //       date: "2 months ago",
-    //       comment:
-    //         "Outstanding service. The advocate was thorough and explained everything clearly.",
-    //       avatar: "/api/placeholder/40/40",
-    //     },
-  ]);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
-  const { token } = useSelector((state: RootState) => state.auth);
+  const { token, user } = useSelector((state: RootState) => state.auth);
+
+  // Check if current advocate is saved
+  const isSaved = id ? savedAdvocates.includes(id) : false;
 
   useEffect(() => {
     const fetchAdvocate = async () => {
@@ -249,15 +109,92 @@ const AdvocateProfile = () => {
     };
 
     fetchAdvocate();
-  }, []);
-  const handleSave = () => {
-    setIsSaved(!isSaved);
-    // In a real app, you'd save this to the user's profile
+  }, [id, token]);
+
+  useEffect(() => {
+    const fetchReviews = async (advocateId: string | undefined) => {
+      if (!advocateId) return;
+
+      try {
+        const response = await findReviews(advocateId);
+        if (response?.status === 200) {
+          setReviews(response.data.reviews);
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+
+    fetchReviews(advocate?.id);
+  }, [advocate?.id]);
+
+  const startChat = async () => {
+    if (!user) {
+      toast.error("Please log in to start a chat");
+      navigate("/signup");
+      return;
+    }
+
+    if (!id) {
+      toast.error("Invalid advocate ID");
+      return;
+    }
+
+    try {
+      const conversation = await CreateConversation(id, "advocate");
+      navigate(
+        `/chat?conversationId=${conversation?.data._id}&advocateId=${conversation?.data.participants[1].userId}`
+      );
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      toast.error("Failed to start chat. Please try again.");
+    }
   };
 
-  //   const handleViewSimilarProfile = (advocateId: string) => {
-  //     navigate(`/advocates/${advocateId}`);
-  //   };
+  const toggleSaved = useCallback(async (advocateId: string) => {
+    try {
+      // Call API
+      const response = await toggleSaveAdvocate(advocateId);
+
+      if (response?.data?.success) {
+        setSavedAdvocates((prev) => {
+          if (prev.includes(advocateId)) {
+            return prev.filter((id) => id !== advocateId);
+          } else {
+            return [...prev, advocateId];
+          }
+        });
+        
+        // Show success message
+        const isCurrentlySaved = savedAdvocates.includes(advocateId);
+        toast.success(isCurrentlySaved ? "Advocate removed from saved list" : "Advocate added to saved list");
+      } else {
+        toast.error("Failed to update saved advocates");
+      }
+    } catch (error) {
+      console.error("Error saving advocate:", error);
+      toast.error("An error occurred while saving advocate");
+    }
+  }, [savedAdvocates]);
+
+  useEffect(() => {
+    const getSavedAdvocates = async () => {
+      try {
+        const response = await GetSavedAdvocates();
+        const saved = response?.data?.advocates || [];
+        console.log(response);
+        // assuming each saved advocate has an `id` or `_id` field
+        const savedIds = saved.map((adv: Ad) => adv._id || adv.id);
+
+        setSavedAdvocates(savedIds);
+      } catch (error) {
+        console.error("Failed to fetch saved advocates:", error);
+        toast.error("Error loading saved advocates");
+      }
+    };
+
+    getSavedAdvocates();
+  }, []);
 
   const getCategoryColor = (category: string): BadgeProps["color"] => {
     const categories: Record<string, BadgeProps["color"]> = {
@@ -357,18 +294,8 @@ const AdvocateProfile = () => {
 
                     {/* Quick actions */}
                     <div className="flex flex-wrap gap-3">
-                      {/* <button className="flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 shadow-sm">
-                        <Calendar size={18} />
-                        <span>Book Consultation</span>
-                      </button>
-
-                      <button className="flex items-center justify-center gap-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-5 rounded-lg transition-colors duration-200">
-                        <MessageSquare size={18} className="text-indigo-600" />
-                        <span>Send Message</span>
-                      </button> */}
-
                       <button
-                        onClick={handleSave}
+                        onClick={() => id && toggleSaved(id)}
                         className={`flex items-center justify-center gap-2 border ${
                           isSaved
                             ? "border-indigo-200 bg-indigo-50 text-indigo-600"
@@ -685,104 +612,14 @@ const AdvocateProfile = () => {
               </div>
             )}
 
-            {/* Reviews tab */}
             {activeTab === "reviews" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-gray-800">
-                      Client Reviews
-                    </h2>
-                    <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
-                      Write a Review
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg mb-6">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-gray-800">
-                        {advocate?.rating ? advocate.rating.toFixed(1) : "4.8"}
-                      </div>
-                      <div className="flex justify-center mb-1">
-                        <RatingStars rating={advocate?.rating || 4.8} />
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        {reviews.length} reviews
-                      </p>
-                    </div>
-
-                    <div className="flex-1">
-                      {/* Rating distribution - this is mock data */}
-                      <div className="flex items-center mb-1">
-                        <span className="w-8 text-xs text-gray-600">5★</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="bg-green-500 h-full"
-                            style={{ width: "75%" }}
-                          ></div>
-                        </div>
-                        <span className="w-8 text-xs text-gray-600 text-right">
-                          75%
-                        </span>
-                      </div>
-                      <div className="flex items-center mb-1">
-                        <span className="w-8 text-xs text-gray-600">4★</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="bg-green-400 h-full"
-                            style={{ width: "15%" }}
-                          ></div>
-                        </div>
-                        <span className="w-8 text-xs text-gray-600 text-right">
-                          15%
-                        </span>
-                      </div>
-                      <div className="flex items-center mb-1">
-                        <span className="w-8 text-xs text-gray-600">3★</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="bg-yellow-400 h-full"
-                            style={{ width: "7%" }}
-                          ></div>
-                        </div>
-                        <span className="w-8 text-xs text-gray-600 text-right">
-                          7%
-                        </span>
-                      </div>
-                      <div className="flex items-center mb-1">
-                        <span className="w-8 text-xs text-gray-600">2★</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="bg-orange-400 h-full"
-                            style={{ width: "3%" }}
-                          ></div>
-                        </div>
-                        <span className="w-8 text-xs text-gray-600 text-right">
-                          3%
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="w-8 text-xs text-gray-600">1★</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="bg-red-400 h-full"
-                            style={{ width: "0%" }}
-                          ></div>
-                        </div>
-                        <span className="w-8 text-xs text-gray-600 text-right">
-                          0%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="divide-y divide-gray-100">
-                    {reviews.map((review) => (
-                      <ReviewComponent key={review.id} review={review} />
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <RatingAndReview
+                advocateId={id}
+                advocateName={advocate?.name}
+                reviews={reviews}
+                setReviews={setReviews}
+                userId={user?.id}
+              />
             )}
 
             {/* Availability tab */}
@@ -797,19 +634,6 @@ const AdvocateProfile = () => {
                     {advocate?.name}. You can book a consultation during these
                     hours.
                   </p>
-
-                  {/* This is mock data - in a real app, you'd fetch this from the API */}
-                  {/* <AvailabilityTable
-                    availability={{
-                      monday: "9:00 AM - 5:00 PM",
-                      tuesday: "9:00 AM - 5:00 PM",
-                      wednesday: "9:00 AM - 5:00 PM",
-                      thursday: "9:00 AM - 5:00 PM",
-                      friday: "9:00 AM - 5:00 PM",
-                      saturday: "10:00 AM - 2:00 PM",
-                      sunday: "",
-                    }}
-                  /> */}
 
                   <div className="mt-6 bg-indigo-50 rounded-lg p-4 border border-indigo-100">
                     <div className="flex items-start">
@@ -857,20 +681,13 @@ const AdvocateProfile = () => {
                     Book Appointment
                   </button>
 
-                  <button className="w-full py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center">
+                  <button
+                    className="w-full py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center"
+                    onClick={startChat}
+                  >
                     <MessageSquare size={18} className="mr-2 text-indigo-600" />
                     Send Message
                   </button>
-
-                  {/* <button className="w-full py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center">
-                    <Phone size={18} className="mr-2 text-green-600" />
-                    Call Now
-                  </button> */}
-
-                  {/* <button className="w-full py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center">
-                    <FileText size={18} className="mr-2 text-blue-600" />
-                    Download Profile
-                  </button> */}
 
                   <button className="w-full py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center">
                     <Share2 size={18} className="mr-2" />
@@ -879,31 +696,6 @@ const AdvocateProfile = () => {
                 </div>
               </div>
             </div>
-
-            {/* Similar advocates card */}
-            {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-5 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-800">
-                  Similar Advocates
-                </h3>
-              </div>
-              <div className="p-5">
-                <div className="space-y-4">
-                  {similarAdvocates?.map((simAdvocate) => (
-                    <SimilarAdvocateCard
-                      key={simAdvocate.id}
-                      advocate={simAdvocate}
-                      onViewProfile={handleViewSimilarProfile}
-                    />
-                  ))}
-                </div>
-
-                <button className="w-full mt-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors flex items-center justify-center">
-                  <Users size={16} className="mr-2" />
-                  View More Advocates
-                </button>
-              </div>
-            </div> */}
           </div>
         </div>
       </div>

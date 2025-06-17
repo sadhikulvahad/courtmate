@@ -102,7 +102,7 @@ export default function LawyerProfile() {
     };
   }, []);
 
-  function safelyParseLanguages(input: any): string[] {
+  function safelyParseLanguages(input: string | string[] | unknown): string[] {
     try {
       if (typeof input === "string") {
         // If it's a JSON string, parse it

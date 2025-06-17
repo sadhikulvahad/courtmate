@@ -1,15 +1,22 @@
-import { findUser, updateUser } from "@/api/user/userApi";
+import { ChevronLeft, Search, Bookmark } from "lucide-react";
 import NavBar from "@/components/ui/NavBar";
 import { RootState } from "@/redux/store";
 import { Advocate } from "@/types/Types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import {
+  findUser,
+  updateUser,
+  GetSavedAdvocates,
+  toggleSaveAdvocate,
+} from "@/api/user/userApi";
 import ResetPasswordModal from "../components/ui/ResetPasswordModal";
 
 export default function UserProfile() {
   const [user, setUser] = useState<Advocate>();
+  const [savedAdvocates, setSavedAdvocates] = useState<Advocate[]>([]);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState<Partial<Advocate>>({});
@@ -20,22 +27,34 @@ export default function UserProfile() {
     (state: RootState) => state.auth
   );
 
+  // Fetch user profile and saved advocates
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserData = async () => {
       try {
-        const response = await findUser(authUser?.id as string, token);
-        if (response.status === 200) {
-          setUser(response.data.user);
-          setEditedUser(response.data.user); // Initialize edited user with current data
+        // Fetch user profile
+        const userResponse = await findUser(authUser?.id as string, token);
+        if (userResponse.status === 200) {
+          setUser(userResponse.data.user);
+          setEditedUser(userResponse.data.user);
         } else {
-          toast.error(response.data.error);
+          toast.error(
+            userResponse.data.error || "Failed to fetch user details"
+          );
         }
+
+        // Fetch saved advocates
+        const advocatesResponse = await GetSavedAdvocates();
+        const saved = advocatesResponse?.data?.advocates || [];
+        setSavedAdvocates(saved);
       } catch (error) {
-        console.log(error);
-        toast.error("Failed to fetch user details");
+        console.error("Error fetching data:", error);
+        toast.error("Failed to fetch user data or saved advocates");
       }
     };
-    fetchUser();
+
+    if (authUser?.id && token) {
+      fetchUserData();
+    }
   }, [authUser?.id, token]);
 
   const handleOpenPasswordModal = () => {
@@ -48,7 +67,6 @@ export default function UserProfile() {
 
   const handleEditToggle = () => {
     if (isEditing) {
-      // Cancel editing - reset form
       setEditedUser(user || {});
     }
     setIsEditing(!isEditing);
@@ -66,7 +84,6 @@ export default function UserProfile() {
 
     try {
       const formData = new FormData();
-
       Object.entries(editedUser).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (value instanceof File) {
@@ -78,7 +95,6 @@ export default function UserProfile() {
       });
 
       const response = await updateUser(formData, token);
-
       if (response?.status === 200) {
         setUser(response.data.userData);
         setIsEditing(false);
@@ -87,149 +103,222 @@ export default function UserProfile() {
         toast.error(response?.data.error || "Failed to update profile");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error updating profile:", error);
       toast.error("An error occurred while updating profile");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const toggleSaved = useCallback(
+    async (advocateId: string) => {
+      try {
+        const response = await toggleSaveAdvocate(advocateId);
+        if (response?.data?.success) {
+          const isCurrentlySaved = savedAdvocates.some(
+            (adv) => adv.id === advocateId
+          );
+          const updated = isCurrentlySaved
+            ? savedAdvocates.filter((adv) => adv.id !== advocateId)
+            : [...savedAdvocates, response.data.advocate];
+
+          setSavedAdvocates(updated);
+          toast.success(
+            isCurrentlySaved
+              ? "Advocate removed from saved list"
+              : "Advocate added to saved list"
+          );
+        } else {
+          toast.error("Failed to update saved advocates");
+        }
+      } catch (error) {
+        console.error("Error saving advocate:", error);
+        toast.error("An error occurred while saving advocate");
+      }
+    },
+    [savedAdvocates]
+  );
+
   return (
     <>
       <NavBar />
-      <div className="flex justify-between p-6">
-        <div className="left-12 top-20">
-          <button
-            className="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center hover:bg-gray-200 transition-all duration-300"
-            onClick={() => navigate(-1)}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Back Button */}
+          <div className="mb-6">
+            <button
+              className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+              onClick={() => navigate(-1)}
             >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </button>
-        </div>
-        <div className="relative w-full max-w-3xl bg-white rounded-lg shadow border border-2 p-8">
-          <div className="flex flex-col md:flex-row md:items-start gap-8">
-            <div className="flex justify-center">
-              <div className="w-40 h-40 bg-gray-500 rounded-full flex items-center justify-center text-white text-6xl font-semibold">
-                {user?.profilePhoto
-                  ? `${import.meta.env.BASE_URL}/uploads/${user?.profilePhoto}`
-                  : user?.name
-                  ? user.name[0]
-                  : "?"}
+              <ChevronLeft size={20} className="mr-1" />
+              <span>Back</span>
+            </button>
+          </div>
+
+          {/* Profile and Saved Advocates Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Profile Section */}
+            <div className="lg:col-span-2 bg-white rounded-lg shadow border border-gray-200 p-8">
+              <div className="flex flex-col md:flex-row md:items-start gap-8">
+                <div className="flex justify-center">
+                  <div className="w-40 h-40 bg-gray-500 rounded-full flex items-center justify-center text-white text-6xl font-semibold">
+                    {user?.profilePhoto ? (
+                      <img
+                        src={`${import.meta.env.VITE_API_URL}/Uploads/${
+                          user.profilePhoto
+                        }`}
+                        alt={user.name}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      user?.name?.[0] || "?"
+                    )}
+                  </div>
+                </div>
+
+                {/* Profile Information */}
+                <div className="flex-1">
+                  <div className="flex justify-between items-center mb-4">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="name"
+                        value={editedUser.name || ""}
+                        onChange={handleInputChange}
+                        className="text-3xl font-semibold border-b border-gray-300 focus:outline-none focus:border-indigo-500"
+                      />
+                    ) : (
+                      <h1 className="text-3xl font-semibold">{user?.name}</h1>
+                    )}
+                    <button
+                      className="text-indigo-600 font-medium hover:underline"
+                      onClick={handleEditToggle}
+                    >
+                      {isEditing ? "Cancel" : "Edit Profile"}
+                    </button>
+                  </div>
+
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={editedUser.email || ""}
+                          disabled={true}
+                          onChange={handleInputChange}
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Phone
+                        </label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={editedUser.phone || ""}
+                          onChange={handleInputChange}
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <button
+                        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors mr-2"
+                        onClick={handleSaveChanges}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Saving..." : "Save Changes"}
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-lg mb-1">{user?.email}</p>
+                      <p className="text-lg mb-6">{user?.phone}</p>
+                      <button
+                        className="text-indigo-600 font-medium hover:underline"
+                        onClick={handleOpenPasswordModal}
+                      >
+                        Change Password
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Profile information */}
-            <div className="flex-1">
-              <div className="flex justify-between items-center mb-4">
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="name"
-                    value={editedUser.name || ""}
-                    onChange={handleInputChange}
-                    className="text-3xl font-semibold border-b border-gray-300 focus:outline-none focus:border-indigo-500"
-                  />
-                ) : (
-                  <h1 className="text-3xl font-semibold">{user?.name}</h1>
-                )}
-                <button
-                  className="text-indigo-600 font-medium hover:underline"
-                  onClick={handleEditToggle}
-                >
-                  {isEditing ? "Cancel" : "Edit Profile"}
-                </button>
-              </div>
-
-              {isEditing ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={editedUser.email || ""}
-                      disabled={true}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Phone
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={editedUser.phone || ""}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <button
-                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors mr-2"
-                    onClick={handleSaveChanges}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Saving..." : "Save Changes"}
-                  </button>
+            {/* Saved Advocates Section */}
+            <div className="bg-white rounded-lg shadow border border-gray-200 p-6 h-fit">
+              <h2 className="text-xl font-bold mb-4">Saved Advocates</h2>
+              {savedAdvocates.length === 0 ? (
+                <div className="text-center py-6">
+                  <Search className="w-12 h-12 mx-auto text-gray-400" />
+                  <p className="text-gray-600 mt-2">No saved advocates found</p>
                 </div>
               ) : (
-                <>
-                  <p className="text-lg mb-1">{user?.email}</p>
-                  <p className="text-lg mb-6">{user?.phone}</p>
-                </>
+                <div className="space-y-4 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                  {savedAdvocates.map((advocate) => (
+                    <div
+                      key={advocate.id}
+                      className="bg-gray-50 rounded-lg shadow hover:shadow-md transition-all duration-300 border border-gray-100 p-4 flex-shrink-0"
+                    >
+                      <div className="relative">
+                        <button
+                          onClick={() => toggleSaved(advocate.id)}
+                          className="absolute top-2 right-2 p-1 rounded-full bg-white shadow hover:shadow-md transition-all duration-200"
+                        >
+                          <Bookmark
+                            size={16}
+                            className={`transition-colors duration-200 ${
+                              savedAdvocates.some(
+                                (adv) => adv.id === advocate.id
+                              )
+                                ? "text-red-500 fill-current"
+                                : "text-gray-400 hover:text-red-400"
+                            }`}
+                          />
+                        </button>
+                        <div className="flex items-start space-x-3">
+                          <img
+                            src={`${import.meta.env.VITE_API_URL}/Uploads/${
+                              advocate.profilePhoto
+                            }`}
+                            alt={advocate.name}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow flex-shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-lg font-semibold truncate">
+                              {advocate.name}
+                            </h3>
+                            <p className="text-sm text-gray-600 truncate">
+                              {advocate.category}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate">
+                              {advocate.email}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
+            </div>
+          </div>
+        </div>
 
-              {!isEditing && (
-                <button
-                  className="text-indigo-600 font-medium mb-10 hover:underline"
-                  onClick={handleOpenPasswordModal}
-                >
-                  Change Password
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="rounded rounded-md border border-2 shadow-xl w-96 max-w-xl md:mr-24 flex flex-col items-center border-gray-200 px-8">
-          <div className="font-poppins p-4 text-xl font-bold relative">
-            Saved Advocates
-          </div>
-          <div className="w-full border border-2 shadow-xl rounded rounded-md p-2">
-            <div className="w-14 h-14 bg-gray-500 rounded-full flex items-center justify-center text-white text-3xl font-semibold">
-              {user?.profilePhoto
-                ? `${import.meta.env.BASE_URL}/uploads/${user?.profilePhoto}`
-                : user?.name
-                ? user.name[0]
-                : "?"}
-            </div>
-          </div>
-        </div>
+        {/* Reset Password Modal */}
+        {authUser && (
+          <ResetPasswordModal
+            isOpen={isPasswordModalOpen}
+            onClose={handleClosePasswordModal}
+            token={token}
+            user={authUser}
+          />
+        )}
       </div>
-
-      {/* Reset Password Modal */}
-      {authUser && (
-        <ResetPasswordModal
-          isOpen={isPasswordModalOpen}
-          onClose={handleClosePasswordModal}
-          token={token}
-          user={authUser}
-        />
-      )}
     </>
   );
 }

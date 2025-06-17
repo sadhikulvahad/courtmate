@@ -11,12 +11,35 @@ export class VerifyRoom {
         }
 
         const booking = await this.bookingRepository.findByRoomId(roomId);
+        console.log(booking)
         if (!booking) {
             return { isAuthorized: false, message: "Booking not found" };
         }
-
         // Check if the user is either the booked user or advocate
-        const isUserAuthorized = booking.userId.toString() === userId || booking.advocateId.toString() === userId;
+        const extractId = (obj: any): string => {
+            if (!obj) return "";
+            // Handle ObjectId instances directly
+            if (obj.toHexString && typeof obj.toHexString === "function") {
+                return obj.toHexString();
+            }
+            // Handle nested _id objects
+            if (obj._id && obj._id.toHexString && typeof obj._id.toHexString === "function") {
+                return obj._id.toHexString();
+            }
+            // Handle string IDs
+            if (typeof obj === "string") return obj;
+            // Handle objects with string _id
+            if (obj._id && typeof obj._id === "string") return obj._id;
+            return "";
+        };
+
+        const bookingUserId = extractId(booking.userId);
+        const bookingAdvocateId = extractId(booking.advocateId);
+
+        const isUserAuthorized =
+            bookingUserId === userId ||
+            bookingAdvocateId === userId;
+
         if (!isUserAuthorized) {
             return { isAuthorized: false, message: "User is not authorized for this booking" };
         }

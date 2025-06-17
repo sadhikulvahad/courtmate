@@ -26,7 +26,7 @@ const AdvocateAvailabilityView = ({
   const [newSlotDate, setNewSlotDate] = useState("");
   const [newSlotTime, setNewSlotTime] = useState("");
   const [newRule, setNewRule] = useState({
-    frequency: "weekly" as "daily" | "weekly" | "monthly",
+    frequency: "weekly" as "weekly" | "monthly",
     daysOfWeek: [] as number[],
     timeSlot: "",
     startDate: "",
@@ -150,13 +150,12 @@ const AdvocateAvailabilityView = ({
               onChange={(e) =>
                 setNewRule({
                   ...newRule,
-                  frequency: e.target.value as "daily" | "weekly" | "monthly",
+                  frequency: e.target.value as "weekly" | "monthly",
                 })
               }
               className="rounded border p-2 w-full"
             >
               <option value="weekly">Weekly</option>
-              <option value="daily">Daily</option>
               <option value="monthly">Monthly</option>
             </select>
           </div>

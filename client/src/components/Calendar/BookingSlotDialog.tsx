@@ -36,7 +36,6 @@ const BookingSlotDialog: React.FC<bookingProps> = ({
   };
 
   const handleProceedToPayment = () => {
-    console.log('hey')
     onProceedToPayment()
   };
 

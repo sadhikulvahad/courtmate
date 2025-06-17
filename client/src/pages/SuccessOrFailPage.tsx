@@ -146,7 +146,7 @@ const CancelPage = () => (
 
 const PaymentPages = () => {
   const { status } = useParams<{ status: string }>();
-  const [currentPage, setCurrentPage] = useState<string | undefined>();
+  const [currentPage, setCurrentPage] = useState<string | undefined>('success');
   const navigate = useNavigate();
   useEffect(() => {
     setCurrentPage(status);

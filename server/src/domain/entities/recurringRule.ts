@@ -20,7 +20,7 @@ export class RecurringRule {
     if (new Date(props.startDate) > new Date(props.endDate)) {
       throw new Error('End date must be after start date');
     }
-    if (!['daily', 'weekly', 'monthly'].includes(props.frequency)) {
+    if (!['weekly', 'monthly'].includes(props.frequency)) {
       throw new Error('Invalid frequency');
     }
     if (props.daysOfWeek.some((day) => day < 0 || day > 6)) {

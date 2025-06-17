@@ -18,7 +18,7 @@ export class paymentController {
     async createCheckoutSessionController(req: Request, res: Response) {
         try {
             const { advocateId, selectedSlotId } = req.body
-            const user = req.user as { id: string; role: string; name: string } | undefined;
+            const user = req.user as { id: string; role: string; name: string; email: string } | undefined;
             const url = await this.createCheckoutSessionUseCase.execute(user, advocateId, selectedSlotId); // Pass user if needed
             res.status(200).json({ url });
         } catch (err) {
@@ -56,12 +56,12 @@ export class paymentController {
                     session?.metadata?.advocate_id!,
                     session?.metadata?.slotId!,
                     session?.metadata?.user_id!,
+                    session.metadata.user_name!,
                     "Booked via user interface",
                     user,
                     notificationService
                 )
-                console.log(booking.id, " booking 1")
-                console.log(session, 'session')
+
                 const bookingData: PaymentProps = {
                     sessionId: session.id,
                     userId: new Types.ObjectId(session.metadata.user_id),
@@ -72,11 +72,7 @@ export class paymentController {
                     status: session.payment_status,
                 };
 
-                console.log(bookingData, 'bookingdata')
-
                 const payment = await this.PaymentUsecase.execute(bookingData)
-
-                console.log(payment, 'payment')
 
             } catch (error) {
                 return res.status(500).json({ success: false, error: 'Failed to book slot' })

@@ -115,9 +115,9 @@ export const postPoneBooking = async (date: string, time: string, reason: string
   }
 }
 
-export const createPayment = async (advocateId: string | undefined, selectedSlotId : string | undefined) => {
+export const createPayment = async (advocateId: string | undefined, selectedSlotId: string | undefined) => {
   try {
-    const response = await axiosInstance.post('/payment/create-checkout-session',{advocateId, selectedSlotId})
+    const response = await axiosInstance.post('/payment/create-checkout-session', { advocateId, selectedSlotId })
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -136,7 +136,7 @@ export const createPayment = async (advocateId: string | undefined, selectedSlot
 
 export const verifyRoomBooking = async (roomId: string, token: string | null) => {
   try {
-    const response = await axiosInstance.get(`/bookings/verify/${roomId}`, {
+    const response = await axiosInstance.get(`/booking/verify/${roomId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response;
@@ -154,3 +154,54 @@ export const verifyRoomBooking = async (roomId: string, token: string | null) =>
     }
   }
 };
+
+
+export const getBook = async (advocateId: string | null, userId: string | null) => {
+  try {
+    const response = await axiosInstance.get('/booking/getBook', {
+      params: {
+        advocateId,
+        userId,
+      },
+    });
+    return response;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Axios error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+      throw error;
+    } else {
+      console.error("Unknown error:", error);
+      throw error;
+    }
+  }
+};
+
+
+export const postponeSlot = async (date: string, time: string, reason: string | undefined, slotId: string, token: string | null) => {
+   try {
+    const response = await axiosInstance.put(`/slot/${slotId}`, {
+      date,
+      time,
+      reason
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Axios error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+      throw error;
+    } else {
+      console.error("Unknown error:", error);
+      throw error;
+    }
+  }
+}

@@ -35,11 +35,11 @@ import {
   addCustomSlot,
   addRecurringRule,
   createPayment,
-  // bookSlot,
   getBookings,
   getRecurringRules,
   getSlots,
   postPoneBooking,
+  postponeSlot,
 } from "@/api/Booking";
 import { toast } from "sonner";
 import axios from "axios";
@@ -150,7 +150,7 @@ const AdvocateProfilePage = () => {
       const advocateId = id ? id : (user?.id as string);
 
       try {
-        setLoading(false);
+        setLoading(true); // Changed from false to true
         const data = await findUser(advocateId, token);
         setAdvocate(data.data.user);
 
@@ -158,17 +158,18 @@ const AdvocateProfilePage = () => {
         setRecurringRules(rules?.data.rules);
 
         const monthStart = startOfMonth(currentMonth);
-        // const monthEnd = endOfMonth(currentMonth);
         const slots = await getSlots(
           advocateId,
           format(monthStart, "yyyy-MM-dd"),
           token
         );
 
+        // Set available slots first
         setAvailableSlots(slots.data);
 
-        generateCalendarDates(currentMonth);
-        console.log(isAdvocate);
+        // Then generate calendar dates with the slots data
+        generateCalendarDates(currentMonth, slots.data);
+
         let bookings;
         if (user?.role === "user") {
           bookings = await getBookings(user.id, token);
@@ -177,11 +178,9 @@ const AdvocateProfilePage = () => {
           const formattedMonth = `${currentMonth.getFullYear()}-${String(
             currentMonth.getMonth() + 1
           ).padStart(2, "0")}`;
-          console.log(user.id);
           bookings = await getSlots(user.id, formattedMonth, token);
           setUserBookings(bookings?.data);
         }
-        console.log(bookings, "hehehe");
       } catch (error) {
         console.error("Error fetching advocate data:", error);
       } finally {
@@ -192,7 +191,10 @@ const AdvocateProfilePage = () => {
     fetchAdvocate();
   }, [id, token, user, currentMonth]);
 
-  const generateCalendarDates = (month: Date) => {
+  const generateCalendarDates = (
+    month: Date,
+    slots: Slot[] = availableSlots
+  ) => {
     const monthStart = startOfMonth(month);
     const monthEnd = endOfMonth(month);
     const startDate = startOfDay(monthStart);
@@ -201,6 +203,7 @@ const AdvocateProfilePage = () => {
 
     const dayOfWeek = monthStart.getDay();
     const daysFromPrevMonth = Array(dayOfWeek).fill(null);
+
     const dates: CalendarDate[] = [
       ...daysFromPrevMonth.map(() => ({
         day: null,
@@ -209,15 +212,20 @@ const AdvocateProfilePage = () => {
         isSelected: false,
         hasSlots: false,
       })),
-      ...daysInMonth.map((date) => ({
-        day: date.getDate(),
-        date: date,
-        isToday: isToday(date),
-        isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
-        hasSlots: availableSlots.some(
+      ...daysInMonth.map((date) => {
+        // Check if this date has available slots
+        const hasAvailableSlots = slots.some(
           (slot) => isSameDay(new Date(slot.date), date) && slot.isAvailable
-        ),
-      })),
+        );
+
+        return {
+          day: date.getDate(),
+          date: date,
+          isToday: isToday(date),
+          isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
+          hasSlots: hasAvailableSlots,
+        };
+      }),
     ];
 
     const totalCells = 42;
@@ -246,18 +254,46 @@ const AdvocateProfilePage = () => {
     setSelectedSlot(null);
   };
 
-  const handlePreviousMonth = () => {
+  const handlePreviousMonth = async () => {
     const prevMonth = new Date(currentMonth);
     prevMonth.setMonth(prevMonth.getMonth() - 1);
     setCurrentMonth(prevMonth);
-    generateCalendarDates(prevMonth);
+
+    // Fetch slots for the new month
+    const advocateId = id ? id : (user?.id as string);
+    try {
+      const slots = await getSlots(
+        advocateId,
+        format(startOfMonth(prevMonth), "yyyy-MM-dd"),
+        token
+      );
+      setAvailableSlots(slots.data);
+      generateCalendarDates(prevMonth, slots.data);
+    } catch (error) {
+      console.error("Error fetching slots for previous month:", error);
+      generateCalendarDates(prevMonth, []);
+    }
   };
 
-  const handleNextMonth = () => {
+  const handleNextMonth = async () => {
     const nextMonth = new Date(currentMonth);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     setCurrentMonth(nextMonth);
-    generateCalendarDates(nextMonth);
+
+    // Fetch slots for the new month
+    const advocateId = id ? id : (user?.id as string);
+    try {
+      const slots = await getSlots(
+        advocateId,
+        format(startOfMonth(nextMonth), "yyyy-MM-dd"),
+        token
+      );
+      setAvailableSlots(slots.data);
+      generateCalendarDates(nextMonth, slots.data);
+    } catch (error) {
+      console.error("Error fetching slots for next month:", error);
+      generateCalendarDates(nextMonth, []);
+    }
   };
 
   const handleSlotSelect = (slot: Slot) => {
@@ -290,42 +326,15 @@ const AdvocateProfilePage = () => {
     }
 
     setBookingSlotDialog(true);
-    // try {
-    //   const booking = await bookSlot(
-    //     advocate!.id,
-    //     selectedSlot.id,
-    //     user.id,
-    //     "Booked via user interface",
-    //     token
-    //   );
-
-    //   setUserBookings([booking.data, ...userBookings]);
-
-    //   setAvailableSlots(
-    //     availableSlots.map((slot) =>
-    //       slot.id === selectedSlot.id ? { ...slot, isAvailable: false } : slot
-    //     )
-    //   );
-
-    //   toast.success("Appointment booked successfully!"); // Fix: was toast.error
-    //   setSelectedSlot(null);
-    //   generateCalendarDates(currentMonth);
-    // } catch (error: unknown) {
-    //   console.error("Booking error details:", error);
-    //   toast.error(`Failed to book slot, "Please try again"}`);
-    // }
   };
 
   const handleProceedToPayment = async () => {
     try {
+      const response = await createPayment(advocate?.id, selectedSlot?.id);
 
-      const response = await createPayment(advocate?.id, selectedSlot?.id)
-
-      console.log(response)
-
-      const data = response.data.url
+      const data = response.data.url;
       if (data.url) {
-        window.location.href = data.url; 
+        window.location.href = data.url;
       } else {
         throw new Error("Stripe session URL not found");
       }
@@ -353,11 +362,13 @@ const AdvocateProfilePage = () => {
       };
       const newSlot = await addCustomSlot(advocate!.id, slot, token);
       if (newSlot.status === 201) {
-        setAvailableSlots([...availableSlots, newSlot.data]);
-        generateCalendarDates(currentMonth);
-        toast.success("Slot created Successfully");
+        const updatedSlots = [...availableSlots, newSlot.data];
+        setAvailableSlots(updatedSlots);
+        // Regenerate calendar with updated slots
+        generateCalendarDates(currentMonth, updatedSlots);
+        toast.success("Slot created successfully");
       } else {
-        toast.error("Slot created Successfully");
+        toast.error("Failed to create slot");
       }
     } catch (error) {
       console.error("Error adding custom slot:", error);
@@ -401,8 +412,10 @@ const AdvocateProfilePage = () => {
           monthStart,
           monthEnd
         );
-        setAvailableSlots([...availableSlots, ...newSlots]);
-        generateCalendarDates(currentMonth);
+        const updatedSlots = [...availableSlots, ...newSlots];
+        setAvailableSlots(updatedSlots);
+        // Regenerate calendar with updated slots
+        generateCalendarDates(currentMonth, updatedSlots);
       } else {
         toast.error("Something went wrong");
       }
@@ -442,13 +455,24 @@ const AdvocateProfilePage = () => {
     }
 
     try {
-      const response = await postPoneBooking(
-        date,
-        time,
-        reason!,
-        selectedBooking.id,
-        token
-      );
+      let response;
+      if (isAdvocate) {
+        response = await postponeSlot(
+          date,
+          time,
+          reason,
+          selectedBooking.id,
+          token
+        );
+      } else {
+        response = await postPoneBooking(
+          date,
+          time,
+          reason!,
+          selectedBooking.id,
+          token
+        );
+      }
 
       if (response.status === 200) {
         setUserBookings(

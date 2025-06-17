@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET!, {
 
 export class PaymentService {
     async createCheckoutSession(
-        user: { id: string; name: string; role: string } | undefined,
+        user: { id: string; name: string; role: string; email : string } | undefined,
         advocate: User | null, selectedSlotId : string
     ): Promise<{ url: string; id: string }> {
         const session = await stripe.checkout.sessions.create({
@@ -28,10 +28,10 @@ export class PaymentService {
             mode: "payment",
             success_url: `${process.env.REDIRECT_URL}/success/${"success"}`,
             cancel_url: `${process.env.REDIRECT_URL}/cancel/${"fail"}`,
-            customer_email: user?.name ?? undefined,
+            // customer_name: user?.name ?? undefined,
             metadata: {
                 user_id: user?.id || "guest",
-                user_email: user?.name || "Guest User",
+                user_name: user?.name || "Guest User",
                 advocate_id: advocate?.id || "unknown",
                 advocate_name: advocate?.name ?? "unknown",
                 slotId : selectedSlotId

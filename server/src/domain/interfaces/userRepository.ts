@@ -18,4 +18,5 @@ export interface UserRepository {
     findByEmail(email: string): Promise<User | null>
     save(user: User): Promise<User>
     update(_id: string, updates: Partial<User>): Promise<User>
+    getSavedAdvocates(userId: string): Promise<User[]>
 }

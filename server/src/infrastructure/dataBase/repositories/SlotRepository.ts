@@ -11,16 +11,14 @@ export class MongooseSlotRepository implements SlotRepository {
     const slots = await SlotModel.find({
       advocateId: objectId,
       date: { $gte: startDate, $lte: endDate },
-    }).lean().exec();
+    }).sort({ createdAt: -1 }).lean().exec();
     return slots.map((slot) => Slot.fromDB(slot));
   }
 
   async create(slot: Slot): Promise<Slot> {
     try {
       const newSlot = new SlotModel(slot.toJSON());
-      console.log(newSlot)
       const saved = await newSlot.save();
-      console.log(saved)
       return Slot.fromDB(saved);
     } catch (err: any) {
       if (err.code === 11000 && err.keyPattern?._id) {
@@ -30,16 +28,29 @@ export class MongooseSlotRepository implements SlotRepository {
     }
   }
 
-  async update(slot: Slot): Promise<Slot> {
-    const slotData = slot.toJSON();
+  async update(slotId: string, updates: Partial<Slot['props']>): Promise<Slot> {
     const updatedSlot = await SlotModel.findByIdAndUpdate(
-      slotData.id,
-      { isAvailable: slotData.isAvailable },
+      slotId,
+      updates,
       { new: true }
     ).exec();
+
     if (!updatedSlot) {
-      throw new Error('Slot not found');
+      throw new Error("Slot not found");
     }
+
     return Slot.fromDB(updatedSlot);
+  }
+
+  async getAllSlots(): Promise<Slot[]> {
+    const slots = await SlotModel.find().lean()
+    return slots.map(slot => Slot.fromDB(slot))
+  }
+
+  async findById(id: string): Promise<Slot | null> {
+    const slot = await SlotModel.findById(id).lean()
+    if (!slot) return null;
+
+    return Slot.fromDB(slot);
   }
 }

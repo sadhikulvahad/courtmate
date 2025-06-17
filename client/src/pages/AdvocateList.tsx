@@ -18,6 +18,8 @@ import { useNavigate } from "react-router-dom";
 import SearchBar from "@/components/SearchBar";
 import Loader from "@/components/ui/Loading";
 import Pagination from "@/components/ui/Pagination";
+import { GetSavedAdvocates, toggleSaveAdvocate } from "@/api/user/userApi";
+import { toast } from "sonner";
 
 const RatingStars = ({ rating }: { rating: number }) => {
   return (
@@ -63,6 +65,11 @@ const Badge = ({ children, color = "gray" }: BadgeProps) => {
     </span>
   );
 };
+
+interface Ad {
+  _id: string;
+  id?: string;
+}
 
 const AdvocateList = () => {
   // Backend filtering approach - only store what comes from API
@@ -127,7 +134,6 @@ const AdvocateList = () => {
   const fetchAdvocates = useCallback(async () => {
     setIsLoading(true);
     try {
-
       const response = await getAllUserAdvocates(apiParams);
 
       setAdvocates(response.advocates || []);
@@ -142,6 +148,25 @@ const AdvocateList = () => {
       setIsLoading(false);
     }
   }, [apiParams]);
+
+  useEffect(() => {
+    const getSavedAdvocates = async () => {
+      try {
+        const response = await GetSavedAdvocates();
+        const saved = response?.data?.advocates || [];
+        console.log(response);
+        // assuming each saved advocate has an `id` or `_id` field
+        const savedIds = saved.map((adv: Ad) => adv._id || adv.id);
+
+        setSavedAdvocates(savedIds);
+      } catch (error) {
+        console.error("Failed to fetch saved advocates:", error);
+        toast.error("Error loading saved advocates");
+      }
+    };
+
+    getSavedAdvocates();
+  }, []);
 
   // Debounced search state
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
@@ -170,6 +195,7 @@ const AdvocateList = () => {
     activeTab,
     sortOption,
     currentFilters,
+    fetchAdvocates,
   ]);
 
   const handleFilterChange = useCallback((filters: FilterOptions) => {
@@ -197,14 +223,26 @@ const AdvocateList = () => {
     setSortOption(sort);
   }, []);
 
-  const toggleSaved = useCallback((advocateId: string) => {
-    setSavedAdvocates((prev) => {
-      if (prev.includes(advocateId)) {
-        return prev.filter((id) => id !== advocateId);
+  const toggleSaved = useCallback(async (advocateId: string) => {
+    try {
+      // Call API
+      const response = await toggleSaveAdvocate(advocateId);
+
+      if (response?.data?.success) {
+        setSavedAdvocates((prev) => {
+          if (prev.includes(advocateId)) {
+            return prev.filter((id) => id !== advocateId);
+          } else {
+            return [...prev, advocateId];
+          }
+        });
       } else {
-        return [...prev, advocateId];
+        toast.error("Failed to update saved advocates");
       }
-    });
+    } catch (error) {
+      console.error("Error saving advocate:", error);
+      toast.error("An error occurred while saving advocate");
+    }
   }, []);
 
   const getCategoryColor = useCallback((category: string) => {

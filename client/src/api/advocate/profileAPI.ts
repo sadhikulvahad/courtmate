@@ -45,3 +45,92 @@ export const profileUpdate = async (form: FormData, token: string): Promise<Axio
         }
     }
 }
+
+export const findReviews = async (advocateId: string | undefined) => {
+    try {
+        const response = await axiosInstance.get('/review', { params: { advocateId } })
+        return response
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Error from Get reviews API", error);
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
+    }
+}
+
+export const createReview = async ({
+    advocateId,
+    userId,
+    review,
+    rating,
+}: {
+    advocateId: string | undefined
+    userId: string | undefined
+    review: string;
+    rating: number;
+}) => {
+    try {
+        const response = await axiosInstance.post("/review", {
+            advocateId,
+            userId,
+            review: review,
+            rating: rating,
+        });
+        return response
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Error from Create reviews API", error);
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
+    }
+}
+
+
+export const updateReview = async ({
+    reviewId,
+    review,
+    rating
+}: {
+    reviewId: string | number
+    review: string
+    rating: number
+}) => {
+    try {
+        const response = await axiosInstance.put("/review", {
+            reviewId,
+            review: review,
+            rating: rating,
+        });
+        return response
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Error from Create reviews API", error);
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
+    }
+}
+
+export const deleteReview = async (reviewId: string | undefined) => {
+    try {
+        console.log(reviewId)
+        const response = await axiosInstance.delete(`/review/${reviewId}`);
+        return response;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Error from Delete Review API", error);
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
+    }
+};
