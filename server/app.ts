@@ -21,6 +21,10 @@ import paymentRouoter from './src/presentation/routes/paymentRouter'
 import conversationRoutes from './src/presentation/routes/conversationRoutes'
 import reviewRoutes from './src/presentation/routes/reviewRouter'
 import chatFileRoutes from './src/presentation/routes/chatFileRoutes';
+import caseRouter from './src/presentation/routes/caseRouter'
+import subscription from './src/presentation/routes/subscriptionRoutes'
+import adminDashboard from './src/presentation/routes/adminDashboardRoutes'
+import advocateDashboard from './src/presentation/routes/advocateDashboardRoutes'
 import path from "path";
 import { Server } from 'socket.io'
 import http from 'http'
@@ -29,7 +33,6 @@ import { ConversationRepositoryImplements } from './src/infrastructure/dataBase/
 import { CreateMessageUseCase } from "./src/application/useCases/messages/CreateMessage";
 import { MessageProps } from "./src/domain/types/EntityProps";
 import userModel from "./src/infrastructure/dataBase/models/userModel";
-import { chatMediaUpload } from './src/infrastructure/web/multer';
 
 const messageRepository = new MessageRepositoryImplements();
 const conversationRepository = new ConversationRepositoryImplements()
@@ -197,6 +200,10 @@ app.use('/api/payment', paymentRouoter)
 app.use('/api/conversation', conversationRoutes)
 app.use('/api/review', reviewRoutes)
 app.use('/api/chat', chatFileRoutes);
+app.use('/api/case', caseRouter)
+app.use('/api/subscribe', subscription)
+app.use('/api/advocateDashboard', advocateDashboard)
+app.use('/api/adminDashoard', adminDashboard)
 
 // app.post('/api/upload', chatMediaUpload, (req, res) => {
 //   try {

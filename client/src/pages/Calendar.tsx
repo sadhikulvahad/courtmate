@@ -361,18 +361,26 @@ const AdvocateProfilePage = () => {
         time: timeSlot,
       };
       const newSlot = await addCustomSlot(advocate!.id, slot, token);
+      console.log(newSlot);
       if (newSlot.status === 201) {
         const updatedSlots = [...availableSlots, newSlot.data];
         setAvailableSlots(updatedSlots);
-        // Regenerate calendar with updated slots
         generateCalendarDates(currentMonth, updatedSlots);
         toast.success("Slot created successfully");
       } else {
-        toast.error("Failed to create slot");
+        toast.error(newSlot.data.message || "Failed to create slot");
       }
     } catch (error) {
       console.error("Error adding custom slot:", error);
-      toast.error("Failed to add slot. Please try again.");
+
+      if (axios.isAxiosError(error)) {
+        const errorMessage =
+          error.response?.data?.message ||
+          "Failed to add slot. Please try again.";
+        toast.error(errorMessage);
+      } else {
+        toast.error("Failed to add slot. Please try again.");
+      }
     }
   };
 

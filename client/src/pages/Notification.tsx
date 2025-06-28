@@ -5,8 +5,8 @@ import {
 } from "@/api/admin/notification";
 import SearchBar from "@/components/SearchBar";
 import { RootState } from "@/redux/store";
-import {
-  Notificaiton,
+import type {
+  Notification,
   NotificationTabs,
   NotificationType,
 } from "@/types/Types";
@@ -24,7 +24,7 @@ import { useSelector } from "react-redux";
 import { toast } from "sonner";
 
 interface NotificationItemProps {
-  notification: Notificaiton;
+  notification: Notification;
   markAsRead: (id: string) => void;
 }
 
@@ -106,7 +106,7 @@ const Notification = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<NotificationTabs>("all");
   const [activeSubTab, setActiveSubTab] = useState<NotificationType>("All");
-  const [notifications, setNotifications] = useState<Notificaiton[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const { user, token } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
@@ -120,7 +120,7 @@ const Notification = () => {
   }, [token, user?.id]);
 
   const filteredNotifications = notifications.filter(
-    (notification: Notificaiton) => {
+    (notification: Notification) => {
       // Filter by search term
       const matchesSearch =
         // notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -144,7 +144,7 @@ const Notification = () => {
 
   const markAsRead = async (id: string) => {
     const notification = notifications.filter(
-      (notification: Notificaiton) => notification.id === id
+      (notification: Notification) => notification.id === id
     );
     if (notification[0].read) {
       return;
@@ -152,7 +152,7 @@ const Notification = () => {
       const response = await markAsReadNotificaiton(token, id);
       if (response?.data.success) {
         setNotifications(
-          notifications.map((notification: Notificaiton) =>
+          notifications.map((notification: Notification) =>
             notification.id === id
               ? { ...notification, read: true }
               : notification
@@ -167,7 +167,7 @@ const Notification = () => {
 
   const markAllAsRead = async () => {
     const notification = notifications.filter(
-      (notification: Notificaiton) => !notification.read
+      (notification: Notification) => !notification.read
     );
     if (!notification.length) {
       return;
@@ -175,7 +175,7 @@ const Notification = () => {
       const response = await markAllAsReadNotification(token, user?.id);
       if (response?.data.success) {
         setNotifications(
-          notifications.map((notification: Notificaiton) => ({
+          notifications.map((notification: Notification) => ({
             ...notification,
             read: true,
           }))
@@ -304,7 +304,7 @@ const Notification = () => {
         <div className="mt-4 border border-gray-200 rounded-md overflow-hidden max-h-96 overflow-y-auto">
           {filteredNotifications.length > 0 ? (
             <div>
-              {filteredNotifications.map((notification: Notificaiton) => (
+              {filteredNotifications.map((notification: Notification) => (
                 <NotificationItem
                   key={notification.id}
                   notification={notification}

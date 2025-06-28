@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { AddRecurringRule } from '../../application/useCases/recurringRule/AddRecurringRule';
-import { isBefore, isValid, startOfDay } from 'date-fns';
 import { GetRecurringRulesByAdvocate } from '../../application/useCases/recurringRule/GetRecurringRule';
 
 export class RecurringRuleController {

@@ -11,24 +11,19 @@ export class VerifyRoom {
         }
 
         const booking = await this.bookingRepository.findByRoomId(roomId);
-        console.log(booking)
+
         if (!booking) {
             return { isAuthorized: false, message: "Booking not found" };
         }
-        // Check if the user is either the booked user or advocate
         const extractId = (obj: any): string => {
             if (!obj) return "";
-            // Handle ObjectId instances directly
             if (obj.toHexString && typeof obj.toHexString === "function") {
                 return obj.toHexString();
             }
-            // Handle nested _id objects
             if (obj._id && obj._id.toHexString && typeof obj._id.toHexString === "function") {
                 return obj._id.toHexString();
             }
-            // Handle string IDs
             if (typeof obj === "string") return obj;
-            // Handle objects with string _id
             if (obj._id && typeof obj._id === "string") return obj._id;
             return "";
         };
@@ -44,7 +39,6 @@ export class VerifyRoom {
             return { isAuthorized: false, message: "User is not authorized for this booking" };
         }
 
-        // Combine date and time for validation
         const bookedDate = new Date(booking.date);
         const bookedTime = new Date(booking.time);
         const bookedDateTime = new Date(
@@ -56,29 +50,23 @@ export class VerifyRoom {
             bookedTime.getSeconds()
         );
 
-        // Current time in IST
         const now = new Date();
-        // Convert to IST (optional, if stored in UTC)
-        const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
-        const nowIST = new Date(now.getTime() + istOffset);
+        const istOffset = 5.5 * 60 * 60 * 1000; 
 
-        // Define time window (30-minute slot, 5-minute buffer before/after)
-        const slotDuration = 30 * 60 * 1000; // 30 minutes
-        const bufferBefore = 5 * 60 * 1000; // 5 minutes before
-        const bufferAfter = 5 * 60 * 1000; // 5 minutes after
+        const bufferBefore = 5 * 60 * 1000;
+        const accessDuration = 60 * 60 * 1000;
         const startTime = new Date(bookedDateTime.getTime() - bufferBefore);
-        const endTime = new Date(bookedDateTime.getTime() + slotDuration + bufferAfter);
+        const endTime = new Date(bookedDateTime.getTime() + accessDuration);
 
-        // Format times in IST for error message
-        const formatOptions: Intl.DateTimeFormatOptions = {
-            timeZone: "Asia/Kolkata",
-            dateStyle: "medium",
-            timeStyle: "short",
-        };
-        const startTimeStr = startTime.toLocaleString("en-US", formatOptions);
-        const endTimeStr = endTime.toLocaleString("en-US", formatOptions);
+        if (now < startTime || now > endTime) {
+            const formatOptions: Intl.DateTimeFormatOptions = {
+                timeZone: "Asia/Kolkata",
+                dateStyle: "medium",
+                timeStyle: "short",
+            };
+            const startTimeStr = startTime.toLocaleString("en-US", formatOptions);
+            const endTimeStr = endTime.toLocaleString("en-US", formatOptions);
 
-        if (nowIST < startTime || nowIST > endTime) {
             return {
                 isAuthorized: false,
                 message: `Access denied: The video call is only available between ${startTimeStr} and ${endTimeStr} IST`,

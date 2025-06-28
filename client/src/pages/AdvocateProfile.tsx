@@ -18,7 +18,11 @@ import {
   Bookmark,
   ChevronLeft,
 } from "lucide-react";
-import { findUser, GetSavedAdvocates, toggleSaveAdvocate } from "@/api/user/userApi";
+import {
+  findUser,
+  GetSavedAdvocates,
+  toggleSaveAdvocate,
+} from "@/api/user/userApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { Advocate, BadgeProps, RatingStarsProps, Review } from "@/types/Types";
@@ -81,15 +85,9 @@ const AdvocateProfile = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [savedAdvocates, setSavedAdvocates] = useState<string[]>([]);
-  // Mock data for similar advocates - in a real app, you'd fetch this
-  //   const [similarAdvocates, setSimilarAdvocates] = useState<Advocate[]>([]);
-
-  // Mock reviews - in a real app, you'd fetch these
   const [reviews, setReviews] = useState<Review[]>([]);
-
   const { token, user } = useSelector((state: RootState) => state.auth);
 
-  // Check if current advocate is saved
   const isSaved = id ? savedAdvocates.includes(id) : false;
 
   useEffect(() => {
@@ -151,31 +149,69 @@ const AdvocateProfile = () => {
     }
   };
 
-  const toggleSaved = useCallback(async (advocateId: string) => {
-    try {
-      // Call API
-      const response = await toggleSaveAdvocate(advocateId);
+  const handleShare = async () => {
+    const shareText = `Advocate Profile: Check this out!\n\n${window.location.href}`;
+    const encodedText = encodeURIComponent(shareText);
 
-      if (response?.data?.success) {
-        setSavedAdvocates((prev) => {
-          if (prev.includes(advocateId)) {
-            return prev.filter((id) => id !== advocateId);
-          } else {
-            return [...prev, advocateId];
-          }
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Advocate Profile",
+          text: shareText,
+          url: window.location.href,
         });
-        
-        // Show success message
-        const isCurrentlySaved = savedAdvocates.includes(advocateId);
-        toast.success(isCurrentlySaved ? "Advocate removed from saved list" : "Advocate added to saved list");
       } else {
-        toast.error("Failed to update saved advocates");
+        const whatsappUrl = `https://api.whatsapp.com/send/?text=${encodedText}`;
+        const opened = window.open(whatsappUrl, "_blank");
+
+        if (!opened) {
+          try {
+            await navigator.clipboard.writeText(shareText);
+            toast.success("Profile link copied to clipboard!");
+          } catch (clipError) {
+            console.error("Clipboard copy failed:", clipError);
+            toast.error("Failed to share or copy");
+          }
+        }
       }
     } catch (error) {
-      console.error("Error saving advocate:", error);
-      toast.error("An error occurred while saving advocate");
+      console.error("Share failed:", error);
+      toast.error("Sharing failed");
     }
-  }, [savedAdvocates]);
+  };
+
+  const toggleSaved = useCallback(
+    async (advocateId: string) => {
+      try {
+        // Call API
+        const response = await toggleSaveAdvocate(advocateId);
+
+        if (response?.data?.success) {
+          setSavedAdvocates((prev) => {
+            if (prev.includes(advocateId)) {
+              return prev.filter((id) => id !== advocateId);
+            } else {
+              return [...prev, advocateId];
+            }
+          });
+
+          // Show success message
+          const isCurrentlySaved = savedAdvocates.includes(advocateId);
+          toast.success(
+            isCurrentlySaved
+              ? "Advocate removed from saved list"
+              : "Advocate added to saved list"
+          );
+        } else {
+          toast.error("Failed to update saved advocates");
+        }
+      } catch (error) {
+        console.error("Error saving advocate:", error);
+        toast.error("An error occurred while saving advocate");
+      }
+    },
+    [savedAdvocates]
+  );
 
   useEffect(() => {
     const getSavedAdvocates = async () => {
@@ -689,7 +725,10 @@ const AdvocateProfile = () => {
                     Send Message
                   </button>
 
-                  <button className="w-full py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center">
+                  <button
+                    className="w-full py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center"
+                    onClick={handleShare}
+                  >
                     <Share2 size={18} className="mr-2" />
                     Share Profile
                   </button>

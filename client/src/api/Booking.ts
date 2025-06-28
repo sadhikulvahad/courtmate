@@ -57,12 +57,27 @@ export const getSlots = async (
 };
 
 export const addCustomSlot = async (advocateId: string, slot: { date: string; time: string }, token: string | null) => {
-  const response = await axiosInstance.post(
-    `/slot`,
-    { advocateId, ...slot },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  return response;
+  try {
+    const response = await axiosInstance.post(
+      `/slot`,
+      { advocateId, ...slot },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Axios error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+      throw error;
+    } else {
+      console.error("Unknown error:", error);
+      throw error;
+    }
+  }
+
 };
 
 export const bookSlot = async (
@@ -182,7 +197,7 @@ export const getBook = async (advocateId: string | null, userId: string | null) 
 
 
 export const postponeSlot = async (date: string, time: string, reason: string | undefined, slotId: string, token: string | null) => {
-   try {
+  try {
     const response = await axiosInstance.put(`/slot/${slotId}`, {
       date,
       time,
@@ -190,6 +205,25 @@ export const postponeSlot = async (date: string, time: string, reason: string | 
     }, {
       headers: { Authorization: `Bearer ${token}` }
     })
+    return response
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Axios error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+      throw error;
+    } else {
+      console.error("Unknown error:", error);
+      throw error;
+    }
+  }
+}
+
+export const GetHostory = async () => {
+  try {
+    const response = await axiosInstance.get('/booking/callHistory')
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {

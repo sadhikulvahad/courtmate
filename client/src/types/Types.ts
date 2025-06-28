@@ -29,6 +29,9 @@ export interface Advocate {
   availability?: string[]; // Added this field for availability filtering
   createdAt?: string; // For sorting by recent
   isAdminVerified: string;
+  verifiedAt: Date
+  isActive : boolean,
+  isSponsored : boolean
 }
 
 
@@ -180,7 +183,7 @@ export interface RatingStarsProps {
 
 export type NotificationType = 'Reminder' | 'Notification' | 'Alert' | 'All'
 
-export interface Notificaiton {
+export interface Notification {
   createdAt: Date;
   id: string;
   recieverId: string;
@@ -295,10 +298,40 @@ export interface Review {
   advocateId: string
   rating: number
   review: string
+  createdAt: Date
   _id: string
   userId: {
     email: string
     name: string
     _id: string
   }
+}
+
+
+export interface CaseProps {
+  _id?: string;
+  title: string;
+  advocateId ?: string
+  clientName: string;
+  caseType: string;
+  priority: string;
+  nextHearingDate: string;
+  description: string;
+  hearingHistory: string[];
+  createdAt?: string;
+}
+
+
+export interface DashboardData {
+  availableSlots: Slot[];
+  cases: CaseProps[];
+  notifications: Notification[];
+  reviews: Review[];
+  totalBooking: Booking[];
+}
+
+export interface AdminDashboardData {
+  totalUser: number;
+  totalBooking: number;
+  advocates: Advocate[];
 }

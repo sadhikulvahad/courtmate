@@ -393,15 +393,14 @@ const AdvocateList = () => {
                           "/api/placeholder/128/160";
                       }}
                     />
-                    {advocate.rating && advocate.rating >= 4.5 && (
-                      <div className="absolute top-0 right-0 bg-yellow-400 text-white px-2 py-1 text-xs font-bold rounded-bl-lg flex items-center">
-                        <Award size={12} className="mr-1" />
-                        Top Rated
+                    {advocate.isSponsored && (
+                      <div className="absolute top-0 left-0 bg-gray-600 text-white px-2 py-1 text-xs font-bold rounded-br-lg flex items-center z-10">
+                        <Star size={12} className="mr-1" />
+                        Sponsored
                       </div>
                     )}
                   </div>
                 </div>
-
                 {/* Middle: Details */}
                 <div className="flex-grow space-y-4">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">

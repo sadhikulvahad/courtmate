@@ -121,8 +121,10 @@ export class UserRepositoryImplement implements UserRepository {
         }
 
         // Sorting
-        const sortOptions: any = {};
-        sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+        const sortOptions: any = {
+            isSponsored: -1,
+            [sortBy]: sortOrder === 'asc' ? 1 : -1
+        };
 
         // Pagination
         const skip = (page - 1) * limit;
@@ -232,7 +234,9 @@ export class UserRepositoryImplement implements UserRepository {
             age: mongooseUser.age,
             DOB: mongooseUser.DOB,
             onlineConsultation: mongooseUser.onlineConsultation,
-            savedAdvocates: mongooseUser.savedAdvocates ?? []
+            savedAdvocates: mongooseUser.savedAdvocates ?? [],
+            subscriptionPlan: mongooseUser.subscriptionPlan,
+            isSponsored: mongooseUser.isSponsored
         });
     }
 

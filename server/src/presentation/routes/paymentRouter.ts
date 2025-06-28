@@ -24,13 +24,17 @@ const bookingRepository = new BookingRepositoryImplements()
 const slotRepository = new MongooseSlotRepository
 const bookSlot = new BookSlot(bookingRepository, slotRepository)
 const PaymentRepository = new PaymentRepositoryImplement()
-const createCheckoutSessionUseCase = new CreateCheckoutSessionUseCase(paymentService, userRepository);
+const createCheckoutSessionUseCase = new CreateCheckoutSessionUseCase(paymentService, userRepository, slotRepository);
 const paymentUsecase = new PaymentUsecase(PaymentRepository)
 const paymentControllerInstance = new paymentController(createCheckoutSessionUseCase, bookSlot, paymentUsecase);
 
 router.post('/create-checkout-session', authMiddleware, (req: Request, res: Response) => {
     paymentControllerInstance.createCheckoutSessionController(req, res);
 });
+
+router.post("/create-subscription-checkout", authMiddleware, (req: Request, res: Response) => {
+    paymentControllerInstance.createSubscriptionCheckoutSessionController(req, res)
+})
 
 router.post(
     "/webhook",

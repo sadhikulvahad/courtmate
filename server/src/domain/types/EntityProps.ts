@@ -8,15 +8,15 @@ export type UserProps = {
   _id?: string;
   name: string;
   email: string;
-  phone?: string;
+  phone?: string | null;
   password?: string;
   role: RoleType;
-  googleId?: string
+  googleId?: string | null
   authMethod: AuthMethod
   isActive: boolean;
   isVerified: boolean
   isAdminVerified: Status
-  verifiedAt?: Date
+  verifiedAt?: Date | null
   isBlocked: boolean
   address?: Address;
   certification?: string;
@@ -35,6 +35,8 @@ export type UserProps = {
   DOB?: string
   onlineConsultation?: boolean
   savedAdvocates?: Types.ObjectId[];
+  subscriptionPlan?: 'none' | 'basic' | 'professional' | 'enterprise'
+  isSponsored?: boolean
 }
 
 export type NotificationProps = {
@@ -76,7 +78,7 @@ export interface SlotProps {
   time: Date;
   isAvailable: boolean;
   status: BookingStatus
-  postponeReason ?: string
+  postponeReason?: string
 }
 export type Frequency = 'weekly' | 'monthly';
 
@@ -138,5 +140,27 @@ export interface ReviewProps {
   review: string
   rating: number
   createdAt: Date
-  isDeleted ?: boolean
+  isDeleted?: boolean
+}
+
+export interface CaseProps {
+  _id?: string
+  advocateId: Types.ObjectId
+  title: string
+  clientName: string
+  caseType: string
+  priority: string
+  nextHearingDate: Date
+  description: string
+  hearingHistory: Date[]
+}
+
+export interface SubscriptionProps {
+  advocateId: Types.ObjectId;
+  plan: 'basic' | 'professional' | 'enterprise';
+  price: number;
+  billingCycle: 'monthly' | 'yearly';
+  nextBillingDate: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }

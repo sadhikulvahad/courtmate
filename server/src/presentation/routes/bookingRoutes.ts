@@ -11,6 +11,7 @@ import { GetBookSlot } from '../../application/useCases/Booking/GetBookSlot';
 import { VerifyRoom } from '../../application/useCases/Booking/VerifyRoom';
 import { Postpone } from '../../application/useCases/Booking/Postpone';
 import { GetBookingThisHourUseCase } from '../../application/useCases/Booking/GetBook';
+import { GetCallHistoryUseCase } from '../../application/useCases/Booking/GetCallHistoryUseCase';
 const router = Router();
 
 const tokenService = new JwtTokenService()
@@ -20,12 +21,12 @@ const bookingRepository = new BookingRepositoryImplements()
 const refreshTokenUseCase = new RefreshTokenUseCase(tokenService, userRepository)
 const authMiddleware = createAuthMiddleware(tokenService,refreshTokenUseCase)
 
-const slot = new BookSlot(bookingRepository, slotRepository)
 const getBookingSlot = new GetBookSlot(bookingRepository)
 const verifyRoom = new VerifyRoom(bookingRepository)
 const postpone = new Postpone(bookingRepository, slotRepository)
 const getBook = new GetBookingThisHourUseCase(bookingRepository)
-const bookingController = new BookingController(slot, getBookingSlot, verifyRoom, postpone,getBook)
+const getCallHistoryUseCase = new GetCallHistoryUseCase(bookingRepository)
+const bookingController = new BookingController(getBookingSlot, verifyRoom, postpone,getBook, getCallHistoryUseCase)
 
 router.get('/', authMiddleware, (req: Request, res: Response) => {
     bookingController.getBookSlot(req,res)

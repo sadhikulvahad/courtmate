@@ -102,7 +102,7 @@ export class AuthController {
                 token: token,
                 user: user
             });
-            
+
             res.redirect(`${process.env.REDIRECT_URL}/signup?token=${token}&email=${user.email}`);
         } catch (error) {
             console.error("Error from handleCallbackController", error)
@@ -247,9 +247,16 @@ export class AuthController {
 
     async logout(req: Request, res: Response) {
         try {
-            
+            res.clearCookie('refreshToken', {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none',
+                path: '/',
+            });
+
+            return res.status(200).json({ success: true, message: 'Logged out successfully' });
         } catch (error) {
-            res.status(500).json({success: false, error : 'Server Error'})
+            res.status(500).json({ success: false, error: 'Server Error' })
         }
     }
 }

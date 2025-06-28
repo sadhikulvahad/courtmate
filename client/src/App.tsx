@@ -39,6 +39,8 @@ import AdvocateSettings from "./pages/Settings";
 import MyActivityPage from "./pages/CallHistory";
 import Dashboard from "./components/ui/advocate/Dashboard";
 import AdminDashboard from "./pages/AdminDashBoard";
+import SubscriptionSuccess from "./components/ui/SubscriptionSuccess";
+import SubscriptionCancel from "./components/SubscriptionCancel";
 // import Loader from "./components/ui/Loading";
 
 export const socket = io("http://localhost:8080", {
@@ -48,7 +50,6 @@ export const socket = io("http://localhost:8080", {
 function App() {
   const { user, token } = useSelector((state: RootState) => state.auth);
   // const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     if (!user?.id || !token) {
       socket.disconnect();
@@ -109,7 +110,14 @@ function App() {
             <Route path="/aboutUs" element={<AboutPage />} />
             <Route path="/contactUs" element={<ContactPage />} />
             <Route path="/activity" element={<MyActivityPage />} />
-
+            <Route
+              path="/subscription/success"
+              element={<SubscriptionSuccess />}
+            />
+            <Route
+              path="/subscription/cancel"
+              element={<SubscriptionCancel />}
+            />
             <Route element={<Layout />}>
               <Route
                 path="/dashboard"

@@ -56,6 +56,10 @@ router.post("/refresh", async (req: Request, res: Response) => {
     authController.refreshToken(req, res);
 })
 
+router.post('/logout', async (req:Request, res: Response) => {
+    authController.logout(req,res)
+})
+
 
 export const authMiddleware = createAuthMiddleware(tokenService, refreshTokenUseCase);
 

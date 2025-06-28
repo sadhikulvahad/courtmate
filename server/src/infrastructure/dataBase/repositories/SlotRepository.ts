@@ -53,4 +53,19 @@ export class MongooseSlotRepository implements SlotRepository {
 
     return Slot.fromDB(slot);
   }
+
+  async getAvailableSlots(advocateId: string): Promise<Slot[]> {
+    const objectId = new Types.ObjectId(advocateId);
+
+    const slots = await SlotModel.find({
+      advocateId: objectId,
+      status: { $ne: 'expired' },
+      isAvailable: true,
+    })
+      .sort({ date: 1 })
+      .lean()
+      .exec();
+
+    return slots.map(slot => Slot.fromDB(slot));
+  }
 }

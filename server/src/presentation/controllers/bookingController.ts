@@ -7,14 +7,15 @@ import { NotificationService } from "../../infrastructure/services/notificationS
 import { VerifyRoom } from "../../application/useCases/Booking/VerifyRoom";
 import { Postpone } from "../../application/useCases/Booking/Postpone";
 import { GetBookingThisHourUseCase } from "../../application/useCases/Booking/GetBook";
+import { GetCallHistoryUseCase } from "../../application/useCases/Booking/GetCallHistoryUseCase";
 
 export class BookingController {
   constructor(
-    private BookSlot: BookSlot,
     private getBookings: GetBookSlot,
     private VerifyRoom: VerifyRoom,
     private Postpone: Postpone,
-    private GetBook: GetBookingThisHourUseCase
+    private GetBook: GetBookingThisHourUseCase,
+    private getCallHistoryUseCase: GetCallHistoryUseCase
   ) { }
 
   async getBookSlot(req: Request, res: Response) {
@@ -109,15 +110,17 @@ export class BookingController {
     try {
       const user = req.user as { id: string; role: string; name: string } | undefined;
 
-      if(!user){
-        return res.status(400).json({ status: false, error: 'Missing advocateId or userId' });
+      if (!user) {
+        return res.status(400).json({ status: false, error: "User not authenticated" });
       }
+      console.log(user.id, user.role)
+      const result = await this.getCallHistoryUseCase.execute(user.id, user.role);
 
-      const result = await this
+      return res.status(200).json({ status: true, data: result });
     } catch (error) {
-      console.error("Error getHistory:", error);
+      console.error("Error callHistory:", error);
       return res.status(500).json({ status: false, message: "Server error" });
     }
-  }
 
+  }
 }

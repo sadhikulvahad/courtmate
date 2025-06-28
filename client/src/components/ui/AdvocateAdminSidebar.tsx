@@ -24,6 +24,8 @@ import { RootState } from "@/redux/store";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logout } from "@/features/authSlice";
 import ConfirmationModal from "../ConfirmationModal";
+import { logoutApi } from "@/api/authApi";
+import { toast } from "sonner";
 
 const AdvocateAdminSidebar = () => {
   const location = useLocation();
@@ -48,7 +50,11 @@ const AdvocateAdminSidebar = () => {
             path: "/advocate/appointments",
           },
           { icon: Settings, label: "Settings", path: "/advocate/settings" },
-          { icon: Star, label: "Ratings and Reviews", path: "/advocate/reviews" },
+          {
+            icon: Star,
+            label: "Ratings and Reviews",
+            path: "/advocate/reviews",
+          },
           { icon: Briefcase, label: "Cases", path: "/advocate/cases" },
           { icon: UserCircle, label: "Profile", path: "/advocate/adProfile" },
         ]
@@ -95,17 +101,32 @@ const AdvocateAdminSidebar = () => {
     // dispatch(logout());
   };
 
+  const confirmLogout = async () => {
+    try {
+      const response = await logoutApi();
+      if (response?.status === 200) {
+        dispatch(logout());
+        toast.success("Logged out successfully");
+        navigate("/signup"); 
+      } else {
+        toast.error("Failed to logout");
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error("Something went wrong while logging out");
+    }
+  };
+
   return (
     <>
       {isModalOpen && (
         <ConfirmationModal
           title="Confirm Logout"
           description="Are you sure you want to logout?"
-          isOpen = {isModalOpen}
-          onConfirm={() => {
+          isOpen={isModalOpen}
+          onConfirm={async () => {
             setIsModalOpen(false);
-            dispatch(logout());
-            navigate("/signup"); // or wherever you redirect on logout
+            await confirmLogout(); 
           }}
           onCancel={() => setIsModalOpen(false)}
         />

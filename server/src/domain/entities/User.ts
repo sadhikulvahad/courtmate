@@ -3,6 +3,7 @@ import { RoleType } from "../types/RoleTypes";
 import { UserProps } from "../types/EntityProps";
 import { Status } from "../types/status";
 import { Types } from "mongoose";
+import { AuthMethod } from "../types/AuthMethod";
 
 
 export class User {
@@ -27,7 +28,7 @@ export class User {
         return this.props.googleId || null
     }
 
-    get authMethod(): string {
+    get authMethod(): AuthMethod {
         return this.props.authMethod
     }
 
@@ -92,6 +93,15 @@ export class User {
     get savedAdvocates(): Types.ObjectId[] {
         return this.props.savedAdvocates || [];
 
+    }
+
+    get subscriptionPlan(): 'none' | 'basic' | 'professional' | 'enterprise' {
+        return this.props.subscriptionPlan ?? 'none';
+    }
+
+
+    get isSponsored(): boolean | undefined {
+        return this.props.isSponsored
     }
 
     verifyEmail(): void {
@@ -187,6 +197,11 @@ export class User {
         this.props.password = newPassword;
     }
 
+    updateSubscriptionStatus(plan: 'none' | 'basic' | 'professional' | 'enterprise'): void {
+        this.props.subscriptionPlan = plan;
+        this.props.isSponsored = true
+    }
+
     toJSON() {
         return {
             id: this.props._id,
@@ -216,7 +231,9 @@ export class User {
             languages: this.props.languages,
             DOB: this.props.DOB,
             onlineConsultation: this.props.onlineConsultation,
-            savedAdvocates: this.props.savedAdvocates
+            savedAdvocates: this.props.savedAdvocates,
+            subscriptionPlan: this.props.subscriptionPlan,
+            isSponsored: this.props.isSponsored
         };
     }
 

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import AdvocateAdminSidebar from "../AdvocateAdminSidebar";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +6,7 @@ import { toast } from "sonner";
 import { completeProfile, profileUpdate } from "@/api/advocate/profileAPI";
 import { CheckCircle } from "lucide-react";
 import { formDataProps } from "@/types/Types";
+import AdvocateDashboard from "./AdvocateDashboard";
 
 const Dashboard = () => {
   const [isModal, setIsModal] = useState(false);
@@ -30,7 +30,7 @@ const Dashboard = () => {
     bciCertificatePreview: "",
     termsAccepted: false,
   });
-
+  console.log("alksdjfh")
   const [step, setStep] = useState(1);
   const [previewImage, setPreviewImage] = useState("");
 
@@ -230,10 +230,7 @@ const Dashboard = () => {
 
   return (
     <>
-      <div>
-        <AdvocateAdminSidebar />
-      </div>
-
+    <AdvocateDashboard />
       {submitModal && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="text-center bg-white p-8 rounded-xl shadow-lg max-w-md w-full">

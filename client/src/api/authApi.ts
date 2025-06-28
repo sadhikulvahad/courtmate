@@ -1,4 +1,5 @@
 import axios from "axios";
+import axiosInstance from "./axiosInstance";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -24,7 +25,8 @@ export const signupUser = async (userData: object) => {
 
 export const loginUser = async (credentials: { email: string; password: string }) => {
   try {
-    const response = await axios.post(`${API_URL}/auth/login`, credentials,{withCredentials:true ,
+    const response = await axios.post(`${API_URL}/auth/login`, credentials, {
+      withCredentials: true,
       headers: {
         "Content-Type": "application/json",
       },
@@ -70,5 +72,19 @@ export const forgetResetPassword = async (password: string, email: string) => {
   } catch (error) {
     console.error("Error from forgetResetPassword api", error)
     throw error
+  }
+}
+
+export const logoutApi = async () => {
+  try {
+    const response = await axiosInstance.post('auth/logout')
+    return response
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return error.response;
+    } else {
+      console.error("Unexpected error", error);
+      return { status: 500, data: { error: "Unexpected error occurred" } };
+    }
   }
 }

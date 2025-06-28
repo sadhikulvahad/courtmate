@@ -4,19 +4,19 @@ import { UserProps } from "../../../domain/types/EntityProps";
 
 const userSchema = new Schema<UserProps>(
     {
-        name : {
+        name: {
             type: String,
             required: true,
         },
-        email :{
-            type :String,
+        email: {
+            type: String,
             required: true,
-            unique : true
+            unique: true
         },
         phone: {
             type: String,
             required: false,
-            unique : true,
+            unique: true,
             sparse: true
         },
         password: {
@@ -25,50 +25,50 @@ const userSchema = new Schema<UserProps>(
         },
         role: {
             type: String,
-            enum : ["user", "admin", "advocate"],
+            enum: ["user", "admin", "advocate"],
             required: true
         },
-        authMethod:{
+        authMethod: {
             type: String,
-            required : true,
+            required: true,
             default: 'local'
         },
-        googleId:{
-            type:String,
-            sparse : true,
+        googleId: {
+            type: String,
+            sparse: true,
             unique: true,
             required: false
         },
-        isActive:{
+        isActive: {
             type: Boolean,
-            default : false
+            default: false
         },
-        isVerified:{
+        isVerified: {
             type: Boolean,
             default: false
         },
         isAdminVerified: {
-            type:String,
-            enum: ['Request' , 'Pending' , 'Accepted', 'Rejected'],
+            type: String,
+            enum: ['Request', 'Pending', 'Accepted', 'Rejected'],
             default: 'Request'
         },
-        verifiedAt:{
+        verifiedAt: {
             type: Date,
         },
-        address:{
-            street :{
-                type : String
-            },
-            city:{
+        address: {
+            street: {
                 type: String
             },
-            state:{
+            city: {
                 type: String
             },
-            country :{
+            state: {
                 type: String
             },
-            pincode:{
+            country: {
+                type: String
+            },
+            pincode: {
                 type: String
             }
         },
@@ -76,58 +76,68 @@ const userSchema = new Schema<UserProps>(
             type: String,
 
         },
-        bio:{
+        bio: {
             type: String
         },
-        typeOfLawyer :{
+        typeOfLawyer: {
             type: String
         },
-        experience:{
+        experience: {
             type: Number,
-            default:0
+            default: 0
         },
         category: {
             type: String
         },
-        practicingField :{
-            type :String
-        },
-        profilePhoto:{
+        practicingField: {
             type: String
         },
-        bciCertificate:{
-            type : String
-        },
-        barCouncilIndia:{
+        profilePhoto: {
             type: String
         },
-        barCouncilRegisterNumber :{
+        bciCertificate: {
             type: String
         },
-        isBlocked:{
+        barCouncilIndia: {
+            type: String
+        },
+        barCouncilRegisterNumber: {
+            type: String
+        },
+        isBlocked: {
             type: Boolean,
             default: false
         },
-        age:{
-            type :Number
+        age: {
+            type: Number
         },
-        languages:{
-            type: [String], 
-            default :[]
+        languages: {
+            type: [String],
+            default: []
         },
-        DOB:{
+        DOB: {
             type: String
         },
-        onlineConsultation :{
+        onlineConsultation: {
             type: Boolean
         },
-        savedAdvocates :{
-            type : [Types.ObjectId],
-            default :[],
+        savedAdvocates: {
+            type: [Types.ObjectId],
+            default: [],
             ref: 'User'
+        },
+        subscriptionPlan: {
+            type: String,
+            enum: ['none', 'basic', 'professional', 'enterprise'],
+            default: 'none'
+        },
+        isSponsored: {
+            type: Boolean,
+            default: false
         }
+
     },
-    {timestamps: true}
+    { timestamps: true }
 )
 
 export default mongoose.model<UserProps>("User", userSchema)
