@@ -43,33 +43,56 @@ import SubscriptionSuccess from "./components/ui/SubscriptionSuccess";
 import SubscriptionCancel from "./components/SubscriptionCancel";
 // import Loader from "./components/ui/Loading";
 
-export const socket = io("http://localhost:8080", {
-  autoConnect: false, // Prevent auto-connect until user is authenticated
-});
+export const socket = io(
+  import.meta.env.VITE_SOCKET_URL || "http://localhost:8080",
+  {
+    autoConnect: false,
+    reconnection: true,
+    reconnectionAttempts: 3,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    randomizationFactor: 0.5,
+  }
+);
 
 function App() {
   const { user, token } = useSelector((state: RootState) => state.auth);
-  // const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    if (!user?.id || !token) {
-      socket.disconnect();
-      return;
+    if (user?.id && token) {
+      if (!socket.connected) {
+        socket.auth = { token };
+        socket.connect();
+      }
+
+      socket.on("connect", () => {
+        console.log("Socket connected:", socket.id);
+        socket.emit("join-user", user.id); 
+      });
+
+      socket.on("connect_error", (error) => {
+        console.error("Connection error:", error.message);
+      });
+
+      socket.on("notification", (data) => {
+        if (data.receiverId === user.id) {
+          toast(data.message, {
+            description:
+              data.type === "chat" ? "New chat message" : "System notification",
+            duration: 5000,
+          });
+        }
+      });
+    } else {
+      if (socket.connected) {
+        socket.disconnect();
+      }
     }
 
-    socket.auth = { token };
-    socket.connect();
-    socket.emit("join", user.id);
-
-    socket.on("notification", (data) => {
-      console.log("notification", data);
-      if (data.userId === user.id) {
-        toast(data.message);
-      }
-    });
-
     return () => {
+      socket.off("connect");
+      socket.off("connect_error");
       socket.off("notification");
-      socket.disconnect();
     };
   }, [user?.id, token]);
 
@@ -118,6 +141,7 @@ function App() {
               path="/subscription/cancel"
               element={<SubscriptionCancel />}
             />
+            <Route path="/user/notification" element={<Notification />} />
             <Route element={<Layout />}>
               <Route
                 path="/dashboard"

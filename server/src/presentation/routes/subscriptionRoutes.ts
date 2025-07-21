@@ -1,31 +1,38 @@
+import { Router, Request, Response, NextFunction } from 'express';
+import { container } from '../../infrastructure/DIContainer/container';
+import { TYPES } from '../../types';
+import { SubscriptionController } from '../../presentation/controllers/subscriptioncontroller';
+import { AuthMiddleware } from '../../infrastructure/web/authMiddlware';
+import { Logger } from 'winston';
 
+// Async handler wrapper
+const asyncHandler = (
+    fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>
+) => (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+};
 
-import express, {Request, Response} from 'express'
-import { UserRepositoryImplement } from '../../infrastructure/dataBase/repositories/userRepository'
-import { JwtTokenService } from '../../infrastructure/services/jwt'
-import { RefreshTokenUseCase } from '../../application/useCases/auth/refreshTokenUseCase'
-import { createAuthMiddleware } from '../../infrastructure/web/authMiddlware'
-import { SubscriptionController } from '../controllers/subscriptioncontroller'
+const router = Router();
+const subscriptionController = container.get<SubscriptionController>(TYPES.SubscriptionController);
+const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const logger = container.get<Logger>(TYPES.Logger);
 
-const router = express.Router()
+router.use((req: Request, res: Response, next: NextFunction) => {
+    logger.info(`Subscription route accessed: ${req.method} ${req.path}`, {
+        ip: req.ip,
+        query: req.query,
+        body: req.body,
+    });
+    next();
+});
 
-const userRepository = new UserRepositoryImplement()
-const tokenService = new JwtTokenService()
-const refreshTokenUsecase = new RefreshTokenUseCase(tokenService, userRepository)
-const authMiddleware = createAuthMiddleware(tokenService, refreshTokenUsecase)
+router.use(authMiddleware.auth.bind(authMiddleware))
+router.use(authMiddleware.authorizeRoles('advocate'))
 
-const subscriptionController = new SubscriptionController()
+router.post('/', asyncHandler(subscriptionController.createSubscription.bind(subscriptionController)));
 
-router.post('/', authMiddleware, (req:Request, res: Response) => {
-    subscriptionController.createSubscription(req,res)
-})
+router.get('/getAll', asyncHandler(subscriptionController.getAllSubscriptions.bind(subscriptionController)));
 
-router.get('/getAll', authMiddleware, (req: Request, res: Response) => {
-    subscriptionController.getAllSubscriptions(req,res)
-})
+router.get('/:advocateId', asyncHandler(subscriptionController.getSubscription.bind(subscriptionController)));
 
-router.get('/:advocateId', authMiddleware, (req: Request, res: Response) => {
-    subscriptionController.getSubscription(req, res)
-})
-
-export default router
+export default router;

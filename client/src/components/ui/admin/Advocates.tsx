@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-// import { Search } from "lucide-react";
 import { Tab } from "@headlessui/react";
 import AdvocateModal from "./AdvocateModal";
 import { toast } from "sonner";
@@ -11,41 +10,47 @@ const Advocates: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("all");
   const [advocates, setAdvocates] = useState<AdvocateProps[]>([]);
-  const [selectedAdvocate, setSelectedAdvocate] = useState<AdvocateProps | null>(
-    null
-  );
-  // const { token } = useSelector((state: RootState) => state.auth);
+  const [selectedAdvocate, setSelectedAdvocate] =
+    useState<AdvocateProps | null>(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+  });
 
   useEffect(() => {
-    const fetchAdvocates = async () => {
-      const response = await getAllAdminAdvocates();
-      if (response?.status === 200 || response?.status === 201) {
-        setAdvocates(response?.data?.advocates);
-      } else {
-        toast.error(response?.data.error);
+    const fetchAdvocates = async (page: number = 1) => {
+      try {
+        const response = await getAllAdminAdvocates({
+          page: page,
+          limit: 10,
+          searchTerm: searchTerm,
+          activeTab: selectedTab,
+        });
+
+        if (response?.status === 200) {
+          setAdvocates(response.data.advocates);
+          setPagination({
+            currentPage: response.data.pagination.currentPage,
+            totalPages: response.data.pagination.totalPages,
+            totalItems: response.data.pagination.totalItems,
+            itemsPerPage: response.data.pagination.itemsPerPage,
+          });
+        } else {
+          toast.error(response?.data.error);
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error("Failed to fetch advocates");
       }
     };
-    fetchAdvocates();
-  }, []);
+    fetchAdvocates(pagination.currentPage);
+  }, [searchTerm, selectedTab, pagination.currentPage]);
 
-  const getFilteredAdvocates = () => {
-    const filtered = advocates?.filter(
-      (advocate) =>
-        advocate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        advocate.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    switch (selectedTab) {
-      case "signups":
-        return filtered.filter((a) => a.isAdminVerified === "Request");
-      case "verified":
-        return filtered.filter((a) => a.isAdminVerified === "Accepted");
-      case "pending":
-        return filtered.filter((a) => a.isAdminVerified === "Pending");
-      case "rejected":
-        return filtered.filter((a) => a.isAdminVerified === "Rejected");
-      default:
-        return filtered;
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setPagination({ ...pagination, currentPage: newPage });
     }
   };
 
@@ -60,25 +65,27 @@ const Advocates: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className=" mb-4">
+      <div className="mb-4">
         <Tab.Group>
           <Tab.List className="flex space-x-3 bg-white rounded-xl overflow-x-auto">
-            {["All", "Signups", "Verified", "Pending", 'Rejected'].map((tab) => (
-              <Tab
-                key={tab}
-                className={({ selected }) =>
-                  `py-2.5 px-3 text-sm font-medium leading-5 rounded-lg whitespace-nowrap flex-shrink-0
+            {["All", "Request", "Accepted", "Pending", "Rejected"].map(
+              (tab) => (
+                <Tab
+                  key={tab}
+                  className={({ selected }) =>
+                    `py-2.5 px-3 text-sm font-medium leading-5 rounded-lg whitespace-nowrap flex-shrink-0
                   ${
                     selected
                       ? "bg-gray-900 text-white shadow"
                       : "text-gray-700 hover:bg-gray-100"
                   }`
-                }
-                onClick={() => setSelectedTab(tab.toLowerCase())}
-              >
-                {tab}
-              </Tab>
-            ))}
+                  }
+                  onClick={() => setSelectedTab(tab.toLowerCase())}
+                >
+                  {tab}
+                </Tab>
+              )
+            )}
           </Tab.List>
         </Tab.Group>
       </div>
@@ -99,7 +106,7 @@ const Advocates: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {getFilteredAdvocates()?.map((advocate) => (
+              {advocates?.map((advocate) => (
                 <tr key={advocate.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <div className="flex items-center gap-2">
@@ -142,7 +149,7 @@ const Advocates: React.FC = () => {
 
         {/* Mobile Card List */}
         <div className="md:hidden space-y-3">
-          {getFilteredAdvocates()?.map((advocate) => (
+          {advocates?.map((advocate) => (
             <div
               key={advocate.id}
               className="bg-white rounded-lg shadow p-3 border border-gray-200"
@@ -157,7 +164,7 @@ const Advocates: React.FC = () => {
                   </div>
                 </div>
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  className={`(px-3 py-1 rounded-full text-sm font-semibold ${
                     advocate.isVerified
                       ? "bg-green-100 text-green-900"
                       : "bg-yellow-100 text-yellow-900"
@@ -197,12 +204,35 @@ const Advocates: React.FC = () => {
         </div>
 
         {/* Empty state */}
-        {getFilteredAdvocates()?.length === 0 && (
+        {advocates?.length === 0 && (
           <div className="p-8 text-center text-gray-500 bg-white rounded-lg shadow">
             No advocates found matching your criteria.
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {advocates?.length > 0 && (
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={() => handlePageChange(pagination.currentPage - 1)}
+            disabled={pagination.currentPage === 1}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span>
+            Page {pagination.currentPage} of {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(pagination.currentPage + 1)}
+            disabled={pagination.currentPage === pagination.totalPages}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {selectedAdvocate && (
         <AdvocateModal

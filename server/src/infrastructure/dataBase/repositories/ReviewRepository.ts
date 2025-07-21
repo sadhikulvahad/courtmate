@@ -38,7 +38,7 @@ export class ReviewRepositoryImplements implements ReviewRepository {
                 .lean()
                 .exec();
 
-            return reviews.map((review: any) =>
+            return reviews.map((review: ReviewProps) =>
                 Review.fromDB({
                     _id: review._id,
                     advocateId: review.advocateId,

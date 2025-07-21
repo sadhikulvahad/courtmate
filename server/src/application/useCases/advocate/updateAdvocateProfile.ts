@@ -1,13 +1,18 @@
 
 
 import { Types } from "mongoose";
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 import { NotificationService } from "../../../infrastructure/services/notificationService";
 import { UpdateAdvocateProfileDTO } from "../../types/UpdateAdvocateProfileDTO ";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
+import { Logger } from "winston";
 
+
+@injectable()
 export class UpdateAdvocateProfile {
     constructor(
-        private userRepository: UserRepository
+        @inject(TYPES.UserRepository) private userRepository: UserRepository,
     ) { }
 
     async execute(data: UpdateAdvocateProfileDTO, notificationService: NotificationService) {
@@ -36,7 +41,7 @@ export class UpdateAdvocateProfile {
 
         const languages = data.languages.split(',').map(lang => lang.trim());
         const onlineConsultation = data.onlineConsultation == 'true';
-        const yearsOfPractice = parseInt(data.yearsOfPractice, 10)
+        const yearsOfPractice = Number(data.yearsOfPractice || 0)
 
         const user = await this.userRepository.findById(data.id)
         const isBCINumberExist = await this.userRepository.findByBCINumber(data.barCouncilNumber)

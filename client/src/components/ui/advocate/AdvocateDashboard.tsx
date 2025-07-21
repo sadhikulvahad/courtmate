@@ -35,12 +35,11 @@ const AdvocateDashboard: React.FC = () => {
     const fetchDashboardData = async () => {
       try {
         const response = await getAdvocateDashboardData(token, user?.id);
-        console.log(response);
         if (response?.status === 201) {
           setDashboardData(response.data.dashboardData);
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
         toast.error("Something went wrong");
       }
     };

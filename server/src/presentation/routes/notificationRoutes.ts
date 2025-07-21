@@ -1,31 +1,38 @@
+import { Router, Request, Response, NextFunction } from 'express';
+import { container } from '../../infrastructure/DIContainer/container';
+import { TYPES } from '../../types';
+import { NotificationController } from '../controllers/admin/notificationController';
+import { AuthMiddleware } from '../../infrastructure/web/authMiddlware';
+import { Logger } from 'winston';
 
+// Async handler wrapper
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>
+) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
-import Express, {Request, Response} from 'express'
-import { UserRepositoryImplement } from '../../infrastructure/dataBase/repositories/userRepository'
-import { NotificaitonController } from '../controllers/admin/notificationController'
-import { createAuthMiddleware } from '../../infrastructure/web/authMiddlware'
-import { JwtTokenService } from '../../infrastructure/services/jwt'
-import { RefreshTokenUseCase } from '../../application/useCases/auth/refreshTokenUseCase'
+const router = Router();
+const notificationController = container.get<NotificationController>(TYPES.NotificationController);
+const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const logger = container.get<Logger>(TYPES.Logger);
 
-const router = Express.Router()
-const userRepository = new UserRepositoryImplement()
-const tokenService = new JwtTokenService()
-const refreshTokenUseCase = new RefreshTokenUseCase(tokenService, userRepository)
+router.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Notification route accessed: ${req.method} ${req.path}`, {
+    ip: req.ip,
+    query: req.query,
+    body: req.body,
+  });
+  next();
+});
 
+router.use(authMiddleware.auth.bind(authMiddleware))
+router.use(authMiddleware.authorizeRoles('admin', 'advocate', 'user'))
 
-const notificationController = new NotificaitonController()
-const authMiddleware = createAuthMiddleware(tokenService, refreshTokenUseCase)
+router.get('/:id', asyncHandler(notificationController.getAdminNotifications.bind(notificationController)));
 
-router.get('/:id',authMiddleware, (req:Request, res: Response) => {
-    notificationController.getAdminNotifications(req,res)
-})
+router.put('/markAsRead', asyncHandler(notificationController.markAsRead.bind(notificationController)));
 
-router.put('/markAsRead', authMiddleware, (req: Request, res: Response) => {
-    notificationController.markAsRead(req, res)
-})
+router.put('/markAllAsRead', asyncHandler(notificationController.markAllAsRead.bind(notificationController)));
 
-router.put('/markAllAsRead', authMiddleware, (req: Request, res: Response) => {
-    notificationController.markAllAsRead(req, res)
-})
-
-export default router
+export default router;

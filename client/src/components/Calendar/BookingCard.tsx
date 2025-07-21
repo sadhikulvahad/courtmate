@@ -2,11 +2,16 @@ import React from "react";
 import { format } from "date-fns";
 import { Clock, Calendar, Mail, AlertCircle, Check, X } from "lucide-react";
 import { Booking } from "@/types/Types";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { CreateConversation } from "@/api/chatApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface BookingCardProps {
   booking: Booking;
   onPostpone: (booking: Booking) => void;
-  onCancel: (bookingId: string) => void;
+  // onCancel: (bookingId: string) => void;
   isAdvocate: boolean | null;
 }
 
@@ -16,6 +21,8 @@ const BookingCard: React.FC<BookingCardProps> = ({
   // onCancel,
   // isAdvocate,
 }) => {
+  const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "confirmed":
@@ -43,6 +50,33 @@ const BookingCard: React.FC<BookingCardProps> = ({
         return <AlertCircle className="w-4 h-4 mr-1" />;
       default:
         return null;
+    }
+  };
+
+  const startChat = async () => {
+    console.log('kasjd')
+    if (!user) {
+      toast.error("Please log in to start a chat");
+      navigate("/signup");
+      return;
+    }
+
+    if (!booking.advocate.id) {
+      toast.error("Invalid advocate ID");
+      return;
+    }
+
+    try {
+      const conversation = await CreateConversation(
+        booking.advocate.id,
+        "advocate"
+      );
+      navigate(
+        `/chat?conversationId=${conversation?.data._id}&advocateId=${conversation?.data.participants[1].userId}`
+      );
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      toast.error("Failed to start chat. Please try again.");
     }
   };
 
@@ -124,6 +158,14 @@ const BookingCard: React.FC<BookingCardProps> = ({
             (!booking.advocate?.name && new Date(booking.date) > new Date())) &&
             booking.status !== "postponed" && (
               <div className="mt-4 flex justify-end space-x-2">
+                {booking.advocate?.name && (
+                  <button
+                    onClick={startChat}
+                    className="px-3 py-1 bg-green-400 text-black text-sm rounded hover:bg-green-100 transition-colors"
+                  >
+                    Chat with {booking.advocate.name}
+                  </button>
+                )}
                 <button
                   onClick={() => onPostpone(booking)}
                   className="px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded hover:bg-blue-100 transition-colors"

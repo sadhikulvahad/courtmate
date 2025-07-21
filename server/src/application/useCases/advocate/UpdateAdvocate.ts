@@ -1,9 +1,15 @@
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { inject, injectable } from "inversify";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 import { UpdateAdvocateProfileDTO } from "../../types/UpdateAdvocateProfileDTO ";
+import { TYPES } from "../../../types";
+import { S3Service } from "../../../infrastructure/web/s3Credential";
 
+
+@injectable()
 export class UpdateAdvocate {
     constructor(
-        private userRepository: UserRepository
+        @inject(TYPES.UserRepository) private userRepository: UserRepository,
+        @inject(TYPES.S3Service) private s3Service : S3Service
     ) { }
 
     async execute(data: UpdateAdvocateProfileDTO) {
@@ -38,8 +44,9 @@ export class UpdateAdvocate {
             updatePayload.onlineConsultation = data.onlineConsultation === 'true';
         }
 
-        if (data.languages) {
-            updatePayload.languages = data.languages.split(',').map(lang => lang.trim());
+
+        if (data.languages && Array.isArray(data.languages)) {
+            updatePayload.languages = data.languages.map((lang: string) => lang.trim());
         }
 
         if (data.street || data.city || data.state || data.country || data.pincode) {
@@ -58,6 +65,13 @@ export class UpdateAdvocate {
         }
 
         const updatedUser = await this.userRepository.update(data.id, updatePayload);
+
+        if (updatedUser?.profilePhoto) {
+                const signedUrl = await this.s3Service.generateSignedUrl(updatedUser.profilePhoto);
+                const bciSignedurl = await this.s3Service.generateSignedUrl(updatedUser.bciCertificate);
+                updatedUser.updateProfilePhoto(signedUrl)
+                updatedUser.updateBciCirtificate(bciSignedurl);
+            }
 
         return {
             success: true,

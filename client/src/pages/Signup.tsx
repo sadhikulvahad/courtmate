@@ -64,7 +64,6 @@ export function Signup() {
         id: decoded?.id,
         name: decoded?.name,
         role: decoded?.role,
-        
       };
       dispatch(
         loginSuccess({
@@ -206,9 +205,9 @@ export function Signup() {
     setShowModal(false);
   };
 
-  const handleGoogleSignup = () => {
+  const handleGoogleSignup = async () => {
     // const role = 'user'
-    const response = initiateGoogleAuth();
+    await initiateGoogleAuth();
   };
 
   const handleForgotButton = () => {

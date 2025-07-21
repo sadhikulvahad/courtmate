@@ -1,12 +1,15 @@
+import { inject, injectable } from "inversify";
 import { User } from "../../../domain/entities/User";
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 import { HashPassword } from "../../../infrastructure/services/passwordHash";
+import { TYPES } from "../../../types";
 
 
+@injectable()
 export class ResetPassword {
     constructor(
-        private userRepository: UserRepository,
-        private hashPassword: HashPassword
+        @inject(TYPES.UserRepository) private userRepository: UserRepository,
+        @inject(TYPES.HashPasswordService) private hashPassword: HashPassword
     ) { }
 
     async execute(id: string, oldPassword: string, newPassword: string) {

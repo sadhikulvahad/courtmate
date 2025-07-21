@@ -68,6 +68,7 @@ export class User {
         return this.props.isVerified || false;
     }
 
+
     get age(): number {
         if (!this.props.age) {
             return 0
@@ -104,6 +105,14 @@ export class User {
         return this.props.isSponsored
     }
 
+    get avgRating(): number {
+        return this.props.avgRating!
+    }
+
+    get totalReviews(): number {
+        return this.props.totalReviews!
+    }
+
     verifyEmail(): void {
         this.props.isActive = true;
         this.props.isVerified = true;
@@ -118,6 +127,10 @@ export class User {
 
     updateProfilePhoto(url: string): void {
         this.props.profilePhoto = url;
+    }
+
+    updateBciCirtificate(url: string): void {
+        this.props.bciCertificate = url
     }
 
     updateAddress(address: Address): void {
@@ -233,7 +246,9 @@ export class User {
             onlineConsultation: this.props.onlineConsultation,
             savedAdvocates: this.props.savedAdvocates,
             subscriptionPlan: this.props.subscriptionPlan,
-            isSponsored: this.props.isSponsored
+            isSponsored: this.props.isSponsored,
+            avgRating: this.props.avgRating,
+            totalReviews: this.props.totalReviews
         };
     }
 

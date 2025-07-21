@@ -1,8 +1,11 @@
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { inject, injectable } from "inversify";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { TYPES } from "../../../types";
 
 
+@injectable()
 export class GetSavedAdvocates {
-    constructor(private userRepository: UserRepository) {}
+    constructor(@inject(TYPES.UserRepository) private userRepository: UserRepository) { }
 
     async execute(userId: string) {
         if (!userId) return { success: false, error: "User ID is required" };

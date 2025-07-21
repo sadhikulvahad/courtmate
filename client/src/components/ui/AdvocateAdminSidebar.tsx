@@ -34,7 +34,7 @@ const AdvocateAdminSidebar = () => {
   const navigate = useNavigate();
 
   const dispatch = useDispatch();
-  const { isAuthenticated, user } = useSelector(
+  const { isAuthenticated, user, token } = useSelector(
     (state: RootState) => state.auth
   );
 
@@ -101,9 +101,9 @@ const AdvocateAdminSidebar = () => {
     // dispatch(logout());
   };
 
-  const confirmLogout = async () => {
+  const confirmLogout = async (token : string | null) => {
     try {
-      const response = await logoutApi();
+      const response = await logoutApi(token);
       if (response?.status === 200) {
         dispatch(logout());
         toast.success("Logged out successfully");
@@ -126,7 +126,7 @@ const AdvocateAdminSidebar = () => {
           isOpen={isModalOpen}
           onConfirm={async () => {
             setIsModalOpen(false);
-            await confirmLogout(); 
+            await confirmLogout(token); 
           }}
           onCancel={() => setIsModalOpen(false)}
         />

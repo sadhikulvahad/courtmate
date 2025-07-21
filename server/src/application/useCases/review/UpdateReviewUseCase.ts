@@ -1,4 +1,7 @@
+import { inject, injectable } from "inversify";
 import { ReviewRepository } from "../../../domain/interfaces/ReviewRepository";
+import { TYPES } from "../../../types";
+
 
 export interface UpdateReviewDTO {
     reviewId: string;
@@ -6,8 +9,9 @@ export interface UpdateReviewDTO {
     rating?: number;
 }
 
+@injectable()
 export class UpdateReviewUseCase {
-    constructor(private reviewRepository: ReviewRepository) { }
+    constructor(@inject(TYPES.ReviewRepository) private reviewRepository: ReviewRepository) { }
 
     async execute(data: UpdateReviewDTO) {
         const { reviewId, review, rating } = data;

@@ -31,7 +31,6 @@ const AdvocateReviewsPage = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       const response = await findReviews(user?.id);
-      console.log(response?.data.reviews);
       setReviews(response?.data.reviews);
     };
     fetchReviews();

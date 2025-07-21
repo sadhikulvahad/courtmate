@@ -1,11 +1,14 @@
 import { Types } from "mongoose";
 import { ConversationRepository } from "../../../domain/interfaces/ConversationRepository";
-import userModel from "../../../infrastructure/dataBase/models/userModel";
+import userModel from "../../../infrastructure/dataBase/models/UserModel";
 import { ConversationProps } from "../../../domain/types/EntityProps";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
 
 
+@injectable()
 export class CreateConversationUseCase {
-  constructor(private conversationRepository: ConversationRepository) {}
+  constructor(@inject(TYPES.ConversationRepository) private conversationRepository: ConversationRepository) { }
 
   async execute(data: { userId: string; participantId: string; participantRole: string; userRole: string }) {
     const { userId, participantId, participantRole, userRole } = data;

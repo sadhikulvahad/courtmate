@@ -9,6 +9,15 @@ import { Advocate } from "@/types/Types";
 const SavedAdvocates = () => {
   const navigate = useNavigate();
   const [advocates, setSavedAdvocates] = useState<Advocate[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6; // Number of advocates per page
+
+  // Calculate total pages and paginated data
+  const totalPages = Math.ceil(advocates.length / pageSize);
+  const paginatedAdvocates = advocates.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   useEffect(() => {
     const getSavedAdvocates = async () => {
@@ -30,7 +39,9 @@ const SavedAdvocates = () => {
       try {
         const response = await toggleSaveAdvocate(advocateId);
         if (response?.data?.success) {
-          const isCurrentlySaved = advocates.some((adv) => adv.id === advocateId);
+          const isCurrentlySaved = advocates.some(
+            (adv) => adv.id === advocateId
+          );
 
           const updated = isCurrentlySaved
             ? advocates.filter((adv) => adv.id !== advocateId)
@@ -54,6 +65,12 @@ const SavedAdvocates = () => {
     [advocates]
   );
 
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   return (
     <>
       <NavBar />
@@ -71,13 +88,13 @@ const SavedAdvocates = () => {
           {/* Results Count */}
           <div className="mb-6">
             <p className="text-gray-600">
-              Showing {advocates.length} of {advocates.length} advocates
+              Showing {Math.min(currentPage * pageSize, advocates.length)} of {advocates.length} advocates
             </p>
           </div>
 
           {/* Advocates Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            {advocates.map((advocate) => (
+            {paginatedAdvocates.map((advocate) => (
               <div
                 key={advocate.id}
                 className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden"
@@ -101,7 +118,7 @@ const SavedAdvocates = () => {
 
                   <div className="flex items-start space-x-4">
                     <img
-                      src={`${import.meta.env.VITE_API_URL}/Uploads/${advocate.profilePhoto}`}
+                      src={`${advocate.profilePhoto}`}
                       alt={advocate.name}
                       className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg"
                     />
@@ -123,6 +140,53 @@ const SavedAdvocates = () => {
               </div>
             ))}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-8 px-6 py-4 flex justify-between items-center">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-md ${
+                  currentPage === 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                } transition-colors`}
+              >
+                Previous
+              </button>
+
+              <div className="flex gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-1 rounded-md ${
+                        currentPage === page
+                          ? "bg-indigo-600 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      } transition-colors`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-md ${
+                  currentPage === totalPages
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                } transition-colors`}
+              >
+                Next
+              </button>
+            </div>
+          )}
 
           {/* No Results */}
           {advocates.length === 0 && (

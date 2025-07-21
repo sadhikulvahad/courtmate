@@ -114,7 +114,6 @@ export const deleteCase = async (caseId: string, token: string | null) => {
 
 export const updateHearing = async (caseId: string , hearingEntry: string, token: string | null) => {
     try {
-        console.log(hearingEntry)
         const response = await axiosInstance.put(`/case/updateHearing/${caseId}`, { hearingEntry }, {
             headers: {
                 Authorization: `Bearer ${token}`

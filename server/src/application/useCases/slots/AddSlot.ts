@@ -3,9 +3,13 @@ import { Slot } from "../../../domain/entities/Slot";
 import { SlotRepository } from "../../../domain/interfaces/SlotRepository";
 import { SlotProps } from "../../../domain/types/EntityProps";
 import { Types } from "mongoose";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class AddSlot {
-  constructor(private slotRepository: SlotRepository) { }
+  constructor(@inject(TYPES.SlotRepository) private slotRepository: SlotRepository) { }
 
   async execute(props: SlotProps): Promise<Slot> {
     if (!props.advocateId || !props.date || !props.time || props.isAvailable === undefined) {

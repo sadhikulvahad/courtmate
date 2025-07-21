@@ -7,4 +7,5 @@ export interface SlotRepository {
   update(id: string, updates: Partial<SlotProps>): Promise<Slot>;
   getAvailableSlots(advocateId: string): Promise<Slot[]>
   findById(id: string): Promise<Slot | null>
+  getAllSlots():Promise<Slot[]>
 }

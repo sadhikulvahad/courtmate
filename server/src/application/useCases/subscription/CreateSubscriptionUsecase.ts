@@ -1,13 +1,17 @@
 import { SubscriptionRepository } from "../../../domain/interfaces/SubscriptionRepository";
 import { SubscriptionProps } from "../../../domain/types/EntityProps";
 import { Subscription } from "../../../domain/entities/Subscription";
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 import { User } from "../../../domain/entities/User";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class CreateSubscriptionUseCase {
     constructor(
-        private subscriptionRepository: SubscriptionRepository,
-        private userRepository: UserRepository
+        @inject(TYPES.SubscriptionRepository) private subscriptionRepository: SubscriptionRepository,
+        @inject(TYPES.UserRepository) private userRepository: UserRepository
 
     ) { }
 

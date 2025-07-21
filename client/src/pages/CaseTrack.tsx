@@ -121,7 +121,7 @@ const CaseTracker = () => {
     setLoading(true);
     try {
       const response = await createCase(newCase, token);
-      if(response?.status === 201){
+      if (response?.status === 201) {
         setCases([...cases, response?.data.data]);
         setNewCase({
           title: "",
@@ -134,8 +134,8 @@ const CaseTracker = () => {
         });
         setNewHearingEntry("");
         setShowCreateForm(false);
-      }else{
-        toast.error(response?.data.error)
+      } else {
+        toast.error(response?.data.error);
       }
     } catch (err) {
       if (err instanceof AxiosError) {
@@ -150,6 +150,16 @@ const CaseTracker = () => {
 
   const handleUpdateCase = async () => {
     if (!selectedCase || !selectedCase._id) return;
+    if (
+      !newCase.title.trim() ||
+      !newCase.clientName.trim() ||
+      !newCase.caseType.trim() ||
+      !newCase.nextHearingDate.trim() ||
+      !newCase.description.trim()
+    ) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
     setLoading(true);
     try {
       const response = await updateCase(selectedCase, token);
@@ -566,12 +576,12 @@ const CaseTracker = () => {
                     </div>
                     {newCase.hearingHistory.length > 0 && (
                       <ul className="text-sm text-gray-600 list-disc pl-4">
-                      {newCase.hearingHistory.map((entry, index) => (
-                        <li key={index}>
-                          {new Date(entry).toLocaleDateString()}
-                        </li>
-                      ))}
-                    </ul>
+                        {newCase.hearingHistory.map((entry, index) => (
+                          <li key={index}>
+                            {new Date(entry).toLocaleDateString()}
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </div>
 

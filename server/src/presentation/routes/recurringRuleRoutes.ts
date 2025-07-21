@@ -1,35 +1,36 @@
-import { Router, Request, Response } from 'express';
-import { JwtTokenService } from '../../infrastructure/services/jwt';
-import { RefreshTokenUseCase } from '../../application/useCases/auth/refreshTokenUseCase';
-import { UserRepositoryImplement } from '../../infrastructure/dataBase/repositories/userRepository';
-import { MongooseSlotRepository } from '../../infrastructure/dataBase/repositories/SlotRepository';
-import { RecurringRuleRepositoryImplement } from '../../infrastructure/dataBase/repositories/RecurringRuleRepository';
-import { createAuthMiddleware } from '../../infrastructure/web/authMiddlware';
-import { AddRecurringRule } from '../../application/useCases/recurringRule/AddRecurringRule';
+import { Router, Request, Response, NextFunction } from 'express';
+import { container } from '../../infrastructure/DIContainer/container';
+import { TYPES } from '../../types';
 import { RecurringRuleController } from '../controllers/recurringRuleController';
-import { GetRecurringRulesByAdvocate } from '../../application/useCases/recurringRule/GetRecurringRule';
+import { AuthMiddleware } from '../../infrastructure/web/authMiddlware';
+import { Logger } from 'winston';
 
-// Factory function to create the router with dependencies
-    const router = Router();
+// Async handler wrapper
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>
+) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
-    // Initialize dependencies
-    const tokenService = new JwtTokenService();
-    const userRepository = new UserRepositoryImplement();
-    const slotRepository = new MongooseSlotRepository();
-    const recurringRuleRepository = new RecurringRuleRepositoryImplement();
-    const refreshTokenUseCase = new RefreshTokenUseCase(tokenService, userRepository);
-    const authMiddleware = createAuthMiddleware(tokenService, refreshTokenUseCase);
-    const addRecurringRuleUseCase = new AddRecurringRule(recurringRuleRepository, slotRepository);
-    const getRecurringRulesByAdvocate = new GetRecurringRulesByAdvocate(recurringRuleRepository)
-    const recurringRuleController = new RecurringRuleController(addRecurringRuleUseCase, getRecurringRulesByAdvocate);
+const router = Router();
+const recurringRuleController = container.get<RecurringRuleController>(TYPES.RecurringRuleController);
+const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const logger = container.get<Logger>(TYPES.Logger);
 
-    // Routes
-    router.post('/', authMiddleware, (req: Request, res: Response) => {
-        recurringRuleController.addRecurringRule(req, res)
-    });
+router.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Recurring rule route accessed: ${req.method} ${req.path}`, {
+    ip: req.ip,
+    query: req.query,
+    body: req.body,
+  });
+  next();
+});
 
-    router.get('/', authMiddleware, (req: Request, res: Response) => {
-        recurringRuleController.getRecurringRule(req, res)
-    })
+router.use(authMiddleware.auth.bind(authMiddleware))
+router.use(authMiddleware.authorizeRoles('advocate'))
+
+router.post('/', asyncHandler(recurringRuleController.addRecurringRule.bind(recurringRuleController)));
+
+router.get('/', asyncHandler(recurringRuleController.getRecurringRule.bind(recurringRuleController)));
 
 export default router;

@@ -5,29 +5,30 @@ import { UpdateCaseUseCase } from "../../application/useCases/case/UpdateCaseUse
 import { DeleteCaseUseCase } from "../../application/useCases/case/DeleteCaseUsecase";
 import { CaseRepository } from "../../domain/interfaces/CaseRepository";
 import { CaseProps } from "../../domain/types/EntityProps";
-import { UpdateHearingHistoryUseCase } from "../../application/useCases/case/updateHearingUsecase";
+import { UpdateHearingHistoryUseCase } from "../../application/useCases/case/UpdateHearingUsecase";
+import { HttpStatus } from "../../domain/share/enums";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../types";
+import { Logger } from "winston";
 
+
+@injectable()
 export class CaseController {
-    private createCaseUseCase: CreateCaseUseCase;
-    private getAllCasesUseCase: GetAllCasesUseCase;
-    private updateCaseUseCase: UpdateCaseUseCase;
-    private deleteCaseUseCase: DeleteCaseUseCase;
-    private updateHearingHistoryUseCase: UpdateHearingHistoryUseCase
-
-    constructor(caseRepository: CaseRepository) {
-        this.createCaseUseCase = new CreateCaseUseCase(caseRepository);
-        this.getAllCasesUseCase = new GetAllCasesUseCase(caseRepository);
-        this.updateCaseUseCase = new UpdateCaseUseCase(caseRepository);
-        this.deleteCaseUseCase = new DeleteCaseUseCase(caseRepository);
-        this.updateHearingHistoryUseCase = new UpdateHearingHistoryUseCase(caseRepository)
-    }
+    constructor(
+        @inject(TYPES.CreateCaseUseCase) private createCaseUseCase: CreateCaseUseCase,
+        @inject(TYPES.GetAllCasesUseCase) private getAllCasesUseCase: GetAllCasesUseCase,
+        @inject(TYPES.UpdateCaseUseCase) private updateCaseUseCase: UpdateCaseUseCase,
+        @inject(TYPES.DeleteCaseUseCase) private deleteCaseUseCase: DeleteCaseUseCase,
+        @inject(TYPES.UpdateHearingHistoryUseCase) private updateHearingHistoryUseCase: UpdateHearingHistoryUseCase,
+        @inject(TYPES.Logger) private logger: Logger
+    ) { }
 
     async createCase(req: Request, res: Response) {
         try {
             const user = req.user as { id: string; role: string } | undefined;
 
             if (!user) {
-                return res.status(401).json({ success: false, message: 'Unauthorized' });
+                return res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: 'Unauthorized' });
             }
 
             const caseDataFromClient = req.body;
@@ -40,9 +41,9 @@ export class CaseController {
 
             const newCase = await this.createCaseUseCase.execute(caseData);
 
-            res.status(201).json({ success: true, data: newCase });
+            res.status(HttpStatus.CREATED).json({ success: true, data: newCase });
         } catch (error: any) {
-            res.status(400).json({ success: false, error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: error.message });
         }
     }
 
@@ -51,45 +52,68 @@ export class CaseController {
         try {
             const { userId } = req.params
             if (!userId) {
-                return res.status(404).json({ status: false, error: 'Invalid Id' })
+                return res.status(HttpStatus.NOT_FOUND).json({ status: false, error: 'Invalid Id' })
             }
             const cases = await this.getAllCasesUseCase.execute(userId);
-            res.status(200).json({ success: true, data: cases });
+            res.status(HttpStatus.OK).json({ success: true, data: cases });
         } catch (error: any) {
-            res.status(500).json({ success: false, error: error.message });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
         }
     }
 
     async UpdateCase(req: Request, res: Response) {
         try {
             const caseId = req.params.caseId;
+
+            if (!caseId) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Case Id required' });
+            }
+
             const caseData = req.body as Partial<CaseProps>;
+
+            if (!caseData) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: 'All fields are required' });
+            }
             const updatedCase = await this.updateCaseUseCase.execute(caseId, caseData);
-            res.status(200).json({ success: true, data: updatedCase });
+            res.status(HttpStatus.OK).json({ success: true, data: updatedCase });
         } catch (error: any) {
-            res.status(400).json({ success: false, error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: error.message });
         }
     }
 
     async Deletecase(req: Request, res: Response) {
         try {
             const caseId = req.params.caseId;
+
+            if (!caseId) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Case Id required' });
+            }
+
             await this.deleteCaseUseCase.execute(caseId);
-            res.status(200).json({ success: true, message: "Case deleted successfully" });
+            res.status(HttpStatus.OK).json({ success: true, message: "Case deleted successfully" });
         } catch (error: any) {
-            res.status(400).json({ success: false, error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: error.message });
         }
     }
 
     async updateHearingDate(req: Request, res: Response) {
         try {
             const caseId = req.params.caseId;
+
+            if (!caseId) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Case Id required' });
+            }
+
             const { hearingEntry } = req.body;
-            console.log(hearingEntry)
+
+            if (!hearingEntry) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: 'All fields are required' });
+            }
+
             const updatedCase = await this.updateHearingHistoryUseCase.execute(caseId, hearingEntry);
-            res.status(200).json({ success: true, data: updatedCase });
+            res.status(HttpStatus.OK).json({ success: true, data: updatedCase });
         } catch (error: any) {
-            res.status(400).json({ success: false, error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: error.message });
         }
     }
 }

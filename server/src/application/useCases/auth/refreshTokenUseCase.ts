@@ -1,12 +1,16 @@
 // application/useCases/auth/refreshTokenUseCase.ts
+import { inject, injectable } from "inversify";
 import { TokenService } from "../../../domain/interfaces/TokenRepository";
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class RefreshTokenUseCase {
   constructor(
-    private tokenService: TokenService,
-    private userRepository : UserRepository
-  ) {}
+    @inject(TYPES.TokenRepository) private tokenService: TokenService,
+    @inject(TYPES.UserRepository) private userRepository: UserRepository
+  ) { }
 
   async execute(refreshToken: string) {
     try {

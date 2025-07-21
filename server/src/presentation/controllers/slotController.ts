@@ -2,32 +2,41 @@ import { Request, Response } from 'express';
 import { GetSlots } from '../../application/useCases/slots/GetSlot';
 import { AddSlot } from '../../application/useCases/slots/AddSlot';
 import { PostponeSlot } from '../../application/useCases/slots/PostponeSlot';
+import { HttpStatus } from '../../domain/share/enums';
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../../types';
+import { Logger } from 'winston';
 
+
+@injectable()
 export class SlotController {
   constructor(
-    private GetSlots: GetSlots,
-    private AddSlot: AddSlot,
-    private postponeSlotUseCase : PostponeSlot
+    @inject(TYPES.GetSlots) private GetSlots: GetSlots,
+    @inject(TYPES.AddSlot) private AddSlot: AddSlot,
+    @inject(TYPES.PostponeSlot) private postponeSlotUseCase: PostponeSlot,
+    @inject(TYPES.Logger) private logger: Logger
   ) { }
 
   async getSlots(req: Request, res: Response) {
     try {
       const { advocateId, month } = req.query;
+
       if (!advocateId || !month) {
-        return res.status(400).json({ message: 'advocateId and month are required' });
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: 'advocateId and month are required' });
       }
       const slots = await this.GetSlots.execute(advocateId as string, new Date(month as string));
       res.json(slots.map((slot) => slot.toJSON()));
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
     }
   }
 
   async addSlot(req: Request, res: Response) {
     try {
       const { advocateId, date, time } = req.body;
+
       if (!advocateId || !date || !time) {
-        return res.status(400).json({ message: 'advocateId, date, and time are required' });
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: 'advocateId, date, and time are required' });
       }
       const slot = await this.AddSlot.execute({
         advocateId,
@@ -36,9 +45,9 @@ export class SlotController {
         isAvailable: true,
         status: 'confirmed',
       });
-      res.status(201).json(slot.toJSON());
+      res.status(HttpStatus.CREATED).json(slot.toJSON());
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
     }
   }
 
@@ -46,13 +55,22 @@ export class SlotController {
     try {
       const { id } = req.params;
       const { date, time, reason } = req.body;
+
+      if (!id) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Id required' });
+      }
+
+      if (!date || !time || !reason) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Required data missing' });
+      }
+      
       const user = req.user as { id: string; role: string; name: string } | undefined;
 
       if (!user?.id) {
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Unauthorized' });
       }
       if (!date || !time) {
-        return res.status(400).json({ message: 'Date and time are required' });
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Date and time are required' });
       }
 
       const slot = await this.postponeSlotUseCase.execute(id, user.id, {
@@ -61,9 +79,9 @@ export class SlotController {
         reason,
       });
 
-      res.status(200).json(slot.toJSON());
+      res.status(HttpStatus.OK).json(slot.toJSON());
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
     }
   }
 }

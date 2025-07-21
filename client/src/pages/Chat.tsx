@@ -6,9 +6,6 @@ import {
   Video,
   Send,
   MoreVertical,
-  Clock,
-  CheckCheck,
-  File,
   Paperclip,
   X,
   Image,
@@ -19,12 +16,10 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { socket } from "@/App";
-// import { AdvocateProps } from "@/types/Types";
-// import { findUser } from "@/api/user/userApi";
 import { useLocation } from "react-router-dom";
 import { GetConversation, GetMessages } from "@/api/chatApi";
 import { Booking, Message } from "@/types/Types";
-import { getBook } from "@/api/Booking";
+import { getBook } from "@/api/booking";
 import { toast } from "sonner";
 import axios from "axios";
 import axiosInstance from "@/api/axiosInstance";
@@ -37,6 +32,7 @@ interface Conversation {
   }[];
   lastMessage?: {
     _id: string;
+    attachments?: Attachment[];
     content: string;
     timeStamp: Date;
     status: string;
@@ -59,8 +55,8 @@ interface ImageModalProps {
 
 interface Attachment {
   fileUrl: string;
-  fileName: string;
-  fileType: "image" | "file";
+  fileName?: string;
+  fileType?: "image" | "file";
 }
 
 type ModalImage = {
@@ -76,9 +72,6 @@ const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [modalImage, setModalImage] = useState<ModalImage | null>(null);
-  //   const [advocateDetails, setAdvocateDetails] = useState<AdvocateProps | null>(
-  //     null
-  //   );
   const [advocateId, setAdvocateId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -129,8 +122,6 @@ const Chat = () => {
       const convResponse = await GetConversation();
       setConversations(convResponse?.data || []);
     } catch (error: unknown) {
-      console.error("Error fetching data:", error);
-
       if (axios.isAxiosError(error)) {
         toast.error(error.response?.data?.error || "Something went wrong");
       } else {
@@ -174,7 +165,6 @@ const Chat = () => {
         const response = await GetMessages(selectedChat);
         setMessages(response?.data || []);
         const getBooking = await getBook(advocateId, userId);
-        console.log(getBooking);
         setBooking(getBooking.data.booking);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -188,14 +178,12 @@ const Chat = () => {
     };
 
     fetchMessages();
-    console.log("Joining chat room:", `chat_${selectedChat}`); // Debug
     socket.emit("join-chat", selectedChat);
 
     return () => {
-      console.log("Leaving chat room:", `chat_${selectedChat}`); // Debug
       socket.emit("leave-chat", selectedChat);
     };
-  }, [selectedChat, advocateId, user?.id]);
+  }, [selectedChat, advocateId, userId]);
 
   useEffect(() => {
     const handleNewMessage = (message: Message) => {
@@ -207,7 +195,13 @@ const Chat = () => {
           conv._id === message.conversationId
             ? {
                 ...conv,
-                lastMessage: message,
+                lastMessage: {
+                  _id: message._id,
+                  attachments: message.attachments,
+                  content: message.content,
+                  timeStamp: message.timeStamp,
+                  status: message.status,
+                },
                 unreadCount:
                   message.senderId !== user?.id
                     ? (conv.unreadCount || 0) + 1
@@ -220,7 +214,6 @@ const Chat = () => {
 
     socket.on("new-message", handleNewMessage);
     socket.on("user-typing", (data) => {
-      console.log("User typing:", data); // Debug
       if (data.conversationId === selectedChat && data.userId !== user?.id) {
         setTypingUsers((prev) => {
           if (!prev.find((u) => u.userId === data.userId)) {
@@ -231,13 +224,11 @@ const Chat = () => {
       }
     });
     socket.on("user-stop-typing", (data) => {
-      console.log("User stopped typing:", data); // Debug
       if (data.conversationId === selectedChat) {
         setTypingUsers((prev) => prev.filter((u) => u.userId !== data.userId));
       }
     });
     socket.on("message-read", (data) => {
-      console.log("Message read:", data); // Debug
       if (data.conversationId === selectedChat) {
         setMessages((prev) =>
           prev.map((msg) =>
@@ -253,12 +244,29 @@ const Chat = () => {
       socket.off("user-stop-typing");
       socket.off("message-read");
     };
-  }, [selectedChat, user?.id]);
+  }, [selectedChat]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    console.log("Selected file changed:", selectedFile);
+
+    if (selectedFile) {
+      const url = URL.createObjectURL(selectedFile);
+      setPreviewUrl(url);
+      console.log("Preview URL created:", url);
+
+      return () => {
+        URL.revokeObjectURL(url);
+        console.log("Preview URL revoked");
+      };
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [selectedFile]);
 
   const getFileType = (file: File): "image" | "file" => {
     if (file.type.startsWith("image/")) return "image";
@@ -267,11 +275,10 @@ const Chat = () => {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    console.log("File selected:", file);
     if (!file) return;
 
     setSelectedFile(file);
-
-    // Clear file input
     e.target.value = "";
   };
 
@@ -399,7 +406,6 @@ const Chat = () => {
       setNewMessage("");
       handleRemoveFile(); // Clear file selection
     } catch (error) {
-      console.error("File upload failed:", error);
       if (axios.isAxiosError(error)) {
         const errorMessage =
           error.response?.data?.error ||
@@ -429,7 +435,6 @@ const Chat = () => {
     isTyping,
     selectedFile,
     token,
-    handleRemoveFile,
   ]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -469,26 +474,23 @@ const Chat = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "sent":
-        return <Clock className="w-3 h-3 text-gray-400" />;
-      case "delivered":
-        return <CheckCheck className="w-3 h-3 text-gray-400" />;
-      case "read":
-        return <CheckCheck className="w-3 h-3 text-blue-500" />;
-      default:
-        return null;
-    }
-  };
-
   const currentChat = conversations.find((c) => c._id === selectedChat);
   const otherParticipant = currentChat?.participants.find(
     (p) => p.userId._id !== user?.id
   );
 
-  // Filtered conversations
-  const filteredConversations = conversations.filter((conv) =>
+  // Sort and filter conversations
+  const sortedConversations = [...conversations].sort((a, b) => {
+    const aTime = a.lastMessage?.timeStamp
+      ? new Date(a.lastMessage.timeStamp).getTime()
+      : new Date(a.startedAt).getTime();
+    const bTime = b.lastMessage?.timeStamp
+      ? new Date(b.lastMessage.timeStamp).getTime()
+      : new Date(b.startedAt).getTime();
+    return bTime - aTime; // Sort in descending order (most recent first)
+  });
+
+  const filteredConversations = sortedConversations.filter((conv) =>
     conv.participants.some((p) =>
       p.userId.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -593,8 +595,14 @@ const Chat = () => {
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 truncate">
-                            {conversation.lastMessage?.content ||
-                              "No messages yet"}
+                            {conversation.lastMessage?.content?.trim()
+                              ? conversation.lastMessage.content
+                              : conversation.lastMessage?.attachments?.[0]
+                              ? conversation.lastMessage.attachments[0]
+                                  .fileType === "image"
+                                ? "Image"
+                                : "File"
+                              : "No messages yet"}
                           </p>
                         </div>
                       </div>
@@ -667,10 +675,7 @@ const Chat = () => {
                                   (attachment, index) => {
                                     const isImage =
                                       attachment.fileType === "image";
-                                    const imageUrl = `${
-                                      import.meta.env.VITE_API_URL
-                                    }${attachment.fileUrl}`;
-                                    console.log(imageUrl, isImage);
+                                    const imageUrl = attachment.fileUrl;
                                     return (
                                       <div key={index} className="mb-2">
                                         {isImage ? (
@@ -690,9 +695,7 @@ const Chat = () => {
                                           />
                                         ) : (
                                           <a
-                                            href={`${
-                                              import.meta.env.VITE_API_URL
-                                            }${attachment.fileUrl}`}
+                                            href={attachment.fileUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -712,16 +715,6 @@ const Chat = () => {
                                 )}
                               </div>
                             ) : null}
-                            <div className="flex items-center justify-end mt-1 space-x-1">
-                              <span className="text-xs opacity-70">
-                                {formatTime(message.timeStamp)}
-                              </span>
-                              {message.senderId === user?.id && (
-                                <div className="ml-1">
-                                  {getStatusIcon(message.status)}
-                                </div>
-                              )}
-                            </div>
                           </div>
                         </div>
                       ))}
@@ -756,26 +749,31 @@ const Chat = () => {
 
                 {/* File Preview */}
                 {selectedFile && (
-                  <div className="bg-gray-100 border-t border-gray-200 p-4">
+                  <div className="bg-gray-100 border border-gray-200 p-4 rounded-lg">
                     <div className="flex items-center space-x-4 bg-white p-3 rounded-lg shadow-sm">
                       <div className="flex-shrink-0">
                         {selectedFile.type.startsWith("image/") ? (
-                          <img
-                            src={previewUrl!}
-                            alt="Preview"
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                        ) : selectedFile.type.startsWith("video/") ? (
-                          <video
-                            src={previewUrl!}
-                            className="w-12 h-12 object-cover rounded"
-                          />
+                          <div>
+                            <p className="text-xs text-green-600 mb-1">
+                              Image Preview:
+                            </p>
+                            <img
+                              src={previewUrl!}
+                              alt="Preview"
+                              className="w-12 h-12 object-cover rounded border"
+                            />
+                          </div>
                         ) : (
-                          <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                            {getFileIcon(
-                              getFileType(selectedFile),
-                              selectedFile.name
-                            )}
+                          <div>
+                            <p className="text-xs text-blue-600 mb-1">
+                              File Icon:
+                            </p>
+                            <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center border">
+                              {getFileIcon(
+                                getFileType(selectedFile),
+                                selectedFile.name
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -785,6 +783,9 @@ const Chat = () => {
                         </p>
                         <p className="text-xs text-gray-500">
                           {formatFileSize(selectedFile.size)}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Type: {selectedFile.type || "unknown"}
                         </p>
                       </div>
                       <button
@@ -920,3 +921,5 @@ const ImageModal = ({
     </div>
   );
 };
+
+// is there any problem, because there is something wrong with the lastmassage showing and message count and like those

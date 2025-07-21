@@ -189,8 +189,16 @@ const UserBookingsView = ({
                     }
                   }}
                   className={`p-3 text-center rounded-lg relative transition-all duration-200 min-h-[50px] flex flex-col items-center justify-center
-                    ${isSelected ? "bg-blue-500 text-white shadow-lg scale-105" : ""}
-                    ${date.isToday && !isSelected ? "border-2 border-blue-500 bg-blue-50" : ""}
+                    ${
+                      isSelected
+                        ? "bg-blue-500 text-white shadow-lg scale-105"
+                        : ""
+                    }
+                    ${
+                      date.isToday && !isSelected
+                        ? "border-2 border-blue-500 bg-blue-50"
+                        : ""
+                    }
                     ${
                       date.hasSlots && !isSelected
                         ? "bg-green-100 border-2 border-green-400 hover:bg-green-200"
@@ -205,10 +213,12 @@ const UserBookingsView = ({
                     ${date.hasSlots ? "transform hover:scale-105" : ""}
                   `}
                 >
-                  <span className={`font-medium ${isSelected ? "text-white" : ""}`}>
+                  <span
+                    className={`font-medium ${isSelected ? "text-white" : ""}`}
+                  >
                     {date.day || ""}
                   </span>
-                  
+
                   {/* Simple slot indicator - just a single dot */}
                   {date.hasSlots && date.day && (
                     <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
@@ -219,7 +229,7 @@ const UserBookingsView = ({
                       />
                     </div>
                   )}
-                  
+
                   {/* Today indicator for non-selected dates */}
                   {date.isToday && !isSelected && (
                     <div className="absolute top-1 right-1">
@@ -450,7 +460,7 @@ const UserBookingsView = ({
                         : "bg-green-50 border-green-300 text-green-800 hover:bg-green-100 hover:border-green-400"
                     }`}
                 >
-                  {format(slot.time, "h:mm a")}
+                  {format(new Date(slot.time), "hh mm a")}
                 </button>
               ))}
             {availableSlots?.filter(

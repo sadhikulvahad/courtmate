@@ -1,44 +1,32 @@
-// src/axiosInstance.ts
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-import { logout, setToken } from "../features/authSlice";
-import { store } from "@/redux/store";
-
-type FailedQueueItem = (token: string) => void;
+import axios, { AxiosRequestConfig } from 'axios';
+import { store } from '@/redux/store'; // Adjust based on your store setup
+import { logout, setToken } from '@/features/authSlice';
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true
-});
-
-// 1) Attach the latest access token from Redux to every request
-axiosInstance.interceptors.request.use(config => {
-  const token = store.getState().auth.token;
-  if (token && config.headers) {
-    config.headers["Authorization"] = `Bearer ${token}`;
-  }
-  return config;
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+  withCredentials: true,
 });
 
 let isRefreshing = false;
-let failedQueue: FailedQueueItem[] = [];
+let failedQueue: Array<(token: string) => void> = [];
 
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => {
-    // 2) If server chose to send you a new token in a header...
-    const fresh = response.headers["x-access-token"];
+  (response) => {
+    const fresh = response.headers['x-access-token'];
     if (fresh) {
       store.dispatch(setToken(fresh));
-      axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${fresh}`;
+      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${fresh}`;
     }
-
     return response;
   },
-  async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
+  async (error) => {
+
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    console.log(error.response.data)
     if (
       error.response?.status === 403 &&
-      (error.response.data as { message?: string })?.message === "Account is blocked"
+      ((error.response.data as { message?: string })?.message === 'Account is blocked' || (error.response.data as { error?: string })?.error === 'Account is blocked')
     ) {
       store.dispatch(logout());
       return Promise.reject(error);
@@ -50,7 +38,7 @@ axiosInstance.interceptors.response.use(
           failedQueue.push((newAccessToken: string) => {
             originalRequest.headers = {
               ...originalRequest.headers,
-              Authorization: `Bearer ${newAccessToken}`
+              Authorization: `Bearer ${newAccessToken}`,
             };
             store.dispatch(setToken(newAccessToken));
             resolve(axiosInstance(originalRequest));
@@ -62,23 +50,21 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data, headers } = await axiosInstance.post('/auth/refresh', null, {
-          withCredentials: true
+        const { data, headers } = await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, null, {
+          withCredentials: true,
         });
-
-        // pull the token either from a header or the JSON body:
-        const newAccessToken = headers["x-access-token"] || data.accessToken;
-        // persist it
+        const newAccessToken = headers['x-access-token'] || data.accessToken;
         store.dispatch(setToken(newAccessToken));
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
 
-        failedQueue.forEach(callback => callback(newAccessToken));
+        failedQueue.forEach((callback) => callback(newAccessToken));
         failedQueue = [];
 
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         store.dispatch(setToken(null));
-        window.location.href = '/login';
+        document.cookie = 'refreshToken=; Max-Age=0; path=/;'; // Clear cookie
+        window.location.href = '/signup';
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

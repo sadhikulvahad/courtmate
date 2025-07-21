@@ -1,9 +1,11 @@
+import { inject, injectable } from "inversify";
 import { CaseRepository } from "../../../domain/interfaces/CaseRepository";
 import { CaseProps } from "../../../domain/types/EntityProps";
+import { TYPES } from "../../../types";
 
-
+@injectable()
 export class CreateCaseUseCase {
-    constructor(private caseRepository: CaseRepository) {}
+    constructor(@inject(TYPES.CaseRepository) private caseRepository: CaseRepository) {}
 
     async execute(caseData: CaseProps): Promise<CaseProps> {
         if (!caseData.title || !caseData.clientName || !caseData.caseType || 

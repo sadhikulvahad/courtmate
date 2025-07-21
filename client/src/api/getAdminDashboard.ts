@@ -4,7 +4,7 @@ import axiosInstance from "./axiosInstance";
 
 export const getAdminDashboardData = async (token: string | null, adminId: string | undefined) => {
     try {
-        const response = await axiosInstance.get(`/adminDashoard/${adminId}`, {
+        const response = await axiosInstance.get(`/adminDashboard/${adminId}`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }

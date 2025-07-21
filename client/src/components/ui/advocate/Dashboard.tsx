@@ -30,7 +30,6 @@ const Dashboard = () => {
     bciCertificatePreview: "",
     termsAccepted: false,
   });
-  console.log("alksdjfh")
   const [step, setStep] = useState(1);
   const [previewImage, setPreviewImage] = useState("");
 

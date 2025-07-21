@@ -1,9 +1,13 @@
 import { Types } from "mongoose";
 import { ConversationRepository } from "../../../domain/interfaces/ConversationRepository";
 import { ConversationProps } from "../../../domain/types/EntityProps";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class GetConversationsUseCase {
-  constructor(private conversationRepository: ConversationRepository) {}
+  constructor(@inject(TYPES.ConversationRepository) private conversationRepository: ConversationRepository) { }
 
   async execute(userId: string): Promise<ConversationProps[]> {
     try {

@@ -1,14 +1,16 @@
+import { inject, injectable } from "inversify";
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
 import { Types } from "mongoose";
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class GetBookingThisHourUseCase {
-  constructor(private readonly bookingRepository: BookingRepository) {}
+  constructor(@inject(TYPES.BookingRepository) private readonly bookingRepository: BookingRepository) { }
 
   async execute(advocateId: string, userId: string): Promise<Booking | null> {
     const now = new Date();
-
-    console.log(advocateId, userId)
 
     const startOfHour = new Date(now);
     startOfHour.setMinutes(0, 0, 0);

@@ -1,70 +1,78 @@
 
 
-import Express, {Request, Response} from 'express'
-import { UserRepositoryImplement } from '../../../infrastructure/dataBase/repositories/userRepository'
-import { NotificationRepositoryImplements } from '../../../infrastructure/dataBase/repositories/NotificationRepository'
+import { Request, Response } from 'express'
 import { getAllNotification } from '../../../application/useCases/getAllNotification'
 import { MarkAsRead } from '../../../application/useCases/MarkasRead'
 import { MarkAllAsRead } from '../../../application/useCases/MarkAllAsRead'
+import { HttpStatus } from '../../../domain/share/enums'
+import { inject, injectable } from 'inversify'
+import { TYPES } from '../../../types'
+import { Logger } from 'winston'
 
 
-export class NotificaitonController {
+@injectable()
+export class NotificationController {
 
-    private readonly GetAllNotification : getAllNotification
-    private readonly MarkAsReadnotification : MarkAsRead
-    private readonly MarkAllAsReadNotification : MarkAllAsRead
-    
-    constructor () {
-        const userRepository = new UserRepositoryImplement()
-        const NotificationRepository = new NotificationRepositoryImplements()   
-        this.GetAllNotification = new getAllNotification(NotificationRepository)
-        this.MarkAsReadnotification = new MarkAsRead(NotificationRepository)
-        this.MarkAllAsReadNotification = new MarkAllAsRead(NotificationRepository)
-    }
+    constructor(
+        @inject(TYPES.GetAllNotification) private readonly GetAllNotification: getAllNotification,
+        @inject(TYPES.MarkAsRead) private readonly MarkAsReadnotification: MarkAsRead,
+        @inject(TYPES.MarkAllAsRead) private readonly MarkAllAsReadNotification: MarkAllAsRead,
+        @inject(TYPES.Logger) private logger: Logger
+    ) { }
 
-    async getAdminNotifications (req: Request, res: Response) {
+    async getAdminNotifications(req: Request, res: Response) {
         try {
-            const {id} = req.params
-            if(!id){
-                return res.status(404).json({success: false, error: "No id found"})
+            const { id } = req.params
+            if (!id) {
+                return res.status(HttpStatus.NOT_FOUND).json({ success: false, error: "No id found" })
             }
 
             const result = await this.GetAllNotification.execute(id)
-            if(!result.success){
-                return res.status(400).json({success: false, error: result.error})
+            if (!result.success) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error })
             }
-            return res.status(200).json({success: true, message: result.message, notifications: result.Notifications})
+            return res.status(HttpStatus.OK).json({ success: true, message: result.message, notifications: result.Notifications })
         } catch (error) {
-            console.log('Error from get AdminNotification controller',error)
-            return res.status(500).json({success: false, error : "Server Error"})
+            this.logger.error('Error from get AdminNotification controller', { error })
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: "Server Error" })
         }
     }
 
-    async markAsRead (req: Request, res: Response) {
+    async markAsRead(req: Request, res: Response) {
         try {
-            const {id} = req.body
+            const { id } = req.body
+
+            if (!id) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'Id missing' })
+            }
+
             const result = await this.MarkAsReadnotification.execute(id)
-            if(!result.success){
-                return res.status(400).json({success: false, error: result.error})
+            if (!result.success) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error })
             }
-            res.status(200).json({success: true, message: result.message})
+            res.status(HttpStatus.OK).json({ success: true, message: result.message })
         } catch (error) {
-            console.log('Error from Mark as read controller', error)
-            return res.status(500).json({success: false, error: "Server Error"})
+            this.logger.error('Error from Mark as read controller', { error })
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: "Server Error" })
         }
     }
 
-    async markAllAsRead (req: Request, res: Response) {
+    async markAllAsRead(req: Request, res: Response) {
         try {
-            const {id} = req.body
-            const result = await this.MarkAllAsReadNotification.execute(id)
-            if(!result.success){
-                return res.status(400).json({success: false, error: result.error})
+            const { id } = req.body
+
+            if (!id) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'Id missing' })
             }
-            res.status(200).json({success: true, message: result.message})
+
+            const result = await this.MarkAllAsReadNotification.execute(id)
+            if (!result.success) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error })
+            }
+            res.status(HttpStatus.OK).json({ success: true, message: result.message })
         } catch (error) {
-            console.log('Error from Mark as read controller', error)
-            return res.status(500).json({success: false, error: "Server Error"})
+            this.logger.error('Error from Mark as read controller', { error })
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: "Server Error" })
         }
     }
 }

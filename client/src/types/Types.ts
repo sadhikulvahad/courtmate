@@ -30,8 +30,8 @@ export interface Advocate {
   createdAt?: string; // For sorting by recent
   isAdminVerified: string;
   verifiedAt: Date
-  isActive : boolean,
-  isSponsored : boolean
+  isActive: boolean,
+  isSponsored: boolean
 }
 
 
@@ -119,6 +119,7 @@ export interface AdvocateProps {
   savedAdvocates: string[]
   authMethod: string
   certification: string
+  avgRating?: number
 }
 
 
@@ -311,7 +312,7 @@ export interface Review {
 export interface CaseProps {
   _id?: string;
   title: string;
-  advocateId ?: string
+  advocateId?: string
   clientName: string;
   caseType: string;
   priority: string;
@@ -335,3 +336,48 @@ export interface AdminDashboardData {
   totalBooking: number;
   advocates: Advocate[];
 }
+
+
+export interface Attachment {
+  fileUrl: string;
+  fileName?: string;
+  fileType?: "image" | "file";
+}
+
+
+export interface Conversation {
+  _id: string;
+  participants: {
+    userId: { _id: string; name: string; email: string; role: string };
+    role: string;
+  }[];
+  lastMessage?: {
+    _id: string;
+    attachments?: Attachment[];
+    content: string;
+    timeStamp: Date;
+    status: string;
+  };
+  startedAt: Date;
+  unreadCount?: number;
+}
+
+
+export interface TypingUser {
+  userId: string;
+  name: string;
+}
+
+
+export interface ImageModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  imageUrl: string | undefined;
+  fileName?: string;
+}
+
+
+export type ModalImage = {
+  url: string;
+  name?: string;
+};

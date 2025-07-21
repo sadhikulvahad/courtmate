@@ -75,9 +75,9 @@ export const forgetResetPassword = async (password: string, email: string) => {
   }
 }
 
-export const logoutApi = async () => {
+export const logoutApi = async (token: string | null) => {
   try {
-    const response = await axiosInstance.post('auth/logout')
+    const response = await axiosInstance.post('auth/logout', { token })
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {

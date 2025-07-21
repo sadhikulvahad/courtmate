@@ -1,38 +1,56 @@
+import { Router, Request, Response, NextFunction } from 'express';
+import { container } from '../../../infrastructure/DIContainer/container';
+import { TYPES } from '../../../types';
+import { UserController } from '../../controllers/user/userController';
+import { AuthMiddleware } from '../../../infrastructure/web/authMiddlware';
+import { Logger } from 'winston';
 
+// Async handler wrapper
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>
+) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
+const router = Router();
+const userController = container.get<UserController>(TYPES.UserController);
+const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const logger = container.get<Logger>(TYPES.Logger);
 
+// Log middleware actions
+router.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`User route accessed: ${req.method} ${req.path}`, {
+    ip: req.ip,
+    query: req.query,
+    body: req.body,
+  });
+  next();
+});
 
-import Express, { Request, Response } from "express";
-import { UserController } from "../../controllers/user/userController";
-import { createAuthMiddleware } from "../../../infrastructure/web/authMiddlware";
-import { JwtTokenService } from "../../../infrastructure/services/jwt";
-import { RefreshTokenUseCase } from "../../../application/useCases/auth/refreshTokenUseCase";
-import { UserRepositoryImplement } from "../../../infrastructure/dataBase/repositories/userRepository";
+router.use(authMiddleware.auth.bind(authMiddleware))
 
-const router = Express.Router()
-
-const userController = new UserController()
-const userRepository = new UserRepositoryImplement()
-const tokenService = new JwtTokenService()
-const refreshToken = new RefreshTokenUseCase(tokenService, userRepository)
-const auth = createAuthMiddleware(tokenService, refreshToken)
-
-router.put('/toggleUser', auth, (req: Request, res: Response) => {
-    userController.toggleUserisBlocked(req, res)
-}
+router.put(
+  '/toggleUser',
+  authMiddleware.authorizeRoles('admin'),
+  asyncHandler(userController.toggleUserisBlocked.bind(userController))
 );
 
-router.put('/resetPassword', auth, (req: Request, res: Response) => {
-    userController.resetPassword(req, res)
-})
+router.put(
+  '/resetPassword',
+  authMiddleware.authorizeRoles('user'),
+  asyncHandler(userController.resetPassword.bind(userController))
+);
 
-router.put('/toggleSave/:advocateId', auth, (req: Request, res: Response) => {
-    userController.toggleSaveAdvocate(req, res)
-})
+router.put(
+  '/toggleSave/:advocateId',
+  authMiddleware.authorizeRoles('user'),
+  asyncHandler(userController.toggleSaveAdvocate.bind(userController))
+);
 
-router.get('/savedAdvocates', auth, (req: Request, res: Response) => {
-    userController.getSavedAdvocates(req, res)
-})
+router.get(
+  '/savedAdvocates',
+  authMiddleware.authorizeRoles('user'),
+  asyncHandler(userController.getSavedAdvocates.bind(userController))
+);
 
-
-export default router
+export default router;

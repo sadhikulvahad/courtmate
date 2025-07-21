@@ -1,28 +1,33 @@
+import express, { NextFunction, Request, Response } from 'express';
+import { AuthMiddleware } from '../../infrastructure/web/authMiddlware';
+import { AdminDashboardController } from '../controllers/adminDashboardController';
+import { container } from '../../infrastructure/DIContainer/container';
+import { TYPES } from '../../types';
+import { Logger } from 'winston';
 
-import express, { Request, Response } from 'express'
-import { UserRepositoryImplement } from '../../infrastructure/dataBase/repositories/userRepository'
-import { JwtTokenService } from '../../infrastructure/services/jwt'
-import { RefreshTokenUseCase } from '../../application/useCases/auth/refreshTokenUseCase'
-import { createAuthMiddleware } from '../../infrastructure/web/authMiddlware'
-import { AdminDashboardController } from '../controllers/adminDashboardController'
-import { BookingRepositoryImplements } from '../../infrastructure/dataBase/repositories/BookingRepository'
-import { GetAdminDashboard } from '../../application/useCases/admin/GetAdminDashboard'
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>
+) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
-const userRepository = new UserRepositoryImplement()
-const tokenService = new JwtTokenService()
-const refreshTokenUsecase = new RefreshTokenUseCase(tokenService, userRepository)
-const authMiddleware = createAuthMiddleware(tokenService, refreshTokenUsecase)
+const router = express.Router();
+const adminDashboardController = container.get<AdminDashboardController>(TYPES.AdminDashboardController);
+const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const logger = container.get<Logger>(TYPES.Logger);
 
-const router = express.Router()
+router.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Admin dashboard route accessed: ${req.method} ${req.path}`, {
+    ip: req.ip,
+    query: req.query,
+    body: req.body,
+  });
+  next();
+});
 
-const bookingRepository = new BookingRepositoryImplements()
-const getAdvocateDashboard = new GetAdminDashboard(bookingRepository, userRepository)
-const adminDashboardController = new AdminDashboardController(getAdvocateDashboard)
+router.use(authMiddleware.auth.bind(authMiddleware))
+router.use(authMiddleware.authorizeRoles('admin'))
 
+router.get('/:adminId', asyncHandler(adminDashboardController.getAdminDashboardData.bind(adminDashboardController)));
 
-router.get('/:adminId', authMiddleware, (req: Request, res: Response) => {
-    adminDashboardController.getAdminDashboardData(req, res)
-})
-
-
-export default router
+export default router;

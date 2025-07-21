@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { CreateConversation } from "@/api/chatApi";
 import RatingAndReview from "@/components/Review";
 import { findReviews } from "@/api/advocate/profileAPI";
+import LocationMap from "@/components/ui/LocationMap";
 
 // Reuse the RatingStars component from your list page
 const RatingStars = ({ rating }: RatingStarsProps) => {
@@ -218,8 +219,6 @@ const AdvocateProfile = () => {
       try {
         const response = await GetSavedAdvocates();
         const saved = response?.data?.advocates || [];
-        console.log(response);
-        // assuming each saved advocate has an `id` or `_id` field
         const savedIds = saved.map((adv: Ad) => adv._id || adv.id);
 
         setSavedAdvocates(savedIds);
@@ -281,9 +280,10 @@ const AdvocateProfile = () => {
                 <div className="flex-shrink-0">
                   <div className="relative w-32 h-32 rounded-xl overflow-hidden border-4 border-white shadow-md">
                     <img
-                      src={`${import.meta.env.VITE_API_URL}/uploads/${
-                        advocate?.profilePhoto
-                      }`}
+                      // src={`${import.meta.env.VITE_API_URL}/uploads/${
+                      //   advocate?.profilePhoto
+                      // }`}
+                      src={`${advocate?.profilePhoto}`}
                       alt={advocate?.name}
                       className="w-full h-full object-cover"
                     />
@@ -495,36 +495,53 @@ const AdvocateProfile = () => {
                     </div>
                   )}
 
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  <div className="p-4 bg-white rounded-lg shadow">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
                       Contact Information
                     </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <div className="p-2 bg-gray-100 rounded-full mr-3">
-                          <Phone size={16} className="text-gray-600" />
-                        </div>
-                        <span className="text-gray-700">{advocate?.phone}</span>
-                      </div>
-
-                      <div className="flex items-center">
-                        <div className="p-2 bg-gray-100 rounded-full mr-3">
-                          <Mail size={16} className="text-gray-600" />
-                        </div>
-                        <span className="text-gray-700">{advocate?.email}</span>
-                      </div>
-
-                      {advocate?.address && (
-                        <div className="flex items-start">
-                          <div className="p-2 bg-gray-100 rounded-full mr-3 mt-1">
-                            <MapPin size={16} className="text-gray-600" />
+                    <div className="flex flex-row gap-4">
+                      {/* Left Column: Contact Details */}
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center">
+                          <div className="p-2 bg-gray-100 rounded-full mr-3">
+                            <Phone size={16} className="text-gray-600" />
                           </div>
-                          <div className="text-gray-700">
-                            <p>{advocate.address.street}</p>
-                            <p>
-                              {advocate.address.city}, {advocate.address.state}
-                            </p>
-                            <p>{advocate.address.pincode}</p>
+                          <span className="text-gray-700">
+                            {advocate?.phone}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <div className="p-2 bg-gray-100 rounded-full mr-3">
+                            <Mail size={16} className="text-gray-600" />
+                          </div>
+                          <span className="text-gray-700">
+                            {advocate?.email}
+                          </span>
+                        </div>
+
+                        {advocate?.address && (
+                          <div className="flex items-start">
+                            <div className="p-2 bg-gray-100 rounded-full mr-3 mt-1">
+                              <MapPin size={16} className="text-gray-600" />
+                            </div>
+                            <div className="text-gray-700">
+                              <p>{advocate.address.street}</p>
+                              <p>
+                                {advocate.address.city},{" "}
+                                {advocate.address.state}
+                              </p>
+                              <p>{advocate.address.pincode}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Column: Map */}
+                      {advocate?.address && (
+                        <div className="flex-1">
+                          <div className="rounded-lg shadow">
+                            <LocationMap address={advocate.address} />
                           </div>
                         </div>
                       )}

@@ -1,9 +1,13 @@
 import { PaymentRepository } from "../../domain/interfaces/PaymentRepository";
 import { PaymentProps } from "../../domain/types/EntityProps";
 import { Payment } from "../../domain/entities/Payment";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../types";
 
+
+@injectable()
 export class PaymentUsecase {
-  constructor(private paymentRepository: PaymentRepository) {}
+  constructor(@inject(TYPES.PaymentRepository) private paymentRepository: PaymentRepository) { }
 
   async execute(bookingData: PaymentProps): Promise<Payment> {
     try {

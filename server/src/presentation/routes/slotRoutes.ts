@@ -1,37 +1,38 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+import { container } from '../../infrastructure/DIContainer/container';
+import { TYPES } from '../../types';
 import { SlotController } from '../controllers/slotController';
-import { JwtTokenService } from '../../infrastructure/services/jwt';
-import { UserRepositoryImplement } from '../../infrastructure/dataBase/repositories/userRepository';
-import { MongooseSlotRepository } from '../../infrastructure/dataBase/repositories/SlotRepository';
-import { RefreshTokenUseCase } from '../../application/useCases/auth/refreshTokenUseCase';
-import { createAuthMiddleware } from '../../infrastructure/web/authMiddlware';
-import { AddSlot } from '../../application/useCases/slots/AddSlot';
-import { GetSlots } from '../../application/useCases/slots/GetSlot';
-import { PostponeSlot } from '../../application/useCases/slots/PostponeSlot';
-import { BookingRepositoryImplements } from '../../infrastructure/dataBase/repositories/BookingRepository';
+import { AuthMiddleware } from '../../infrastructure/web/authMiddlware';
+import { Logger } from 'winston';
+
+// Async handler wrapper
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>
+) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
 const router = Router();
+const slotController = container.get<SlotController>(TYPES.SlotController);
+const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const logger = container.get<Logger>(TYPES.Logger);
 
-// Initialize dependencies
-const tokenService = new JwtTokenService();
-const userRepository = new UserRepositoryImplement();
-const slotRepository = new MongooseSlotRepository();
-const bookingRepository = new BookingRepositoryImplements()
-const refreshTokenUseCase = new RefreshTokenUseCase(tokenService, userRepository);
-const authMiddleware = createAuthMiddleware(tokenService, refreshTokenUseCase);
-const addSlotUseCase = new AddSlot(slotRepository);
-const getSlotsUseCase = new GetSlots(slotRepository);
-const postponeSlot = new PostponeSlot(slotRepository, bookingRepository)
-const slotController = new SlotController(getSlotsUseCase, addSlotUseCase, postponeSlot);
-
-// Routes
-router.get('/', authMiddleware, (req: Request, res: Response) => {
-    slotController.getSlots(req, res)
+router.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Slot route accessed: ${req.method} ${req.path}`, {
+    ip: req.ip,
+    query: req.query,
+    body: req.body,
+  });
+  next();
 });
-router.post('/', authMiddleware, (req: Request, res: Response) => {
-    slotController.addSlot(req, res)
-});
-router.put('/:id', authMiddleware, (req:Request, res: Response) => {
-    slotController.postponeSlot(req, res)
-})
 
-export default router
+router.use(authMiddleware.auth.bind(authMiddleware))
+router.use(authMiddleware.authorizeRoles('user', 'advocate'))
+
+router.get('/', asyncHandler(slotController.getSlots.bind(slotController)));
+
+router.post('/', asyncHandler(slotController.addSlot.bind(slotController)));
+
+router.put('/:id', asyncHandler(slotController.postponeSlot.bind(slotController)));
+
+export default router;

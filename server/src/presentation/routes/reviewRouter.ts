@@ -1,44 +1,40 @@
-import { Router, Request, Response } from "express";
-import { JwtTokenService } from "../../infrastructure/services/jwt";
-import { UserRepositoryImplement } from "../../infrastructure/dataBase/repositories/userRepository";
-import { RefreshTokenUseCase } from "../../application/useCases/auth/refreshTokenUseCase";
-import { createAuthMiddleware } from "../../infrastructure/web/authMiddlware";
-import { ReviewController } from "../controllers/reviewController";
-import { CreateReviewUseCase } from "../../application/useCases/review/CreateReview";
-import { ReviewRepositoryImplements } from "../../infrastructure/dataBase/repositories/ReviewRepository";
-import { GetReviewsUseCase } from "../../application/useCases/review/GetReviews";
-import { UpdateReviewUseCase } from "../../application/useCases/review/UpdateReviewUseCase";
-import { DeleteReviewUseCase } from "../../application/useCases/review/DeleteReviewUseCase";
+import { Router, Request, Response, NextFunction } from 'express';
+import { container } from '../../infrastructure/DIContainer/container';
+import { TYPES } from '../../types';
+import { ReviewController } from '../controllers/reviewController';
+import { AuthMiddleware } from '../../infrastructure/web/authMiddlware';
+import { Logger } from 'winston';
 
+// Async handler wrapper
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>
+) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
-const router = Router()
+const router = Router();
+const reviewController = container.get<ReviewController>(TYPES.ReviewController);
+const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const logger = container.get<Logger>(TYPES.Logger);
 
-const tokenService = new JwtTokenService()
-const userRepository = new UserRepositoryImplement()
-const refreshTokenUseCase = new RefreshTokenUseCase(tokenService, userRepository)
-const authMiddleware = createAuthMiddleware(tokenService, refreshTokenUseCase)
+router.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Review route accessed: ${req.method} ${req.path}`, {
+    ip: req.ip,
+    query: req.query,
+    body: req.body,
+  });
+  next();
+});
 
-const reviewRepository = new ReviewRepositoryImplements()
-const createReview = new CreateReviewUseCase(reviewRepository)
-const getReview = new GetReviewsUseCase(reviewRepository)
-const UpdateReview = new UpdateReviewUseCase(reviewRepository)
-const deleteReview = new DeleteReviewUseCase(reviewRepository)
-const reviewController = new ReviewController(createReview, getReview, UpdateReview, deleteReview)
+router.use(authMiddleware.auth.bind(authMiddleware))
+router.use(authMiddleware.authorizeRoles('user', 'advocate'))
 
-router.post('/', authMiddleware, (req: Request, res: Response) => {
-    reviewController.createReview(req, res)
-})
+router.post('/', asyncHandler(reviewController.createReview.bind(reviewController)));
 
-router.get('/', authMiddleware, (req: Request, res: Response) => {
-    reviewController.getReviewsByAdvocate(req, res)
-})
+router.get('/', asyncHandler(reviewController.getReviewsByAdvocate.bind(reviewController)));
 
-router.put('/', authMiddleware, (req: Request, res: Response) => {
-    reviewController.updateReview(req, res)
-})
+router.put('/', asyncHandler(reviewController.updateReview.bind(reviewController)));
 
-router.delete('/:reviewId', authMiddleware, (req: Request, res: Response) => {
-    reviewController.deleteReview(req, res)
-})
+router.delete('/:reviewId', asyncHandler(reviewController.deleteReview.bind(reviewController)));
 
-export default router
+export default router;

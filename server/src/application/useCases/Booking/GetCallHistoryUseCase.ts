@@ -1,8 +1,12 @@
+import { inject, injectable } from "inversify";
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class GetCallHistoryUseCase {
-  constructor(private readonly bookingRepo: BookingRepository) { }
+  constructor(@inject(TYPES.BookingRepository) private readonly bookingRepo: BookingRepository) { }
 
   async execute(userId: string, role: string): Promise<Booking[]> {
     if (role === 'user') {

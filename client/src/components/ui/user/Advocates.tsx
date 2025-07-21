@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Star } from "lucide-react";
 import { AdvocateProps } from "@/types/Types";
 import Loader from "../Loading";
-import { getAllAdminAdvocates } from "@/api/admin/advocatesApi";
 import { useNavigate } from "react-router-dom";
+import { topRatedAdvocates } from "@/api/user/advocatesApi";
 
 const Advocates: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -15,8 +15,8 @@ const Advocates: React.FC = () => {
   const fetchAdvocates = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await getAllAdminAdvocates();
-
+      const response = await topRatedAdvocates();
+      console.log(response?.data.advocates);
       const filteredAdvocates = response?.data.advocates.filter(
         (ad: AdvocateProps) => {
           if (!ad.isBlocked && ad.isAdminVerified === "Accepted") {
@@ -32,23 +32,10 @@ const Advocates: React.FC = () => {
       setIsLoading(false);
     }
   }, []);
-
+  console.log(advocates);
   useEffect(() => {
     fetchAdvocates();
   }, []);
-
-  const scroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      const { current } = scrollContainerRef;
-      const scrollAmount = 300;
-
-      if (direction === "left") {
-        current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
-      } else {
-        current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-      }
-    }
-  };
 
   if (isLoading) {
     return <Loader />;
@@ -93,9 +80,10 @@ const Advocates: React.FC = () => {
                 <div className="overflow-hidden bg-white rounded-lg shadow-md">
                   <div className="h-48 overflow-hidden bg-gray-200">
                     <img
-                      src={`${import.meta.env.VITE_API_URL}/uploads/${
-                        advocate.profilePhoto
-                      }`}
+                      src={`${advocate.profilePhoto}`}
+                      // src={`${import.meta.env.VITE_API_URL}/uploads/${
+                      //   advocate.profilePhoto
+                      // }`}
                       alt={advocate.name}
                       className="object-cover w-full h-full transition-transform hover:scale-105"
                     />
@@ -109,11 +97,13 @@ const Advocates: React.FC = () => {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
+                        <p className="font-medium">
+                          {Math.round(advocate.avgRating!)}
+                        </p>
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="font-medium">{advocate.rating}</span>
-                        <span className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500">
                           ({advocate.experience} Experience)
-                        </span>
+                        </p>
                       </div>
 
                       <div className="flex items-center px-3 py-1 text-white bg-gray-900 rounded-full">

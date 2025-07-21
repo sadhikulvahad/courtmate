@@ -1,5 +1,5 @@
 // src/components/Calendar/AdvocateProfilePage.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { RefreshCw } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -40,7 +40,7 @@ import {
   getSlots,
   postPoneBooking,
   postponeSlot,
-} from "@/api/Booking";
+} from "@/api/booking";
 import { toast } from "sonner";
 import axios from "axios";
 import BookingSlotDialog from "@/components/Calendar/BookingSlotDialog";
@@ -145,51 +145,8 @@ const AdvocateProfilePage = () => {
     return slots;
   };
 
-  useEffect(() => {
-    const fetchAdvocate = async () => {
-      const advocateId = id ? id : (user?.id as string);
-
-      try {
-        setLoading(true); // Changed from false to true
-        const data = await findUser(advocateId, token);
-        setAdvocate(data.data.user);
-
-        const rules = await getRecurringRules(advocateId, token);
-        setRecurringRules(rules?.data.rules);
-
-        const monthStart = startOfMonth(currentMonth);
-        const slots = await getSlots(
-          advocateId,
-          format(monthStart, "yyyy-MM-dd"),
-          token
-        );
-
-        // Set available slots first
-        setAvailableSlots(slots.data);
-
-        // Then generate calendar dates with the slots data
-        generateCalendarDates(currentMonth, slots.data);
-
-        let bookings;
-        if (user?.role === "user") {
-          bookings = await getBookings(user.id, token);
-          setUserBookings(bookings?.data.bookings);
-        } else if (isAdvocate) {
-          const formattedMonth = `${currentMonth.getFullYear()}-${String(
-            currentMonth.getMonth() + 1
-          ).padStart(2, "0")}`;
-          bookings = await getSlots(user.id, formattedMonth, token);
-          setUserBookings(bookings?.data);
-        }
-      } catch (error) {
-        console.error("Error fetching advocate data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAdvocate();
-  }, [id, token, user, currentMonth]);
+  const userId = useMemo(() => user?.id, [user]);
+  const userRole = useMemo(() => user?.role, [user]);
 
   const generateCalendarDates = (
     month: Date,
@@ -245,6 +202,111 @@ const AdvocateProfilePage = () => {
     setCalendarDates(dates);
   };
 
+  useEffect(() => {
+    const fetchAdvocate = async () => {
+      const advocateId = id ? id : (userId as string);
+
+      try {
+        setLoading(true); // Changed from false to true
+        const data = await findUser(advocateId, token);
+        setAdvocate(data.data.user);
+
+        const rules = await getRecurringRules(advocateId, token);
+        setRecurringRules(rules?.data.rules);
+
+        const monthStart = startOfMonth(currentMonth);
+        const slots = await getSlots(
+          advocateId,
+          format(monthStart, "yyyy-MM-dd"),
+          token
+        );
+
+        // Set available slots first
+        setAvailableSlots(slots.data);
+
+        // Then generate calendar dates with the slots data
+        generateCalendarDates(currentMonth, slots.data);
+
+        let bookings;
+        if (userRole === "user") {
+          bookings = await getBookings(userId!, token);
+          setUserBookings(bookings?.data.bookings);
+        } else if (isAdvocate) {
+          const formattedMonth = `${currentMonth.getFullYear()}-${String(
+            currentMonth.getMonth() + 1
+          ).padStart(2, "0")}`;
+          bookings = await getSlots(user.id, formattedMonth, token);
+          setUserBookings(bookings?.data);
+        }
+      } catch (error) {
+        console.error("Error fetching advocate data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdvocate();
+  }, []);
+
+  const handleMonthChange = async (newMonth: Date) => {
+    if (!isValid(newMonth)) {
+      console.error("Invalid newMonth in handleMonthChange:", newMonth);
+      toast.error("Invalid month selected");
+      return;
+    }
+    setCurrentMonth(newMonth);
+    try {
+      const advocateId = selectedBooking?.advocate.id;
+      if (!advocateId) {
+        toast.error("No advocate associated with this booking");
+        return;
+      }
+      const monthStart = startOfMonth(newMonth);
+      const slots = await getSlots(
+        advocateId,
+        format(monthStart, "yyyy-MM-dd"),
+        token
+      );
+      const rules = await getRecurringRules(advocateId, token);
+      const recurringSlots = generateSlotsFromRules(
+        rules?.data.rules || [],
+        monthStart,
+        endOfMonth(newMonth)
+      );
+      const combinedSlots = [...slots.data, ...recurringSlots]
+        .filter((slot) => {
+          const isValidDate = validateDate(slot.date, true);
+          const isValidTime =
+            typeof slot.time === "string" &&
+            (/^\d{2}:\d{2}$/.test(slot.time) ||
+              !isNaN(new Date(slot.time).getTime()));
+          if (!isValidDate || !isValidTime) {
+            console.warn("Invalid slot filtered out:", slot);
+            return false;
+          }
+          return true;
+        })
+        .map((slot) => ({
+          ...slot,
+          date:
+            typeof slot.date === "string"
+              ? slot.date
+              : format(slot.date, "yyyy-MM-dd"),
+          time:
+            typeof slot.time === "string" && /^\d{2}:\d{2}$/.test(slot.time)
+              ? slot.time
+              : format(new Date(slot.time), "HH:mm"),
+        }));
+      setAvailableSlots(combinedSlots);
+      generateCalendarDates(newMonth, combinedSlots);
+    } catch (error) {
+      console.error("Error fetching slots for new month:", error);
+      toast.error("Failed to load slots for the selected month");
+      setAvailableSlots([]);
+      generateCalendarDates(newMonth, []);
+    }
+  };
+
   const handleDateSelect = (date: Date | null) => {
     if (date && !validateDate(date, true)) {
       toast.error("Selected date is invalid or in the past.");
@@ -260,7 +322,7 @@ const AdvocateProfilePage = () => {
     setCurrentMonth(prevMonth);
 
     // Fetch slots for the new month
-    const advocateId = id ? id : (user?.id as string);
+    const advocateId = id ? id : (userId as string);
     try {
       const slots = await getSlots(
         advocateId,
@@ -281,7 +343,7 @@ const AdvocateProfilePage = () => {
     setCurrentMonth(nextMonth);
 
     // Fetch slots for the new month
-    const advocateId = id ? id : (user?.id as string);
+    const advocateId = id ? id : (userId as string);
     try {
       const slots = await getSlots(
         advocateId,
@@ -361,7 +423,6 @@ const AdvocateProfilePage = () => {
         time: timeSlot,
       };
       const newSlot = await addCustomSlot(advocate!.id, slot, token);
-      console.log(newSlot);
       if (newSlot.status === 201) {
         const updatedSlots = [...availableSlots, newSlot.data];
         setAvailableSlots(updatedSlots);
@@ -501,7 +562,7 @@ const AdvocateProfilePage = () => {
         toast.success("Slot postponed successfully!");
       }
     } catch (error: unknown) {
-      console.log(error);
+      console.error(error);
       if (axios.isAxiosError(error) && error.response) {
         toast.error(
           error.response.data.error ||
@@ -511,20 +572,6 @@ const AdvocateProfilePage = () => {
         toast.error("There is a problem in postponing your slot");
       }
     }
-  };
-
-  const handleCancelBooking = (bookingId: string) => {
-    setUserBookings(
-      userBookings.map((booking) =>
-        booking.id === bookingId ? { ...booking, status: "cancelled" } : booking
-      )
-    );
-    setAvailableSlots(
-      availableSlots.map((slot) =>
-        slot.id === bookingId ? { ...slot, isAvailable: true } : slot
-      )
-    );
-    generateCalendarDates(currentMonth);
   };
 
   if (loading) {
@@ -554,9 +601,9 @@ const AdvocateProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {user?.role !== "advocate" && <NavBar />}
+      {userRole !== "advocate" && <NavBar />}
       <div className="container mx-auto max-w-6xl px-4 py-8">
-        {user?.role !== "advocate" && (
+        {userRole !== "advocate" && (
           <AdvocateProfileHeader advocate={advocate} />
         )}
         <ViewToggle
@@ -575,8 +622,8 @@ const AdvocateProfilePage = () => {
             isAdvocate={isAdvocate}
             recurringRules={recurringRules || []}
             onDateSelect={handleDateSelect}
-            onPreviousMonth={handlePreviousMonth}
             onNextMonth={handleNextMonth}
+            onPreviousMonth={handlePreviousMonth}
             onSlotSelect={handleSlotSelect}
             onBookSlot={handleBookSlot}
             onAddCustomSlot={handleAddCustomSlot}
@@ -587,7 +634,7 @@ const AdvocateProfilePage = () => {
           <UserBookingView
             bookings={userBookings}
             onPostpone={handlePostpone}
-            onCancel={handleCancelBooking}
+            // onCancel={handleCancelBooking}
             isAdvocate={isAdvocate}
           />
         )}
@@ -598,6 +645,11 @@ const AdvocateProfilePage = () => {
           booking={selectedBooking}
           onClose={() => setShowPostponeDialog(false)}
           onPostpone={handlePostponeConfirm}
+          currentMonth={currentMonth}
+          calendarDates={calendarDates}
+          availableSlots={availableSlots}
+          predefinedSlots={predefinedSlots}
+          onMonthChange={handleMonthChange}
         />
       )}
       {bookingSlotDialog && selectedSlot && (

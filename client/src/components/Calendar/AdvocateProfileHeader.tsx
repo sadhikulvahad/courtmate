@@ -24,9 +24,10 @@ export default function AdvocateProfileHeader({
             {/* Image */}
             <div className="relative w-32 h-32 rounded-xl overflow-hidden border-4 border-white shadow-md">
               <img
-                src={`${import.meta.env.VITE_API_URL}/uploads/${
-                  advocate?.profilePhoto
-                }`}
+                src={`${advocate?.profilePhoto}`}
+                // src={`${import.meta.env.VITE_API_URL}/uploads/${
+                //   advocate?.profilePhoto
+                // }`}
                 alt={advocate?.name}
                 className="w-full h-full object-cover"
               />

@@ -2,7 +2,7 @@
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import VideoCall from "@/pages/VideoCall";
-import { verifyRoomBooking } from "@/api/Booking";
+import { verifyRoomBooking } from "@/api/booking";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { toast } from "sonner";
@@ -27,7 +27,6 @@ const VideoCallWrapper = () => {
       try {
         const response = await verifyRoomBooking(roomId!, token);
         setIsAuthorized(response?.data?.isAuthorized || false);
-        console.log(response);
 
         if (!response?.data?.isAuthorized) {
           const message = response?.data?.message || "Unauthorized access";

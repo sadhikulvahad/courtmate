@@ -1,43 +1,38 @@
-import { Router, Request, Response } from "express";
-import { JwtTokenService } from "../../infrastructure/services/jwt";
-import { UserRepositoryImplement } from "../../infrastructure/dataBase/repositories/userRepository";
-import { RefreshTokenUseCase } from "../../application/useCases/auth/refreshTokenUseCase";
-import { createAuthMiddleware } from "../../infrastructure/web/authMiddlware";
-import { ConversationController } from "../controllers/conversationController";
-import { GetConversationsUseCase } from "../../application/useCases/messages/GetConversation";
-import { ConversationRepositoryImplements } from "../../infrastructure/dataBase/repositories/ConversationRepository";
-import { CreateConversationUseCase } from "../../application/useCases/messages/CreateConversation";
-import { GetMessagesUseCase } from "../../application/useCases/messages/GetMessage";
-import { MessageRepositoryImplements } from "../../infrastructure/dataBase/repositories/MessageRepository";
-import { CreateMessageUseCase } from "../../application/useCases/messages/CreateMessage";
-import { UpdateMessageStatusUseCase } from "../../application/useCases/messages/UpdateMessageStatus";
+import { Router, Request, Response, NextFunction } from 'express';
+import { container } from '../../infrastructure/DIContainer/container';
+import { TYPES } from '../../types';
+import { ConversationController } from '../controllers/conversationController';
+import { AuthMiddleware } from '../../infrastructure/web/authMiddlware';
+import { Logger } from 'winston';
 
+// Async handler wrapper
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>
+) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
-const router = Router()
+const router = Router();
+const conversationController = container.get<ConversationController>(TYPES.ConversationController);
+const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const logger = container.get<Logger>(TYPES.Logger);
 
-const tokenService = new JwtTokenService();
-const userRepository = new UserRepositoryImplement();
-const refreshTokenUseCase = new RefreshTokenUseCase(tokenService, userRepository);
-const authMiddleware = createAuthMiddleware(tokenService, refreshTokenUseCase);
-const conversationoRepository = new ConversationRepositoryImplements()
-const messageRepositroy = new MessageRepositoryImplements()
-const getConverstation = new GetConversationsUseCase(conversationoRepository)
-const createConversation = new CreateConversationUseCase(conversationoRepository)
-const getMessage = new GetMessagesUseCase(messageRepositroy)
-const createMessage = new CreateMessageUseCase(messageRepositroy, conversationoRepository)
-const updateMessageStatus = new UpdateMessageStatusUseCase(messageRepositroy)
-const conversationController = new ConversationController(getConverstation, createConversation, getMessage, createMessage, updateMessageStatus)
-
-router.post('/', authMiddleware, (req: Request, res: Response) => {
-    conversationController.createConversation(req, res)
-})
-
-router.get("/", authMiddleware, (req: Request, res: Response) => {
-    conversationController.getConversation(req, res);
+router.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Conversation route accessed: ${req.method} ${req.path}`, {
+    ip: req.ip,
+    query: req.query,
+    body: req.body,
+  });
+  next();
 });
 
-router.get('/messages/:id', authMiddleware, (req: Request, res: Response) => {
-    conversationController.getMessages(req,res)
-})
+router.use(authMiddleware.auth.bind(authMiddleware))
+router.use(authMiddleware.authorizeRoles('user', 'advocate'))
+
+router.post('/', asyncHandler(conversationController.createConversation.bind(conversationController)));
+
+router.get('/', asyncHandler(conversationController.getConversation.bind(conversationController)));
+
+router.get('/messages/:id', asyncHandler(conversationController.getMessages.bind(conversationController)));
 
 export default router;

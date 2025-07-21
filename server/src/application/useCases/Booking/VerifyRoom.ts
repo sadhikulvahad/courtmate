@@ -1,9 +1,19 @@
 // src/application/useCases/Booking/VerifyRoom.ts
+import { inject, injectable } from "inversify";
 import { Booking } from "../../../domain/entities/Booking";
 import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
+import { TYPES } from "../../../types";
+import { NotificationService } from "../../../infrastructure/services/notificationService";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 
+
+@injectable()
 export class VerifyRoom {
-    constructor(private bookingRepository: BookingRepository) { }
+    constructor(
+        @inject(TYPES.BookingRepository) private bookingRepository: BookingRepository,
+        @inject(TYPES.NotificationService) private notificationService: NotificationService,
+        @inject(TYPES.UserRepository) private userRepository: UserRepository
+    ) { }
 
     async execute(userId: string, roomId: string): Promise<{ isAuthorized: boolean; message: string }> {
         if (!userId || !roomId) {
@@ -11,6 +21,7 @@ export class VerifyRoom {
         }
 
         const booking = await this.bookingRepository.findByRoomId(roomId);
+        const user = await this.userRepository.findById(userId)
 
         if (!booking) {
             return { isAuthorized: false, message: "Booking not found" };
@@ -51,7 +62,6 @@ export class VerifyRoom {
         );
 
         const now = new Date();
-        const istOffset = 5.5 * 60 * 60 * 1000; 
 
         const bufferBefore = 5 * 60 * 1000;
         const accessDuration = 60 * 60 * 1000;
@@ -71,6 +81,26 @@ export class VerifyRoom {
                 isAuthorized: false,
                 message: `Access denied: The video call is only available between ${startTimeStr} and ${endTimeStr} IST`,
             };
+        }
+
+        if (booking.userId === userId) {
+            await this.notificationService.sendNotification({
+                senderId: booking.userId,
+                recieverId: booking.advocateId,
+                message: `${user?.name} Joined Video call`,
+                read: false,
+                type: "Alert",
+                createdAt: new Date()
+            })
+        } else if (booking.advocateId === userId) {
+            await this.notificationService.sendNotification({
+                senderId: booking.advocateId,
+                recieverId: booking.userId,
+                message: `${user?.name} Joined Video call`,
+                read: false,
+                type: "Alert",
+                createdAt: new Date()
+            })
         }
 
         return { isAuthorized: true, message: "Authorized" };

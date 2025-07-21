@@ -13,6 +13,7 @@ import {
   faSignIn,
   faBookBookmark,
   faMessage,
+  faBell,
 } from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,6 +21,8 @@ import { logout } from "@/features/authSlice";
 import { RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
 import ConfirmationModal from "../ConfirmationModal";
+import { logoutApi } from "@/api/authApi";
+import { toast } from "sonner";
 
 interface SideBarProps {
   closeSidebar: () => void;
@@ -33,7 +36,7 @@ const SideBar: React.FC<SideBarProps> = ({ closeSidebar }) => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, token } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -57,10 +60,10 @@ const SideBar: React.FC<SideBarProps> = ({ closeSidebar }) => {
         { name: "Profile", icon: faUser, path: "/profile" },
         { name: "Home", icon: faHome, path: "/" },
         { name: "My Activity", icon: faCog, path: "/activity" },
-        {name: "My Bookings", icon: faBookBookmark, path: '/bookings'},
-        {name: "Messages", icon: faMessage, path: '/chat'},
+        { name: "My Bookings", icon: faBookBookmark, path: "/bookings" },
+        { name: "Messages", icon: faMessage, path: "/chat" },
         { name: "Saved Advocates", icon: faBookmark, path: "/savedAdvocate" },
-        // { name: "History", icon: faHistory, path: "*" },
+        { name: "Notifications", icon: faBell, path: "/user/notification" },
         {
           name: "Logout",
           icon: faSignOutAlt,
@@ -142,10 +145,15 @@ const SideBar: React.FC<SideBarProps> = ({ closeSidebar }) => {
           title="Confirm Logout"
           description="Are you sure you want to logout?"
           isOpen={isOpen}
-          onConfirm={() => {
-            setIsOpen(false);
-            dispatch(logout());
-            navigate("/"); // or wherever you redirect on logout
+          onConfirm={async () => {
+            const response = await logoutApi(token);
+            if (response?.status === 200) {
+              dispatch(logout());
+              toast.success("Logged out successfully");
+              navigate("/signup");
+            } else {
+              toast.error("Failed to logout");
+            }
           }}
           onCancel={() => setIsOpen(false)}
         />

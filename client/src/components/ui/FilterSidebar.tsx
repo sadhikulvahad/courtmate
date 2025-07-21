@@ -4,14 +4,13 @@ import { FilterOptions } from "@/types/Types";
 
 interface SidebarProps {
   onFilterChange: (filters: FilterOptions) => void;
-  initialFilters?: FilterOptions; // Add this prop to receive initial filters
+  initialFilters?: FilterOptions;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   onFilterChange,
   initialFilters,
 }) => {
-  // Initialize with passed filters or defaults
   const [filters, setFilters] = useState<FilterOptions>(
     initialFilters || {
       categories: [],
@@ -36,7 +35,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     certifications: false,
   });
 
-  // Update local filters when initialFilters prop changes
   useEffect(() => {
     if (initialFilters) {
       setFilters(initialFilters);
@@ -57,8 +55,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     let updatedFilters = { ...filters };
 
     if (Array.isArray(filters[category])) {
-      const currentValues = filters[category] as unknown as any[];
-      if (currentValues.includes(value)) {
+      const currentValues = filters[category] as string[];
+      if (currentValues.includes(value as string)) {
         updatedFilters = {
           ...filters,
           [category]: currentValues.filter((v) => v !== value),
@@ -77,7 +75,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
 
     setFilters(updatedFilters);
-    onFilterChange(updatedFilters);
+    // Note: onFilterChange is NOT called here; it’s deferred to the Apply Filters button
+  };
+
+  const applyFilters = () => {
+    onFilterChange(filters);
   };
 
   const resetFilters = () => {
@@ -93,10 +95,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
 
     setFilters(resetValues);
-    onFilterChange(resetValues);
+    onFilterChange(resetValues); // Immediately apply reset filters
   };
 
-  // These categories should match exactly with your advocate data
   const legalCategories = [
     "criminal",
     "civil",
@@ -105,7 +106,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     "property",
   ];
 
-  // These languages should match your advocate data languages array
   const availableLanguages = ["English", "Hindi", "Malayalam", "Tamil"];
 
   return (
@@ -125,7 +125,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             <ChevronDown size={20} />
           )}
         </button>
-
         {openSections.categories && (
           <div className="mt-2 space-y-2 pl-1">
             {legalCategories.map((category) => (
@@ -149,6 +148,32 @@ const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
+      {/* Location Search */}
+      <div className="mb-4 border-b pb-4">
+        <button
+          onClick={() => toggleSection("location")}
+          className="flex items-center justify-between w-full text-left font-medium mb-2"
+        >
+          <span>Location</span>
+          {openSections.location ? (
+            <ChevronUp size={20} />
+          ) : (
+            <ChevronDown size={20} />
+          )}
+        </button>
+        {openSections.location && (
+          <div className="mt-2 pl-1">
+            <input
+              type="text"
+              value={filters.location}
+              onChange={(e) => handleFilterChange("location", e.target.value)}
+              placeholder="Enter city or postal code"
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        )}
+      </div>
+
       {/* Experience Level */}
       <div className="mb-4 border-b pb-4">
         <button
@@ -162,7 +187,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             <ChevronDown size={20} />
           )}
         </button>
-
         {openSections.experience && (
           <div className="mt-2 space-y-2 pl-1">
             {[
@@ -213,7 +237,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             <ChevronDown size={20} />
           )}
         </button>
-
         {openSections.languages && (
           <div className="mt-2 space-y-2 pl-1">
             {availableLanguages.map((lang) => (
@@ -237,12 +260,20 @@ const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      <button
-        onClick={resetFilters}
-        className="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
-      >
-        Reset Filters
-      </button>
+      <div className="flex space-x-2">
+        <button
+          onClick={applyFilters}
+          className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2 px-2 rounded-md transition-colors duration-200"
+        >
+          Apply Filters
+        </button>
+        <button
+          onClick={resetFilters}
+          className="w-1/2 bg-gray-800 hover:bg-gray-700 text-white font-medium text-sm py-1 px-2 rounded-md transition-colors duration-200"
+        >
+          Reset Filters
+        </button>
+      </div>
     </aside>
   );
 };

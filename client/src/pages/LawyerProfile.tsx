@@ -325,10 +325,11 @@ export default function LawyerProfile() {
             <img
               src={
                 advocate?.profilePhoto
-                  ? `${import.meta.env.VITE_API_URL}/uploads/${
-                      advocate.profilePhoto
-                    }`
-                  : "/default-profile.jpg"
+                  ? `${advocate.profilePhoto}`
+                  : // ? `${import.meta.env.VITE_API_URL}/uploads/${
+                    //     advocate.profilePhoto
+                    //   }`
+                    "/default-profile.jpg"
               }
               alt="Lawyer photo"
               className="w-30 h-44 rounded-lg object-cover"
@@ -495,10 +496,11 @@ export default function LawyerProfile() {
                     src={
                       profilePhotoPreview ||
                       (advocate?.profilePhoto
-                        ? `${import.meta.env.VITE_API_URL}/uploads/${
-                            advocate.profilePhoto
-                          }`
-                        : "/default-profile.jpg")
+                        ? `${advocate.profilePhoto}`
+                        : // ? `${import.meta.env.VITE_API_URL}/uploads/${
+                          //     advocate.profilePhoto
+                          //   }`
+                          "/default-profile.jpg")
                     }
                     alt="Profile Preview"
                     className="w-full h-full rounded-lg object-cover"

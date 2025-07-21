@@ -1,9 +1,12 @@
 import { Types } from "mongoose";
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
 
 
+@injectable()
 export class ToggleSavedAdvocate {
-    constructor(private userRepository: UserRepository) { }
+    constructor(@inject(TYPES.UserRepository) private userRepository: UserRepository) { }
 
     async execute(userId: string, advocateId: string) {
         const user = await this.userRepository.findById(userId);

@@ -7,11 +7,17 @@ import { NotificationService } from "../../../infrastructure/services/notificati
 import { Types } from "mongoose";
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
+import { UserRepository } from "domain/interfaces/UserRepository";
 
+
+@injectable()
 export class BookSlot {
   constructor(
-    private bookingRepository: BookingRepository,
-    private slotRepository: SlotRepository
+    @inject(TYPES.BookingRepository) private bookingRepository: BookingRepository,
+    @inject(TYPES.SlotRepository) private slotRepository: SlotRepository,
+    @inject(TYPES.UserRepository) private userRepository: UserRepository
   ) { }
 
   async execute(
@@ -31,7 +37,7 @@ export class BookSlot {
     const futureDate = endOfDay(addDays(today, 30));
     const slots = await this.slotRepository.findByAdvocateId(advocateId, today, futureDate);
     const slot = slots.find((s) => s?.id.toString() === slotId);
-
+    const advocate = await this.userRepository.findById(advocateId)
     if (!slot) {
       throw new Error('Slot not found');
     }
@@ -76,6 +82,15 @@ export class BookSlot {
       recieverId: new Types.ObjectId(advocateId),
       senderId: new Types.ObjectId(userId),
       message: `${usrname} wants to book your slot on ${formattedDateTime}`,
+      read: false,
+      type: 'Notification',
+      createdAt: new Date()
+    })
+
+    await notificationService?.sendNotification({
+      recieverId: new Types.ObjectId(userId),
+      senderId: new Types.ObjectId(advocateId),
+      message: `You have booked Advocate ${advocate?.name}'s Slot At ${formattedDateTime}`,
       read: false,
       type: 'Notification',
       createdAt: new Date()

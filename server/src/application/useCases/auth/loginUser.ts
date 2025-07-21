@@ -1,15 +1,19 @@
+import { inject, injectable } from "inversify";
 import { User } from "../../../domain/entities/User";
 import { TokenService } from "../../../domain/interfaces/TokenRepository";
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 import { HashPassword } from "../../../infrastructure/services/passwordHash";
+import { TYPES } from "../../../types";
+import { Logger } from "winston";
 
 
+@injectable()
 export class LoginUser {
     constructor(
-        private userRepository: UserRepository,
-        private hashPassword: HashPassword,
-        private tokenService: TokenService
-        
+        @inject(TYPES.UserRepository) private userRepository: UserRepository,
+        @inject(TYPES.HashPasswordService) private hashPassword: HashPassword,
+        @inject(TYPES.TokenRepository) private tokenService: TokenService,
+        @inject(TYPES.Logger) private logger: Logger
     ) { }
 
     async execute(email: string, password: string): Promise<{
@@ -46,11 +50,11 @@ export class LoginUser {
             const refreshToken = await this.tokenService.generateRefreshToken(user.id)
             return {
                 user,
-                token : accessToken,
+                token: accessToken,
                 refreshToken
             };
         } catch (error) {
-            console.error("Login error:", error);
+            this.logger.error("Login error:", { error })
             return { error: "Login failed. Please try again later." };
         }
     }

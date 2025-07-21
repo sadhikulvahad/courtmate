@@ -1,45 +1,40 @@
+import { Router, Request, Response, NextFunction } from 'express';
+import { container } from '../../../infrastructure/DIContainer/container';
+import { TYPES } from '../../../types';
+import { advProfileController } from '../../../presentation/controllers/advocate/advProfileController';
+import { AuthMiddleware } from '../../../infrastructure/web/authMiddlware';
+import { MulterService } from '../../../infrastructure/web/multer';
+import { Logger } from 'winston';
 
+// Async handler wrapper
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>
+) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
-import Express, { Request, Response } from "express";
-import { advProfileController } from "../../controllers/advocate/advProfileController";
-const router = Express.Router()
-import { upload } from "../../../infrastructure/web/multer";
-import { UserRepositoryImplement } from "../../../infrastructure/dataBase/repositories/userRepository";
-import { JwtTokenService } from "../../../infrastructure/services/jwt";
-import { RefreshTokenUseCase } from "../../../application/useCases/auth/refreshTokenUseCase";
-import { createAuthMiddleware } from "../../../infrastructure/web/authMiddlware";
+const router = Router();
 
-const profileController = new advProfileController()
-const userRepository = new UserRepositoryImplement()
-const tokenService = new JwtTokenService()
-const refreshToken = new RefreshTokenUseCase(tokenService, userRepository)
-const auth = createAuthMiddleware(tokenService, refreshToken)
+const profileController = container.get<advProfileController>(TYPES.AdvProfileController);
+const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const multerService = container.get<MulterService>(TYPES.MulterService);
+const logger = container.get<Logger>(TYPES.Logger);
 
-router.get('/getUser/:id', auth, (req: Request, res: Response) => {
-  profileController.getUser(req, res)
-})
+router.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Profile route accessed: ${req.method} ${req.path}`, {
+    ip: req.ip,
+    query: req.query,
+    body: req.body,
+  });
+  next();
+});
 
-router.get('/details', auth, (req: Request, res: Response) => {
-  profileController.getAdvocateDetail(req, res)
-})
+router.use(authMiddleware.auth.bind(authMiddleware))
+router.use(authMiddleware.authorizeRoles('advocate', 'user'))
 
-router.put(
-  '/updateAdvProfile', auth,
-  upload,
-  (req: Request, res: Response) => {
-    profileController.updateAdvocateProfile(req, res);
-  }
-);
+router.get('/getUser/:id', asyncHandler(profileController.getUser.bind(profileController)));
+router.get('/details', asyncHandler(profileController.getAdvocateDetail.bind(profileController)));
+router.put('/updateAdvProfile', multerService.getProfileUpload(), asyncHandler(profileController.updateAdvocateProfile.bind(profileController)));
+router.put('/updateAdvocate', multerService.getProfileUpload(), asyncHandler(profileController.updateAdvocate.bind(profileController)));
 
-
-router.put(
-  '/updateAdvocate',
-  auth,
-  upload,
-  (req: Request, res: Response) => {
-    profileController.updateAdvocate(req, res);
-  }
-);
-
-
-export default router
+export default router;

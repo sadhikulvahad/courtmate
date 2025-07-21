@@ -1,9 +1,13 @@
 import { Types } from "mongoose";
 import { MessageRepository } from "../../../domain/interfaces/MessageRepository";
 import { MessageProps } from "../../../domain/types/EntityProps";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class UpdateMessageStatusUseCase {
-  constructor(private messageRepository: MessageRepository) {}
+  constructor(@inject(TYPES.MessageRepository) private messageRepository: MessageRepository) { }
 
   async execute(
     messageId: string,

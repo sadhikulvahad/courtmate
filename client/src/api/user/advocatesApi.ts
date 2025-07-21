@@ -54,3 +54,12 @@ export const getAllUserAdvocates = async ({
 };
 
 
+export const topRatedAdvocates = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/user/advocates/topRatedAdvocates`)
+    return response 
+  } catch (error) {
+    console.error("Error fetching advocates:", error);
+    throw error;
+  }
+}

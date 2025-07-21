@@ -20,6 +20,9 @@ import Loader from "@/components/ui/Loading";
 import Pagination from "@/components/ui/Pagination";
 import { GetSavedAdvocates, toggleSaveAdvocate } from "@/api/user/userApi";
 import { toast } from "sonner";
+import { CreateConversation } from "@/api/chatApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 const RatingStars = ({ rating }: { rating: number }) => {
   return (
@@ -79,6 +82,7 @@ const AdvocateList = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [sortOption, setSortOption] = useState("rating");
   const [savedAdvocates, setSavedAdvocates] = useState<string[]>([]);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   // Move filters to parent component to persist state
   const [currentFilters, setCurrentFilters] = useState<FilterOptions>({
@@ -154,8 +158,7 @@ const AdvocateList = () => {
       try {
         const response = await GetSavedAdvocates();
         const saved = response?.data?.advocates || [];
-        console.log(response);
-        // assuming each saved advocate has an `id` or `_id` field
+
         const savedIds = saved.map((adv: Ad) => adv._id || adv.id);
 
         setSavedAdvocates(savedIds);
@@ -258,6 +261,60 @@ const AdvocateList = () => {
     };
     return categories[category] || "indigo";
   }, []);
+
+  const handleShare = async () => {
+    const shareText = `Advocate Profile: Check this out!\n\n${window.location.href}`;
+    const encodedText = encodeURIComponent(shareText);
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Advocate Profile",
+          text: shareText,
+          url: window.location.href,
+        });
+      } else {
+        const whatsappUrl = `https://api.whatsapp.com/send/?text=${encodedText}`;
+        const opened = window.open(whatsappUrl, "_blank");
+
+        if (!opened) {
+          try {
+            await navigator.clipboard.writeText(shareText);
+            toast.success("Profile link copied to clipboard!");
+          } catch (clipError) {
+            console.error("Clipboard copy failed:", clipError);
+            toast.error("Failed to share or copy");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Share failed:", error);
+      toast.error("Sharing failed");
+    }
+  };
+
+  const startChat = async (id: string) => {
+    if (!user) {
+      toast.error("Please log in to start a chat");
+      navigate("/signup");
+      return;
+    }
+
+    if (!id) {
+      toast.error("Invalid advocate ID");
+      return;
+    }
+
+    try {
+      const conversation = await CreateConversation(id, "advocate");
+      navigate(
+        `/chat?conversationId=${conversation?.data._id}&advocateId=${conversation?.data.participants[1].userId}`
+      );
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      toast.error("Failed to start chat. Please try again.");
+    }
+  };
 
   const clearAllFilters = useCallback(() => {
     setSearchTerm("");
@@ -383,15 +440,12 @@ const AdvocateList = () => {
                 <div className="flex-shrink-0 flex justify-center md:justify-start">
                   <div className="relative w-32 h-40 overflow-hidden rounded-xl shadow-sm">
                     <img
-                      src={`${import.meta.env.VITE_API_URL}/uploads/${
-                        advocate.profilePhoto
-                      }`}
+                      src={`${advocate.profilePhoto}`}
+                      // src={`${import.meta.env.VITE_API_URL}/uploads/${
+                      //   advocate.profilePhoto
+                      // }`}
                       alt={advocate.name}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "/api/placeholder/128/160";
-                      }}
                     />
                     {advocate.isSponsored && (
                       <div className="absolute top-0 left-0 bg-gray-600 text-white px-2 py-1 text-xs font-bold rounded-br-lg flex items-center z-10">
@@ -514,7 +568,10 @@ const AdvocateList = () => {
 
                   <button
                     className="w-full flex items-center justify-center gap-2 border border-gray-200 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startChat(advocate?.id);
+                    }}
                   >
                     <MessageSquare size={18} className="text-indigo-600" />
                     <span>Chat</span>
@@ -549,7 +606,10 @@ const AdvocateList = () => {
 
                     <button
                       className="flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-3 rounded-lg transition-colors duration-200"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShare();
+                      }}
                     >
                       <Share2 size={16} />
                     </button>

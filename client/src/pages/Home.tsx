@@ -2,7 +2,7 @@ import Hero from "@/components/ui/user/Hero";
 import NavBar from "../components/ui/NavBar";
 import Services from "@/components/ui/user/Services";
 import Advocates from "@/components/ui/user/Advocates";
-import AdvocateRegistration from "@/components/ui/user/AdvocateRegistration";
+// import AdvocateRegistration from "@/components/ui/user/AdvocateRegistration";
 import Footer from "@/components/Footer";
 
 const Home = () => {
@@ -12,7 +12,7 @@ const Home = () => {
       <Hero />
       <Services />
       <Advocates />
-      <AdvocateRegistration />
+      {/* <AdvocateRegistration /> */}
       <Footer />
     </div>
   );

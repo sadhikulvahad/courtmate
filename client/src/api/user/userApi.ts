@@ -43,7 +43,7 @@ export const BlockUser = async (id: string, token: string | null) => {
     })
     return response
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 }
 

@@ -1,15 +1,21 @@
 import { jwtDecode, JwtPayload } from "jwt-decode";
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 import { JwtTokenService } from "../../../infrastructure/services/jwt";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
+import { Logger } from "winston";
 
 interface JwtPayloadWithEmail extends JwtPayload {
     email: string;
 }
 
+
+@injectable()
 export class verifyEmail {
     constructor(
-        private userRepository: UserRepository,
-        private tokenRepository : JwtTokenService
+        @inject(TYPES.UserRepository) private userRepository: UserRepository,
+        @inject(TYPES.JwtTokenService) private tokenRepository: JwtTokenService,
+        @inject(TYPES.Logger) private logger: Logger
     ) { }
 
     async execute(token: string): Promise<{ success: boolean; message?: string; error?: string }> {
@@ -20,6 +26,8 @@ export class verifyEmail {
             // }
 
             const isvalidToken = await this.tokenRepository.verifyToken(token)
+
+            console.log(isvalidToken)
 
             if (!isvalidToken) {
                 return { success: false, error: 'Invalid token' }
@@ -46,7 +54,7 @@ export class verifyEmail {
 
             return { success: true, message: "Email verified successfully" }
         } catch (error) {
-            console.error("error from verify email usecases")
+            this.logger.error("error from verify email usecases", { error })
             return { success: false, error: "Failed to verify. Please try again" }
         }
     }

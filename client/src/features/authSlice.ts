@@ -8,7 +8,7 @@ interface User {
 }
 
 interface AuthState {
-  user: { id: string; name: string; email: string; role: string;} | null;
+  user: { id: string; name: string; email: string; role: string; } | null;
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
@@ -54,9 +54,16 @@ const authSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
-    }
+    },
+    setAuth: (state, action) => {
+      const { user, token } = action.payload;
+      if (state.user?.id === user?.id && state.token === token) {
+        return state;
+      }
+      return { ...state, user, token };
+    },
   },
 });
 
-export const { loginSuccess, authFailure, logout, setToken, setLoading, clearError } = authSlice.actions;
+export const { loginSuccess, authFailure, logout, setToken, setLoading, clearError, setAuth } = authSlice.actions;
 export default authSlice.reducer;

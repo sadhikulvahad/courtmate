@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   ChevronRight,
   Search,
@@ -18,7 +18,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { toast } from "sonner";
 import { Booking } from "@/types/Types";
-import { GetHostory } from "@/api/Booking";
+import { GetHostory } from "@/api/booking";
 
 // TypeScript Interfaces
 interface Subscription {
@@ -80,10 +80,11 @@ const AdvocateSettings = () => {
     { _id: "callHistory", label: "Call History", icon: Phone },
   ];
 
+  const userId = useMemo(() => user?.id, [user]);
   // Load call history
   useEffect(() => {
     const getHistory = async () => {
-      if (!user?.id || !token) {
+      if (!userId || !token) {
         setError("User not authenticated");
         setLoading((prev) => ({ ...prev, callHistory: false }));
         return;
@@ -104,12 +105,12 @@ const AdvocateSettings = () => {
       }
     };
     getHistory();
-  }, [user?.id, token]);
+  }, [userId, token]);
 
   // Load subscription data
   useEffect(() => {
     const loadSubscriptionData = async () => {
-      if (!user?.id || !token) {
+      if (!userId || !token) {
         setError("User not authenticated");
         setLoading({ subscription: false, plans: false, callHistory: false });
         return;
@@ -117,7 +118,7 @@ const AdvocateSettings = () => {
 
       try {
         // Load current subscription
-        const subscription = await getSubscription(user.id, token);
+        const subscription = await getSubscription(userId, token);
         if (subscription?.status === 200) {
           setCurrentSubscription(subscription.data);
         } else if (subscription?.status === 404) {
@@ -147,9 +148,8 @@ const AdvocateSettings = () => {
         setLoading((prev) => ({ ...prev, plans: false }));
       }
     };
-
     loadSubscriptionData();
-  }, [user?.id, token]);
+  }, [userId, token]);
 
   // Handle plan change
   const handlePlanChange = async (
@@ -157,20 +157,20 @@ const AdvocateSettings = () => {
     price: number,
     billingCycle: "monthly" | "yearly" = "monthly"
   ) => {
-    if (!user?.id || !token) {
+    if (!userId || !token) {
       setError("User not authenticated");
       return;
     }
 
-    if(currentSubscription){
-      toast.error('You already have a subscription')
-      return 
+    if (currentSubscription) {
+      toast.error("You already have a subscription");
+      return;
     }
 
     try {
       setLoading((prev) => ({ ...prev, subscription: true }));
       const subscriptionData = {
-        advocateId: user.id,
+        advocateId: userId,
         plan,
         price,
         billingCycle,
@@ -181,7 +181,6 @@ const AdvocateSettings = () => {
       };
 
       const result = await createSubscription(subscriptionData, token);
-      console.log(result)
       const { url } = result.data;
 
       if (url) {
@@ -228,7 +227,7 @@ const AdvocateSettings = () => {
       return <LoadingSpinner />;
     }
 
-    if (!user?.id || !token) {
+    if (!userId || !token) {
       return <ErrorMessage message="Please log in to view settings" />;
     }
 
@@ -274,9 +273,9 @@ const AdvocateSettings = () => {
                         currentSubscription.nextBillingDate
                       ).toLocaleDateString()}
                     </p>
-                    <p className="text-sm text-green-600">
+                    {/* <p className="text-sm text-green-600">
                       ✓ Auto-renewal enabled
-                    </p>
+                    </p> */}
                   </div>
                   {/* <div className="space-x-3">
                     <button

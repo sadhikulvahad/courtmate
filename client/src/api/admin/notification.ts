@@ -1,3 +1,4 @@
+import axios from "axios";
 import axiosInstance from "../axiosInstance"
 
 
@@ -11,7 +12,17 @@ export const getAllNotification = async (token: string | null, id: string | unde
         })
         return response
     } catch (error) {
-        console.log('Error from get All notification API', error)
+        if (axios.isAxiosError(error)) {
+            console.error("Axios error", {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
     }
 }
 
@@ -27,7 +38,17 @@ export const markAsReadNotificaiton = async (token: string | null, id: string | 
             })
         return response
     } catch (error) {
-        console.log('Error from Mark as read notification API', error)
+        if (axios.isAxiosError(error)) {
+            console.error("Axios error", {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
     }
 } 
 
@@ -43,6 +64,16 @@ export const markAllAsReadNotification = async (token: string | null, id: string
             })
         return response
     } catch (error) {
-        console.log('Error from Mark All as read notification API', error)
+        if (axios.isAxiosError(error)) {
+            console.error("Axios error", {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
     }
 }

@@ -1,13 +1,16 @@
+import { inject, injectable } from "inversify";
 import { EmailService } from "../../../domain/interfaces/EmailService";
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 import { JwtTokenService } from "../../../infrastructure/services/jwt";
+import { TYPES } from "../../../types";
 
 
+@injectable()
 export class forgotPasswordSendMail{
     constructor(
-        private userRepository : UserRepository,
-        private emailService: EmailService,
-        private tokenService : JwtTokenService
+        @inject(TYPES.UserRepository) private userRepository : UserRepository,
+        @inject(TYPES.EmailService) private emailService: EmailService,
+        @inject(TYPES.JwtTokenService) private tokenService : JwtTokenService
          
     ){}
     async execute (email : string){

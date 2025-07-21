@@ -1,6 +1,9 @@
 // infrastructure/services/EmailService.ts
 import nodemailer from "nodemailer";
 import { EmailService } from "../../domain/interfaces/EmailService";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../types";
+import { Logger } from "winston";
 
 
 type EmailConfig = {
@@ -13,25 +16,30 @@ type EmailConfig = {
   baseUrl: string;
 };
 
+
+@injectable()
 export class NodemailerEmailService implements EmailService {
   private transporter: nodemailer.Transporter;
-  private config: EmailConfig;
 
-  constructor(config: EmailConfig) {
-    this.config = config;
+  constructor(
+    @inject(TYPES.EmailConfig) private config: EmailConfig,
+    @inject(TYPES.Logger) private logger: Logger
+  ) {
     this.transporter = nodemailer.createTransport({
       service: config.service,
       auth: config.auth
-    });
+    })
 
-    this.verifyConnection();
+    this.verifyConnection()
   }
 
   private async verifyConnection() {
     try {
       await this.transporter.verify();
+      this.logger.info('"✅ Email server connection verified"')
       console.log("✅ Email server connection verified");
     } catch (error) {
+      this.logger.error('❌ Email server connection failed:', { error })
       console.error("❌ Email server connection failed:", error);
       throw new Error("EMAIL_SERVER_CONNECTION_FAILED");
     }
@@ -51,6 +59,7 @@ export class NodemailerEmailService implements EmailService {
         text: options.html.replace(/<[^>]*>/g, '')
       });
     } catch (error) {
+      this.logger.error('Email sending failed:', { error })
       console.error("Email sending failed:", error);
       throw new Error("EMAIL_SENDING_FAILED");
     }

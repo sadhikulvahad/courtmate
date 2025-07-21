@@ -1,36 +1,62 @@
 
-import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'courtmateSecret'
-
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../types';
 import { TokenService } from '../../domain/interfaces/TokenRepository';
+import jwt from 'jsonwebtoken';
+import { Logger } from 'winston';
 
+@injectable()
 export class JwtTokenService implements TokenService {
-    generateToken(id: string, role: string, name: string): string {
-        return jwt.sign(
-            { id, role, name },
-            process.env.ACCESS_TOKEN_SECRET!,
-            { expiresIn: '15m' }
-        );
+  private accessTokenSecret: string;
+  private refreshTokenSecret: string;
+
+  constructor(
+    @inject(TYPES.Logger) private logger: Logger
+  ) {
+    if (!process.env.ACCESS_TOKEN_SECRET) {
+      throw new Error('ACCESS_TOKEN_SECRET is not defined in environment variables');
+    }
+    if (!process.env.REFRESH_TOKEN_SECRET) {
+      throw new Error('REFRESH_TOKEN_SECRET is not defined in environment variables');
     }
 
-    verifyToken(token: string): any {
-        return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!);
-    }
+    this.accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+    this.refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+  }
 
-    generateRefreshToken(userId: string): string {
-        return jwt.sign(
-            { userId },
-            process.env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: '7d' }
-        );
-    }
+  generateToken(id: string, role: string, name: string): string {
+    this.logger.info(`Generating access token for user ${id}`);
+    return jwt.sign({ id, role, name }, this.accessTokenSecret, { expiresIn: '15m' });
+  }
 
-    verifyRefreshToken(token: string): any {
-        return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET!);
+  verifyToken(token: string): any {
+    try {
+      this.logger.info('Verifying access token');
+      return jwt.verify(token, this.accessTokenSecret);
+    } catch (error: unknown) {
+      this.logger.error('Access token verification failed', { error });
+      throw error;
     }
+  }
 
-    generateEmailVerificationToken(email: string): string {
-        return jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: '1m' })
-    };
+  generateRefreshToken(userId: string): string {
+    this.logger.info(`Generating refresh token for user ${userId}`);
+    return jwt.sign({ userId }, this.refreshTokenSecret, { expiresIn: '7d' });
+  }
+
+  verifyRefreshToken(token: string): any {
+    try {
+      this.logger.info('Verifying refresh token');
+      return jwt.verify(token, this.refreshTokenSecret);
+    } catch (error: unknown) {
+      this.logger.error('Refresh token verification failed', { error });
+      throw error;
+    }
+  }
+
+  generateEmailVerificationToken(email: string): string {
+    this.logger.info(`Generating email verification token for ${email}`);
+    return jwt.sign({ email }, this.accessTokenSecret, { expiresIn: '1m' });
+  }
 }

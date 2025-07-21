@@ -1,7 +1,8 @@
 
-import userModel from "../models/userModel";
+import userModel from "../models/UserModel";
+import { ReviewModel } from "../models/ReviewModel";
 import { User } from "../../../domain/entities/User";
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 import { UserProps } from "../../../domain/types/EntityProps";
 import { AuthMethod } from "../../../domain/types/AuthMethod";
 import { AdvocateFilterOptions } from "../../../application/types/UpdateAdvocateProfileDTO ";
@@ -33,12 +34,54 @@ export class UserRepositoryImplement implements UserRepository {
             .map((user: UserProps) => this.toDomainEntity(user));
     }
 
+    async findAdminAdvocates(filters: AdvocateFilterOptions = {}): Promise<{
+        advocates: UserProps[];
+        totalCount: number;
+        totalPages: number;
+        currentPage: number;
+    }> {
+        const {
+            page = 1,
+            limit = 10,
+            searchTerm,
+            activeTab = "all",
+        } = filters;
+        const query: FilterQuery<UserProps> = { role: "advocate" };
+
+        if (activeTab !== "all") {
+            (query as any).isAdminVerified = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+        }
+
+        if (searchTerm && searchTerm.trim() !== "") {
+            const safeSearch = searchTerm.trim();
+            query.$or = [
+                { name: { $regex: safeSearch, $options: "i" } },
+                { email: { $regex: safeSearch, $options: "i" } },
+            ];
+        }
+
+        const skip = (page - 1) * limit;
+
+        const [advocates, totalCount] = await Promise.all([
+            userModel.find(query).skip(skip).limit(limit).lean(),
+            userModel.countDocuments(query),
+        ]);
+
+        return {
+            advocates: advocates.filter((user: UserProps) => user.name && user.email && user.role),
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit),
+            currentPage: page,
+        };
+    }
+
     async findAdvocatesWithFilters(filters: AdvocateFilterOptions = {}): Promise<{
         advocates: User[];
         totalCount: number;
         totalPages: number;
         currentPage: number;
     }> {
+
         const {
             page = 1,
             limit = 10,
@@ -80,7 +123,9 @@ export class UserRepositoryImplement implements UserRepository {
         if (location) {
             query.$or = [
                 { 'address.city': { $regex: location, $options: 'i' } },
-                { 'address.state': { $regex: location, $options: 'i' } }
+                { 'address.state': { $regex: location, $options: 'i' } },
+                { 'address.street': { $regex: location, $options: 'i' } },
+                { 'address.pincode': { $regex: location, $options: 'i' } }
             ];
         }
 
@@ -154,6 +199,11 @@ export class UserRepositoryImplement implements UserRepository {
         return userData ? this.toDomainEntity(userData) : null
     }
 
+    async findAdmin(): Promise<User | null> {
+        const Admin = await userModel.findOne({ role: 'admin' })
+        return Admin ? this.toDomainEntity(Admin) : null
+    }
+
     async findById(id: string): Promise<User | null> {
         const userData = await userModel.findOne({ _id: id })
         return userData ? this.toDomainEntity(userData) : null
@@ -188,20 +238,63 @@ export class UserRepositoryImplement implements UserRepository {
             .findById(userId)
             .populate({
                 path: "savedAdvocates",
-                select: "name email role profilePhoto category", // remove match temporarily
+                select: "name email role profilePhoto category",
             });
 
         if (!user) {
             throw new Error("User not found");
         }
 
-        console.log("Populated savedAdvocates:", user.savedAdvocates);
-
         const validAdvocates = (user.savedAdvocates || []).filter(
             (adv: any) => adv?.name && adv?.email && adv?.role
         );
 
         return validAdvocates.map((adv: any) => this.toDomainEntity(adv));
+    }
+
+    async topRatedAdvocates(limit = 10): Promise<User[]> {
+        const results = await ReviewModel.aggregate([
+            {
+                $match: {
+                    isDeleted: false,
+                    rating: { $exists: true, $ne: null }
+                }
+            },
+            {
+                $group: {
+                    _id: "$advocateId",
+                    avgRating: { $avg: "$rating" },
+                    totalReviews: { $sum: 1 }
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "advocate"
+                }
+            },
+            { $unwind: "$advocate" },
+            {
+                $match: {
+                    "advocate.role": "advocate",
+                    "advocate.isAdminVerified": "Accepted",
+                    "advocate.isBlocked": false
+                }
+            },
+            { $sort: { avgRating: -1 } },
+            { $limit: limit }
+        ]);
+        const advocates = results.map((r) =>
+            this.toDomainEntity({
+                ...r.advocate,
+                avgRating: r.avgRating,
+                totalReviews: r.totalReviews
+            })
+        );
+
+        return advocates;
     }
 
     private toDomainEntity(mongooseUser: UserProps): User {
@@ -236,7 +329,9 @@ export class UserRepositoryImplement implements UserRepository {
             onlineConsultation: mongooseUser.onlineConsultation,
             savedAdvocates: mongooseUser.savedAdvocates ?? [],
             subscriptionPlan: mongooseUser.subscriptionPlan,
-            isSponsored: mongooseUser.isSponsored
+            isSponsored: mongooseUser.isSponsored,
+            avgRating: mongooseUser.avgRating ?? 0,
+            totalReviews: mongooseUser.totalReviews ?? 0,
         });
     }
 

@@ -1,67 +1,61 @@
-import Express, { Request, Response, Router } from "express";
-import { AuthController } from "../controllers/authController";
-import passport from "passport";
-// import { refreshTokenController } from "../controllers/refreshTokenController";
-import { UserRepositoryImplement } from "../../infrastructure/dataBase/repositories/userRepository";
-import { createAuthMiddleware } from "../../infrastructure/web/authMiddlware";
-import { JwtTokenService } from "../../infrastructure/services/jwt";
-import { RefreshTokenUseCase } from "../../application/useCases/auth/refreshTokenUseCase";
+import { Router, Request, Response, NextFunction } from 'express';
+import { container } from '../../infrastructure/DIContainer/container';
+import { TYPES } from '../../types';
+import { AuthController } from '../controllers/authController';
+import { AuthMiddleware } from '../../infrastructure/web/authMiddlware';
+import { Logger } from 'winston';
+import passport from 'passport';
 
-const userRepository = new UserRepositoryImplement()
-const tokenService = new JwtTokenService();
-const refreshTokenUseCase = new RefreshTokenUseCase(tokenService, userRepository);
+// Async handler wrapper to handle promises in Express routes
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>
+) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
 const router = Router();
-const authController = new AuthController()
+const authController = container.get<AuthController>(TYPES.AuthController);
+const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const logger = container.get<Logger>(TYPES.Logger);
 
-
-
-router.post("/signup", (req: Request, res: Response) => {
-    authController.handleSignup(req, res);
+// Log middleware actions
+router.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Auth route accessed: ${req.method} ${req.path}`, {
+    ip: req.ip,
+    query: req.query,
+    body: req.body,
+  });
+  next();
 });
 
-router.post("/login", async (req: Request, res: Response) => {
-    authController.handleLogin(req, res)
-});
+// Public routes
+router.post('/signup', asyncHandler(authController.handleSignup.bind(authController)));
+router.post('/login', asyncHandler(authController.handleLogin.bind(authController)));
+router.post('/verify-email', asyncHandler(authController.verifyEmailController.bind(authController)));
+router.post('/forgot-password', asyncHandler(authController.handleForgotPasswordMailService.bind(authController)));
+router.get('/verify-forgot-password', asyncHandler(authController.verifyForgotPasswordMail.bind(authController)));
+router.post('/reset-password', asyncHandler(authController.forgotResetPassword.bind(authController)));
 
-router.post("/verify-email", async (req: Request, res: Response) => {
-    authController.verifyEmailController(req, res)
-})
-
-router.get("/google", passport.authenticate("google", {
-    scope: ["profile", "email"],
-    session: false
-})
+// Google OAuth routes
+router.get(
+  '/google',
+  (req: Request, res: Response, next: NextFunction) => {
+    const role = req.query.role || 'user';
+    passport.authenticate('google', {
+      scope: ['profile', 'email'],
+      state: JSON.stringify({ role }),
+      session: false,
+    })(req, res, next);
+  }
+);
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { session: false }),
+  asyncHandler(authController.handleGoogleCallback.bind(authController))
 );
 
-router.get("/google/callback", passport.authenticate("google", { session: false }),
-    (req: Request, res: Response) => {
-        authController.handleGoogleCallback(req, res);
-    }
-);
-
-router.post('/forgotPassword-Mail', async (req: Request, res: Response) => {
-    authController.handleForgotPasswordMailService(req, res)
-})
-
-router.get("/verify-forgotPassword", async (req: Request, res: Response) => {
-    authController.verifyForgotPasswordMail(req, res)
-})
-
-router.put('/forgot-ResetPassword', async (req: Request, res: Response) => {
-    authController.forgotResetPassword(req, res)
-})
-
-router.post("/refresh", async (req: Request, res: Response) => {
-    authController.refreshToken(req, res);
-})
-
-router.post('/logout', async (req:Request, res: Response) => {
-    authController.logout(req,res)
-})
-
-
-export const authMiddleware = createAuthMiddleware(tokenService, refreshTokenUseCase);
-
+// Protected routes
+router.post('/refresh', authMiddleware.auth.bind(authMiddleware), asyncHandler(authController.refreshToken.bind(authController)));
+router.post('/logout', authMiddleware.auth.bind(authMiddleware), asyncHandler(authController.logout.bind(authController)));
 
 export default router;

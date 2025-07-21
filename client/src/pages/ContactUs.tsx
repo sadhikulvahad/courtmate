@@ -126,8 +126,6 @@ const ContactPage = () => {
   };
 
   const handleSubmit = () => {
-    // Here you would typically send the form data to your backend
-    console.log("Form submitted:", formData);
     setIsSubmitted(true);
 
     // Reset form after 3 seconds

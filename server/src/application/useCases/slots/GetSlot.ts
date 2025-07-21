@@ -1,9 +1,13 @@
+import { inject, injectable } from "inversify";
 import { Slot } from "../../../domain/entities/Slot";
 import { SlotRepository } from "../../../domain/interfaces/SlotRepository";
 import { startOfMonth, endOfMonth } from 'date-fns';
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class GetSlots {
-  constructor(private slotRepository: SlotRepository) {}
+  constructor(@inject(TYPES.SlotRepository) private slotRepository: SlotRepository) { }
 
   async execute(advocateId: string, month: Date): Promise<Slot[]> {
 

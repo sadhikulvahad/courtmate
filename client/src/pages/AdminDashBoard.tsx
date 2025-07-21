@@ -37,7 +37,7 @@ const AdminDashboard = () => {
           setAdminDashboard(response.data.dashboardData);
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
         toast.error("Something went wrong");
       }
     };

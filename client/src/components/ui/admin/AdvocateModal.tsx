@@ -34,11 +34,11 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
   const [localAdvocate, setLocalAdvocate] = useState(advocate);
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationModal, setConfirmationModal] = useState(false);
-  
+
   useEffect(() => {
     setLocalAdvocate(advocate);
   }, [advocate]);
-  
+
   const { token } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
 
@@ -70,9 +70,9 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
 
   const handleBlockUser = async (id: string) => {
     if (!token) return;
-    
+
     setIsLoading(true); // Show loading indicator
-    
+
     try {
       const response = await BlockUser(id, token);
 
@@ -102,9 +102,7 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
   return (
     <>
       <ConfirmationModal
-        title={
-          localAdvocate.isBlocked ? "UnBlock Advocate" : "Block Advocate"
-        }
+        title={localAdvocate.isBlocked ? "UnBlock Advocate" : "Block Advocate"}
         description={`Are you sure you want to ${
           localAdvocate.isBlocked ? "unblock" : "block"
         } ${localAdvocate.name}?`}
@@ -123,7 +121,10 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
       <Dialog open={isOpen} onClose={onClose} className="relative z-20">
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
-        <div className="fixed inset-0 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Dialog.Panel className="w-full max-w-2xl bg-white rounded-lg shadow-xl">
             <div className="flex items-center justify-between p-6 border-b">
               <Dialog.Title className="text-2xl font-bold">
@@ -140,9 +141,10 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
             <div className="p-6">
               <div className="flex gap-6 mb-6">
                 <img
-                  src={`${import.meta.env.VITE_API_URL}/uploads/${
-                    localAdvocate.profilePhoto
-                  }`}
+                  // src={`${import.meta.env.VITE_API_URL}/uploads/${
+                  //   localAdvocate.profilePhoto
+                  // }`}
+                  src={`${localAdvocate.profilePhoto}`}
                   alt="profile"
                   className="object-cover w-32 h-32 rounded-lg"
                 />

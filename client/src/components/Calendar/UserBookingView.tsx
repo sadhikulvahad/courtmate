@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import BookingCard from "@/components/Calendar/BookingCard";
 import { Booking } from "@/types/Types";
@@ -6,47 +6,48 @@ import { Booking } from "@/types/Types";
 interface UserBookingViewProps {
   bookings: Booking[];
   onPostpone: (booking: Booking) => void;
-  onCancel: (bookingId: string) => void;
+  // onCancel: (bookingId: string) => void;
   isAdvocate: boolean | null;
 }
 
-const ITEMS_PER_PAGE = 18;
+const ITEMS_PER_PAGE = 9;
 
 export default function UserBookingView({
   bookings,
   onPostpone,
-  onCancel,
-  isAdvocate
+  // onCancel,
+  isAdvocate,
 }: UserBookingViewProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Calculate pagination data
-  const { paginatedBookings, totalPages, startIndex, endIndex } = useMemo(() => {
-    const totalItems = bookings?.length || 0;
-    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
-    const paginatedBookings = bookings?.slice(startIndex, endIndex) || [];
+  const { paginatedBookings, totalPages, startIndex, endIndex } =
+    useMemo(() => {
+      const totalItems = bookings?.length || 0;
+      const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+      const paginatedBookings = bookings?.slice(startIndex, endIndex) || [];
 
-    return {
-      paginatedBookings,
-      totalPages,
-      startIndex,
-      endIndex
-    };
-  }, [bookings, currentPage]);
+      return {
+        paginatedBookings,
+        totalPages,
+        startIndex,
+        endIndex,
+      };
+    }, [bookings, currentPage]);
 
   // Reset to first page when bookings change
-  useState(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [bookings]);
 
   const handlePreviousPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
   const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
   const handlePageClick = (page: number) => {
@@ -57,7 +58,7 @@ export default function UserBookingView({
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -65,16 +66,16 @@ export default function UserBookingView({
     } else {
       let start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
       const end = Math.min(totalPages, start + maxVisiblePages - 1);
-      
+
       if (end - start + 1 < maxVisiblePages) {
         start = Math.max(1, end - maxVisiblePages + 1);
       }
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
     }
-    
+
     return pages;
   };
 
@@ -112,7 +113,7 @@ export default function UserBookingView({
                   key={booking.id}
                   booking={booking}
                   onPostpone={onPostpone}
-                  onCancel={onCancel}
+                  // onCancel={onCancel}
                   isAdvocate={isAdvocate}
                 />
               ))}
@@ -130,7 +131,7 @@ export default function UserBookingView({
                     <ChevronLeft className="w-4 h-4 mr-1" />
                     Previous
                   </button>
-                  
+
                   <div className="flex space-x-1">
                     {getPageNumbers().map((page) => (
                       <button

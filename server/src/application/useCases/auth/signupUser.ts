@@ -1,19 +1,25 @@
 import { User } from "../../../domain/entities/User";
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 import { HashPassword } from "../../../infrastructure/services/passwordHash"
 import { JwtTokenService } from "../../../infrastructure/services/jwt";
 import { EmailService } from "../../../domain/interfaces/EmailService";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
+import { Logger } from "winston";
 
 type SignupResponse =
     | { success: true; message: string }
     | { success: false; error: string };
 
+
+@injectable()
 export class SignupUser {
     constructor(
-        private userRepository: UserRepository,
-        private hashPassword: HashPassword,
-        private emailService: EmailService,
-        private jwtService: JwtTokenService
+        @inject(TYPES.UserRepository) private userRepository: UserRepository,
+        @inject(TYPES.HashPasswordService) private hashPassword: HashPassword,
+        @inject(TYPES.EmailService) private emailService: EmailService,
+        @inject(TYPES.JwtTokenService) private jwtService: JwtTokenService,
+        @inject(TYPES.Logger) private logger: Logger
     ) { }
 
     async execute(userInput: {
@@ -26,6 +32,7 @@ export class SignupUser {
         const existingUser = await this.userRepository.findByEmail(userInput.email)
         const existingNumber = await this.userRepository.findByNumber(userInput.phone)
 
+        console.log(existingUser)
 
         if (existingUser && existingNumber) {
             if (!existingUser?.isActive && !existingNumber?.isActive) {
@@ -35,7 +42,7 @@ export class SignupUser {
             }
         } else if (existingNumber) {
             return { success: false, error: 'Phone number is already exist' }
-        } else if(existingUser){
+        } else if (existingUser) {
             return { success: false, error: "User already exists" as const }
         }
 
@@ -56,7 +63,7 @@ export class SignupUser {
             const savedUser = await this.userRepository.save(user);
             return { success: true, message: "" }
         } catch (error) {
-            console.error('Failed to create user from signup user from useCase', error)
+            this.logger.error('Failed to create user from signup user from useCase', { error })
             return { error: 'Failed to create user', success: false }
         }
     }

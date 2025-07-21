@@ -1,7 +1,11 @@
+import { inject, injectable } from "inversify";
 import { SubscriptionRepository } from "../../../domain/interfaces/SubscriptionRepository";
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class GetAllSubscriptionsUseCase {
-  constructor(private subscriptionRepository: SubscriptionRepository) {}
+  constructor(@inject(TYPES.SubscriptionRepository) private subscriptionRepository: SubscriptionRepository) { }
 
   async execute() {
     return await this.subscriptionRepository.getAllSubscriptions();

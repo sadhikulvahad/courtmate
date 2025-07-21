@@ -121,7 +121,6 @@ export const updateReview = async ({
 
 export const deleteReview = async (reviewId: string | undefined) => {
     try {
-        console.log(reviewId)
         const response = await axiosInstance.delete(`/review/${reviewId}`);
         return response;
     } catch (error) {

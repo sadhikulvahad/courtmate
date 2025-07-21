@@ -5,7 +5,7 @@ export interface UpdateAdvocateProfileDTO {
   name?: string;
   email?: string;
   phone?: string;
-  age?: string;
+  age?: number | undefined;
   street?: string;
   city?: string;
   state?: string;
@@ -14,7 +14,7 @@ export interface UpdateAdvocateProfileDTO {
   bio?: string;
   languages?: string;
   barCouncilNumber?: string;
-  yearsOfPractice?: string;
+  yearsOfPractice?: number | undefined;
   typeOfAdvocate?: string;
   category?: string;
   practicingField?: string;

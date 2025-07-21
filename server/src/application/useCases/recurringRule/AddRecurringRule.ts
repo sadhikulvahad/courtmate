@@ -5,24 +5,34 @@ import { SlotRepository } from '../../../domain/interfaces/SlotRepository';
 import { RecurringRule } from '../../../domain/entities/recurringRule';
 import { Slot } from '../../../domain/entities/Slot';
 import { RecurringRuleProps } from '../../../domain/types/EntityProps';
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../../../types';
 
+
+@injectable()
 export class AddRecurringRule {
   constructor(
-    private recurringRuleRepository: RecurringRuleRepository,
-    private slotRepository: SlotRepository
+    @inject(TYPES.ReccurringRepository) private recurringRuleRepository: RecurringRuleRepository,
+    @inject(TYPES.SlotRepository) private slotRepository: SlotRepository,
   ) { }
 
   async execute(ruleData: Omit<RecurringRuleProps, '_id'>): Promise<any> {
-    const rule = new RecurringRule(ruleData); 
+    const rule = new RecurringRule(ruleData);
 
 
     const slots: Slot[] = this.generateSlots(rule);
     for (const slot of slots) {
+      const existingSlot = await this.slotRepository.findByAdvocateId(slot.advocateId, new Date(slot.date), new Date(slot.time))
+
+      if (existingSlot) {
+        continue
+      }
+      
       await this.slotRepository.create(slot);
     }
 
     try {
-      
+
       const savedRule = await this.recurringRuleRepository.create(rule);
 
       return {
@@ -43,19 +53,21 @@ export class AddRecurringRule {
     const endDate = new Date(rule.endDate);
     const today = startOfDay(new Date());
 
-    const utcStart = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-    const utcEnd = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-
     const days = eachDayOfInterval({
-      start: new Date(utcStart),
-      end: new Date(utcEnd),
+      start: new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate())),
+      end: new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate()))
     });
 
     const slots: Slot[] = [];
 
     for (const day of days) {
       const dayOfWeek = day.getUTCDay();
-      const currentDay = new Date(day.setUTCHours(0, 0, 0, 0));
+
+      const currentDay = new Date(Date.UTC(
+        day.getUTCFullYear(),
+        day.getUTCMonth(),
+        day.getUTCDate()
+      ));
 
       if (
         rule.daysOfWeek.includes(dayOfWeek) &&
@@ -63,15 +75,14 @@ export class AddRecurringRule {
         !rule.exceptions?.some(ex => isSameDay(ex, currentDay))
       ) {
         const [hours, minutes] = rule.timeSlot.split(':').map(Number);
-        const slotDate = new Date(
-          Date.UTC(
-            currentDay.getUTCFullYear(),
-            currentDay.getUTCMonth(),
-            currentDay.getUTCDate(),
-            hours,
-            minutes
-          )
-        );
+
+        const slotDate = new Date(Date.UTC(
+          currentDay.getUTCFullYear(),
+          currentDay.getUTCMonth(),
+          currentDay.getUTCDate(),
+          hours,
+          minutes
+        ));
 
         const slot = Slot.fromDB({
           advocateId: rule.advocateId,
@@ -87,4 +98,5 @@ export class AddRecurringRule {
 
     return slots;
   }
+
 }

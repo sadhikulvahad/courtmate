@@ -1,11 +1,14 @@
+import { inject, injectable } from "inversify";
 import { CaseRepository } from "../../../domain/interfaces/CaseRepository";
 import { CaseProps } from "../../../domain/types/EntityProps";
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class UpdateHearingHistoryUseCase {
-    constructor(private caseRepository: CaseRepository) {}
+    constructor(@inject(TYPES.CaseRepository) private caseRepository: CaseRepository) { }
 
     async execute(id: string, hearingDate: string): Promise<CaseProps> {
-        console.log(id, hearingDate)
         if (!hearingDate || isNaN(new Date(hearingDate).getTime())) {
             throw new Error("Valid hearing date must be provided");
         }

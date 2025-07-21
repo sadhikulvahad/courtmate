@@ -32,12 +32,9 @@ export class BookingRepositoryImplements implements BookingRepository {
   }
 
   async findByRoomId(roomId: string): Promise<Booking | null> {
-    console.log(roomId)
     const booking = await BookingModel.findOne({ roomId: roomId })
       .lean()
       .exec();
-
-    console.log(booking); // for debugging
 
     if (!booking) {
       return null;
@@ -74,7 +71,6 @@ export class BookingRepositoryImplements implements BookingRepository {
 
   async getBook(advocateId: Types.ObjectId, userId: Types.ObjectId): Promise<Booking | null> {
     const now = new Date();
-
     const startOfHour = new Date(now);
     startOfHour.setMinutes(0, 0, 0);
 
@@ -89,6 +85,7 @@ export class BookingRepositoryImplements implements BookingRepository {
         $lte: endOfHour,
       },
     }).lean()
+
     return booking ? Booking.fromDB(booking) : null;
   }
 

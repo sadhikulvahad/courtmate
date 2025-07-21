@@ -1,58 +1,57 @@
-import Express, { Request, Response } from "express";
-import { UserRepositoryImplement } from "../../../infrastructure/dataBase/repositories/userRepository";
-import { GetAllAdvocates } from "../../../application/useCases/admin/getAllAdvocates";
-import { UpdateAdvocateStatus } from "../../../application/useCases/admin/updateAdvocateStatus";
-import { NotificationRepositoryImplements } from "../../../infrastructure/dataBase/repositories/NotificationRepository";
+import { Request, Response } from "express";
+import { UpdateAdvocateStatus } from "../../../application/useCases/admin/UpdateAdvocateStatus";
 import { NotificationService } from "../../../infrastructure/services/notificationService";
-import { Server as SocketIOServer } from "socket.io";
-import { NodemailerEmailService } from "../../../infrastructure/services/sendMail";
-import { createEmailConfig } from "../../../infrastructure/config/emailConfig";
 import { AdvocateFilterOptions } from "../../../application/types/UpdateAdvocateProfileDTO ";
-import { GetAllUserAdvocates } from "../../../application/useCases/user/GetAllUserAdvocates";
+import { HttpStatus } from '../../../domain/share/enums'
+import { TopRatedAdvocatesUseCase } from "../../../application/useCases/user/TopRatedAdvocatesUseCase";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
+import { Logger } from "winston";
+import { GetAllAdminAdvocates } from "../../../application/useCases/admin/GetAllAdminAdvocates";
+import { GetAllAdvocates } from "../../../application/useCases/admin/GetAllAdvocates";
 
-
+@injectable()
 export class AdvocateController {
-    private readonly GetAllAdvocates: GetAllAdvocates
-    private readonly UpdateAdvocateStatus: UpdateAdvocateStatus
-    private readonly NotificationService?: NotificationService
-    private readonly emailService: NodemailerEmailService
-    private readonly GetAllUserAdvocates: GetAllUserAdvocates
 
-    constructor() {
-        const userRepository = new UserRepositoryImplement()
-        const NotificationRepository = new NotificationRepositoryImplements()
-        const config = createEmailConfig()
-        this.GetAllAdvocates = new GetAllAdvocates(userRepository)
-        this.GetAllUserAdvocates = new GetAllUserAdvocates(userRepository)
-        this.emailService = new NodemailerEmailService(config)
-        this.UpdateAdvocateStatus = new UpdateAdvocateStatus(userRepository, NotificationRepository, this.emailService)
-    }
+    constructor(
+        @inject(TYPES.GetAllAdminAdvocates) private getAllAdminAdvocates: GetAllAdminAdvocates,
+        @inject(TYPES.GetAllAdvocates) private getAllAdvocates: GetAllAdvocates,
+        @inject(TYPES.UpdateAdvocateStatus) private updateAdvocateStatus: UpdateAdvocateStatus,
+        @inject(TYPES.TopRatedAdvocatesUseCase) private topRatedAdvocatesUsecase: TopRatedAdvocatesUseCase,
+        @inject(TYPES.Logger) private logger: Logger
+    ) { }
 
     async getAdminAdvocates(req: Request, res: Response) {
         try {
             const filters: AdvocateFilterOptions = {
                 page: Number(req.query.page) || 1,
                 limit: Number(req.query.limit) || 10,
-                searchTerm: req.query.searchTerm?.toString(),
-                categories: undefined,
-                location: undefined,
-                minExperience: undefined,
+                searchTerm: req.query.searchTerm ? decodeURIComponent(req.query.searchTerm as string) : undefined,
+                activeTab: req.query.activeTab ? decodeURIComponent(req.query.activeTab as string) : "all",
             };
-            const result = await this.GetAllUserAdvocates.execute()
+
+            this.logger.info("Received filters for getAdminAdvocates", { filters });
+
+            const result = await this.getAllAdminAdvocates.execute(filters);
+
             if (!result.success) {
-                return res.status(404).json({ success: false, error: result.error })
+                return res.status(HttpStatus.NOT_FOUND).json({ success: false, error: result.error });
             }
-            res.status(200).json({
+
+            res.status(HttpStatus.OK).json({
                 success: true,
                 message: result.message,
-                advocates: result.advocates,
+                advocates: result.data?.advocates,
                 pagination: {
-                    itemsPerPage: filters.limit
-                }
+                    totalItems: result.data?.totalCount,
+                    totalPages: result.data?.totalPages,
+                    currentPage: result.data?.currentPage,
+                    itemsPerPage: filters.limit,
+                },
             });
         } catch (error) {
-            console.error("Error from getAdvocates controller", error)
-            res.status(500).json({ success: false, error: "Server error" })
+            this.logger.error("Error from getAdminAdvocates controller", { error });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: "Server error" });
         }
     }
 
@@ -76,31 +75,13 @@ export class AdvocateController {
                 sortOrder: req.query.sortOrder?.toString() as 'asc' | 'desc' || 'desc'
             };
 
-            // Handle activeTab filters
-            // switch (filters.activeTab) {
-            //     case 'featured':
-            //         filters.minRating = 4;
-            //         break;
-            //     case 'online':
-            //         filters['onlineConsultation'] = true;
-            //         break;
-            //     case 'probono':
-            //         filters['proBonoService'] = true;
-            //         break;
-            //     case 'new':
-            //         // Add logic for new advocates (e.g., created in last 30 days)
-            //         filters.sortBy = 'createdAt';
-            //         filters.sortOrder = 'desc';
-            //         break;
-            // }
-
-            const result = await this.GetAllAdvocates.execute(filters);
+            const result = await this.getAllAdvocates.execute(filters);
 
             if (!result.success) {
-                return res.status(404).json(result);
+                return res.status(HttpStatus.NOT_FOUND).json(result);
             }
 
-            res.status(200).json({
+            res.status(HttpStatus.OK).json({
                 success: true,
                 message: result.message,
                 advocates: result.data?.advocates,
@@ -112,8 +93,8 @@ export class AdvocateController {
                 }
             });
         } catch (error) {
-            console.error("Error in getUserAdvocates:", error);
-            res.status(500).json({
+            this.logger.error("Error in getUserAdvocates:", { error })
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 error: "Internal server error"
             });
@@ -121,35 +102,51 @@ export class AdvocateController {
     }
 
     async advocateStatusUpdate(req: Request, res: Response) {
-        const io = req.app.get('io');
         try {
             const { status, id } = req.body
             const admin = req.user
 
             if (!admin) {
-                return res.status(401).json({ success: false, error: "Unauthorized" })
+                return res.status(HttpStatus.UNAUTHORIZED).json({ success: false, error: "Unauthorized" })
             }
 
             if (!id) {
-                return res.status(400).json({ success: false, error: "Id not found" })
+                return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: "Id not found" })
             }
 
             if (!status) {
-                return res.status(400).json({ success: false, error: "Status not found" })
+                return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: "Status not found" })
             }
 
-            const notificationRepo = new NotificationRepositoryImplements();
-            const notificationService = new NotificationService(notificationRepo, io);
-
-            const result = await this.UpdateAdvocateStatus.execute(status, id, notificationService, admin)
+            const result = await this.updateAdvocateStatus.execute(status, id, admin)
             if (result?.success) {
-                return res.status(200).json({ success: true, message: result.message })
+                return res.status(HttpStatus.OK).json({ success: true, message: result.message })
             } else {
-                return res.status(400).json({ success: false, error: result?.error })
+                return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result?.error })
             }
         } catch (error) {
-            console.log('Error from AdvocateStatusUpdate Controller', error)
-            res.status(500).json({ success: false, error: "Server Error" })
+
+            this.logger.error('from AdvocateStatusUpdate Controller', { error })
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: "Server Error" })
+        }
+    }
+
+
+    async getTopRatedAdvocates(req: Request, res: Response) {
+        try {
+            const result = await this.topRatedAdvocatesUsecase.execute();
+
+            return res.status(HttpStatus.OK).json({
+                success: true,
+                message: 'Advocates fetched successfully',
+                advocates : result,
+            });
+        } catch (error) {
+            this.logger.error('Error from topRatedAdvocate Controller', { error });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: "Server Error"
+            });
         }
     }
 }

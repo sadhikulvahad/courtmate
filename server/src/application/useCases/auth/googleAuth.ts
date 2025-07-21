@@ -1,10 +1,14 @@
 
 
-import { UserRepository } from "../../../domain/interfaces/userRepository";
+import { UserRepository } from "../../../domain/interfaces/UserRepository";
 import { User } from "../../../domain/entities/User";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
 
+
+@injectable()
 export class GoogleAuth {
-    constructor(private userRepository: UserRepository) { }
+    constructor(@inject(TYPES.UserRepository) private userRepository: UserRepository) { }
 
     async execute(profile: {
         id: string;

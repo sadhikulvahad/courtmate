@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Calendar, Edit, Trash2, AlertCircle, X, Plus } from 'lucide-react';
+import { RecurringRule } from '@/types/Types';
 
 interface RecurringRulesManagerProps {
-  rules: any[];
+  rules: RecurringRule[];
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onAddException: (id: string, date: Date) => void;
@@ -43,7 +44,7 @@ const RecurringRulesManager: React.FC<RecurringRulesManagerProps> = ({
         <div className="space-y-4">
           {rules.map((rule) => (
             <div
-              key={rule.id}
+              key={rule._id}
               className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition"
             >
               <div className="flex justify-between">
@@ -78,7 +79,7 @@ const RecurringRulesManager: React.FC<RecurringRulesManagerProps> = ({
                 <div className="flex space-x-2">
                   <button
                     onClick={() => {
-                      setSelectedRuleId(rule.id);
+                      setSelectedRuleId(rule._id);
                       setShowExceptionForm(true);
                     }}
                     className="p-1 text-blue-600 hover:bg-blue-50 rounded"
@@ -87,14 +88,14 @@ const RecurringRulesManager: React.FC<RecurringRulesManagerProps> = ({
                     <Plus className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => onEdit(rule.id)}
+                    onClick={() => onEdit(rule._id)}
                     className="p-1 text-gray-600 hover:bg-gray-100 rounded"
                     title="Edit"
                   >
                     <Edit className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => onDelete(rule.id)}
+                    onClick={() => onDelete(rule._id)}
                     className="p-1 text-red-600 hover:bg-red-50 rounded"
                     title="Delete"
                   >
@@ -104,7 +105,7 @@ const RecurringRulesManager: React.FC<RecurringRulesManagerProps> = ({
               </div>
               
               {/* Exception Form */}
-              {showExceptionForm && selectedRuleId === rule.id && (
+              {showExceptionForm && selectedRuleId === rule._id && (
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <div className="flex items-center">
                     <div className="flex-grow">

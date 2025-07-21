@@ -37,6 +37,8 @@ export type UserProps = {
   savedAdvocates?: Types.ObjectId[];
   subscriptionPlan?: 'none' | 'basic' | 'professional' | 'enterprise'
   isSponsored?: boolean
+  avgRating?: number;
+  totalReviews?: number;
 }
 
 export type NotificationProps = {

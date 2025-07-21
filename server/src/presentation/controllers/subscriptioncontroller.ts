@@ -3,36 +3,50 @@ import { SubscriptionRepositoryImpl } from "../../infrastructure/dataBase/reposi
 import { CreateSubscriptionUseCase } from "../../application/useCases/subscription/CreateSubscriptionUsecase";
 import { GetSubscriptionUseCase } from "../../application/useCases/subscription/GetSubscriptionUsecase";
 import { GetAllSubscriptionsUseCase } from "../../application/useCases/subscription/GetAllSubscriptionsUsecase";
-import { UserRepositoryImplement } from "../../infrastructure/dataBase/repositories/userRepository";
+import { UserRepositoryImplement } from "../../infrastructure/dataBase/repositories/UserRepository";
+import { HttpStatus } from "../../domain/share/enums";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../types";
+import { Logger } from "winston";
 
 
-const repository = new SubscriptionRepositoryImpl();
-const userRepository = new UserRepositoryImplement()
-
+@injectable()
 export class SubscriptionController {
-    private createSubscriptionUseCase = new CreateSubscriptionUseCase(repository, userRepository);
-    private getSubscriptionUseCase = new GetSubscriptionUseCase(repository);
-    private getAllSubscriptionsUseCase = new GetAllSubscriptionsUseCase(repository);
+
+    constructor(
+        @inject(TYPES.CreateSubscriptionUseCase) private createSubscriptionUseCase: CreateSubscriptionUseCase,
+        @inject(TYPES.GetSubscriptionUseCase) private getSubscriptionUseCase: GetSubscriptionUseCase,
+        @inject(TYPES.Logger) private logger: Logger
+    ) { }
 
     async createSubscription(req: Request, res: Response) {
         try {
             const data = req.body;
+
+            if (!data) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Required Data are missing' });
+            }
+
             const result = await this.createSubscriptionUseCase.execute(data);
-            console.log(result)
-            res.status(201).json(result);
+            res.status(HttpStatus.CREATED).json(result);
         } catch (error: any) {
-            res.status(500).json({ message: error.message });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
         }
     }
 
     async getSubscription(req: Request, res: Response) {
         try {
             const { advocateId } = req.params;
+
+            if (!advocateId) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: 'advocateId required' });
+            }
+
             const result = await this.getSubscriptionUseCase.execute(advocateId);
-            if (!result) return res.status(404).json({ message: "Subscription not found" });
-            res.status(200).json(result);
+            if (!result) return res.status(HttpStatus.NOT_FOUND).json({ message: "Subscription not found" });
+            res.status(HttpStatus.OK).json(result);
         } catch (error: any) {
-            res.status(500).json({ message: error.message });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
         }
     }
 
@@ -72,10 +86,10 @@ export class SubscriptionController {
                     ],
                 },
             ];
-            res.status(200).json(plans);
+            res.status(HttpStatus.OK).json(plans);
         } catch (error: any) {
-            console.error(error);
-            res.status(500).json({ message: error.message || "Internal server error" });
+            this.logger.error({ error })
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message || "Internal server error" });
         }
     }
 }

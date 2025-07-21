@@ -34,7 +34,7 @@ const ForgotPassword = () => {
         );
       }
     } catch (error) {
-      console.log(error)
+      console.error(error)
       toast.error("Something went wrong, Please check your connection.");
     } finally {
       setIsSending(false);
@@ -95,7 +95,7 @@ const ForgotPassword = () => {
         toast.error(response.data.error || "Error occurred");
       }
     } catch (error) {
-      console.log(error)
+      console.error(error)
       toast.error("Something went wrong, please try again");
     } finally {
       setIsSending(false); // 🔓 Re-enable button after request

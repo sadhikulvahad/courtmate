@@ -1,15 +1,19 @@
 
 import { Slot } from '../../../domain/entities/Slot';
 import { MongooseSlotRepository } from '../../../infrastructure/dataBase/repositories/SlotRepository';
-import { BookingRepositoryImplements } from '../../../infrastructure/dataBase/repositories/BookingRepository';
 import { Types } from 'mongoose';
 import { parse } from 'date-fns';
 import { BookingStatus } from '../../../domain/types/EntityProps';
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../../../types';
+import { BookingRepository } from '../../../domain/interfaces/BookingRepository';
 
+
+@injectable()
 export class PostponeSlot {
     constructor(
-        private slotRepository: MongooseSlotRepository,
-        private bookingRepository: BookingRepositoryImplements
+        @inject(TYPES.SlotRepository) private slotRepository: MongooseSlotRepository,
+        @inject(TYPES.BookingRepository) private bookingRepository: BookingRepository
     ) { }
 
     async execute(
@@ -48,7 +52,7 @@ export class PostponeSlot {
                     date: newDate,
                     time: newTime,
                     status: 'postponed',
-                    notes : 'Postponed by advocate',
+                    notes: 'Postponed by advocate',
                     postponeReason: data.reason || 'Postponed by advocate',
                 });
             }

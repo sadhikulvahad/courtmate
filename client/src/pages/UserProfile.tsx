@@ -55,7 +55,7 @@ export default function UserProfile() {
     if (authUser?.id && token) {
       fetchUserData();
     }
-  }, [authUser?.id, token]);
+  }, []);
 
   const handleOpenPasswordModal = () => {
     setIsPasswordModalOpen(true);
@@ -164,9 +164,10 @@ export default function UserProfile() {
                   <div className="w-40 h-40 bg-gray-500 rounded-full flex items-center justify-center text-white text-6xl font-semibold">
                     {user?.profilePhoto ? (
                       <img
-                        src={`${import.meta.env.VITE_API_URL}/Uploads/${
-                          user.profilePhoto
-                        }`}
+                        src={`${user.profilePhoto}`}
+                        // src={`${import.meta.env.VITE_API_URL}/Uploads/${
+                        //   user.profilePhoto
+                        // }`}
                         alt={user.name}
                         className="w-full h-full rounded-full object-cover"
                       />
@@ -282,9 +283,10 @@ export default function UserProfile() {
                         </button>
                         <div className="flex items-start space-x-3">
                           <img
-                            src={`${import.meta.env.VITE_API_URL}/Uploads/${
-                              advocate.profilePhoto
-                            }`}
+                            src={`${advocate.profilePhoto}`}
+                            // src={`${import.meta.env.VITE_API_URL}/Uploads/${
+                            //   advocate.profilePhoto
+                            // }`}
                             alt={advocate.name}
                             className="w-12 h-12 rounded-full object-cover border-2 border-white shadow flex-shrink-0"
                           />

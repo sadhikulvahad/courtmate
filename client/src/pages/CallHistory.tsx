@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Phone, Calendar, Clock, ChevronLeft } from "lucide-react";
 import NavBar from "@/components/ui/NavBar";
-import { GetHostory } from "@/api/Booking"; // Fix typo if it's GetHistory
+import { GetHostory } from "@/api/booking"; // Assuming typo is fixed to GetHistory
 import { Booking } from "@/types/Types";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,16 @@ const MyActivityPage = () => {
   const [callHistory, setCallHistory] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5; // Number of calls per page
   const navigate = useNavigate();
+
+  // Calculate total pages and paginated data
+  const totalPages = Math.ceil(callHistory.length / pageSize);
+  const paginatedCalls = callHistory.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   useEffect(() => {
     const fetchCallHistory = async () => {
@@ -32,6 +41,12 @@ const MyActivityPage = () => {
 
     fetchCallHistory();
   }, []);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   return (
     <>
@@ -80,7 +95,7 @@ const MyActivityPage = () => {
                   </p>
                 </div>
               ) : (
-                callHistory.map((call) => (
+                paginatedCalls.map((call) => (
                   <div
                     key={call.id}
                     className="p-6 hover:bg-gray-50 transition-colors"
@@ -112,11 +127,6 @@ const MyActivityPage = () => {
                               {format(new Date(call.time), "hh:mm a")}
                             </span>
                           </div>
-
-                          {/* <div className="flex items-center gap-2">
-                            <User className="w-4 h-4" />
-                            <span>{call.status}</span>
-                          </div> */}
                         </div>
 
                         {call.notes && (
@@ -132,6 +142,53 @@ const MyActivityPage = () => {
                 ))
               )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-md ${
+                    currentPage === 1
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  } transition-colors`}
+                >
+                  Previous
+                </button>
+
+                <div className="flex gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`px-3 py-1 rounded-md ${
+                          currentPage === page
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        } transition-colors`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-md ${
+                    currentPage === totalPages
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  } transition-colors`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

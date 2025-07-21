@@ -3,13 +3,18 @@ import { CreateReviewUseCase } from "../../application/useCases/review/CreateRev
 import { GetReviewsUseCase } from "../../application/useCases/review/GetReviews";
 import { UpdateReviewUseCase } from "../../application/useCases/review/UpdateReviewUseCase";
 import { DeleteReviewUseCase } from "../../application/useCases/review/DeleteReviewUseCase";
+import { HttpStatus } from "../../domain/share/enums";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../types";
 
+
+@injectable()
 export class ReviewController {
     constructor(
-        private CreateReview: CreateReviewUseCase,
-        private GetReview: GetReviewsUseCase,
-        private UpdateReview : UpdateReviewUseCase,
-        private DeleteReview : DeleteReviewUseCase
+        @inject(TYPES.CreateReviewUseCase) private CreateReview: CreateReviewUseCase,
+        @inject(TYPES.GetReviewsUseCase) private GetReview: GetReviewsUseCase,
+        @inject(TYPES.UpdateReviewUseCase) private UpdateReview: UpdateReviewUseCase,
+        @inject(TYPES.DeleteReviewUseCase) private DeleteReview: DeleteReviewUseCase
     ) { }
 
     // Create Review
@@ -18,7 +23,7 @@ export class ReviewController {
             const { advocateId, userId, review, rating } = req.body;
 
             if (!advocateId || !userId || !review || !rating) {
-                return res.status(400).json({ error: "Missing required fields" });
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: "Missing required fields" });
             }
 
             const createdReview = await this.CreateReview.execute({
@@ -28,10 +33,10 @@ export class ReviewController {
                 rating,
             });
 
-            res.status(201).json({ success: true, review: createdReview });
+            res.status(HttpStatus.CREATED).json({ success: true, review: createdReview });
         } catch (error) {
             console.error("Error Creating Review:", error);
-            res.status(500).json({ error: (error as Error).message || "Server error" });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message || "Server error" });
         }
     }
 
@@ -41,22 +46,23 @@ export class ReviewController {
             const { advocateId } = req.query;
 
             if (!advocateId) {
-                return res.status(400).json({ error: "Advocate ID is required" });
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: "Advocate ID is required" });
             }
 
             const reviews = await this.GetReview.execute(advocateId.toString());
-            res.status(200).json({ success: true, reviews });
+            res.status(HttpStatus.OK).json({ success: true, reviews });
         } catch (error) {
             console.error("Error Fetching Reviews:", error);
-            res.status(500).json({ error: (error as Error).message || "Server error" });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message || "Server error" });
         }
     }
 
     async updateReview(req: Request, res: Response) {
         try {
             const { reviewId, review, rating } = req.body;
+
             if (!reviewId || (!review && !rating)) {
-                return res.status(400).json({ error: "Review ID and at least one field (review or rating) are required" });
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: "Review ID and at least one field (review or rating) are required" });
             }
 
             const updatedReview = await this.UpdateReview.execute({
@@ -65,25 +71,26 @@ export class ReviewController {
                 rating,
             });
 
-            res.status(200).json({ success: true, review: updatedReview });
+            res.status(HttpStatus.OK).json({ success: true, review: updatedReview });
         } catch (error) {
             console.error("Error Updating Review:", error);
-            res.status(500).json({ error: (error as Error).message || "Server error" });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message || "Server error" });
         }
     }
 
     async deleteReview(req: Request, res: Response) {
         try {
             const { reviewId } = req.params;
+            
             if (!reviewId) {
-                return res.status(400).json({ error: "Review ID is required" });
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: "Review ID is required" });
             }
 
             await this.DeleteReview.execute(reviewId);
-            res.status(200).json({ success: true, message: "Review deleted successfully" });
+            res.status(HttpStatus.OK).json({ success: true, message: "Review deleted successfully" });
         } catch (error) {
             console.error("Error Deleting Review:", error);
-            res.status(500).json({ error: (error as Error).message || "Server error" });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message || "Server error" });
         }
     }
 }

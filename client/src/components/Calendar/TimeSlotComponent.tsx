@@ -45,10 +45,10 @@ export default function TimeSlotComponent({
               .sort((a, b) => a.time.getTime() - b.time.getTime())
               .map((slot) => (
                 <button
-                  key={slot._id}
+                  key={slot.id}
                   onClick={() => onSlotSelect(slot)}
                   className={`p-3 rounded-md border text-center transition-colors ${
-                    selectedSlot && selectedSlot._id === slot._id
+                    selectedSlot && selectedSlot.id === slot.id
                       ? "bg-blue-600 text-white border-blue-700"
                       : "bg-white hover:bg-gray-50 border-gray-200"
                   }`}

@@ -3,12 +3,15 @@ import { Booking } from "../../../domain/entities/Booking";
 import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
 import { SlotRepository } from "../../../domain/interfaces/SlotRepository";
 import { BookingStatus } from "../../../domain/types/EntityProps";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../../types";
 
 
+@injectable()
 export class Postpone {
     constructor(
-        private bookingRepository: BookingRepository,
-        private slotRepository: SlotRepository
+        @inject(TYPES.BookingRepository) private bookingRepository: BookingRepository,
+        @inject(TYPES.SlotRepository) private slotRepository: SlotRepository
     ) { }
 
     async execute(date: string, time: string, reason: string, bookId: string): Promise<Booking | null> {
