@@ -2,11 +2,15 @@ import axios from "axios";
 import axiosInstance from "./axiosInstance";
 
 
-export const CreateConversation = async (participantId: string | undefined, role: string) => {
+export const CreateConversation = async (participantId: string | undefined, role: string, token: string | null) => {
     try {
         const response = await axiosInstance.post('/conversation', {
             participantId,
             role
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
         })
 
         return response
@@ -25,9 +29,13 @@ export const CreateConversation = async (participantId: string | undefined, role
     }
 }
 
-export const GetConversation = async () => {
+export const GetConversation = async (token: string | null) => {
     try {
-        const response = await axiosInstance.get('/conversation')
+        const response = await axiosInstance.get('/conversation', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
         return response
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -44,9 +52,13 @@ export const GetConversation = async () => {
     }
 }
 
-export const GetMessages = async (id: string) => {
+export const GetMessages = async (id: string, token: string | null) => {
     try {
-        const response = await axiosInstance.get(`/conversation/messages/${id}`)
+        const response = await axiosInstance.get(`/conversation/messages/${id}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
         return response
     } catch (error) {
         if (axios.isAxiosError(error)) {

@@ -73,7 +73,6 @@ export class RecurringRule {
 
   toJSON() {
     const json = {
-      _id : this.id,
       advocateId: this.advocateId,
       startDate: this.startDate,
       endDate: this.endDate,

@@ -1,7 +1,5 @@
 import axios from "axios";
 import axiosInstance from "../axiosInstance";
-
-// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
  
 export const getAllUsers = async (token: string | null) => {
     try {

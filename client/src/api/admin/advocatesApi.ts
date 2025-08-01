@@ -4,8 +4,6 @@
 import axios from "axios"
 import axiosInstance from "../axiosInstance";
 
-// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-
 export const getAllAdminAdvocates = async ({
     page,
     limit,
@@ -16,7 +14,7 @@ export const getAllAdminAdvocates = async ({
     limit: number;
     searchTerm?: string;
     activeTab?: string;
-}) => {
+}, token: string | null) => {
     try {
         const params = {
             page,
@@ -25,7 +23,12 @@ export const getAllAdminAdvocates = async ({
             ...(activeTab ? { activeTab } : {}),
         };
 
-        const response = await axiosInstance.get("/admin/advocate/getAdvocates", { params });
+        const response = await axiosInstance.get("/admin/advocate/getAdvocates", {
+            params,
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         return response;
     } catch (error) {
         if (axios.isAxiosError(error)) {

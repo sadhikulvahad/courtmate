@@ -1,7 +1,7 @@
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const signupUser = async (userData: object) => {
   try {
@@ -77,7 +77,11 @@ export const forgetResetPassword = async (password: string, email: string) => {
 
 export const logoutApi = async (token: string | null) => {
   try {
-    const response = await axiosInstance.post('auth/logout', { token })
+    const response = await axiosInstance.post('auth/logout', { token }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {

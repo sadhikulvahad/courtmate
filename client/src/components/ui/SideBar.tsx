@@ -52,7 +52,6 @@ const SideBar: React.FC<SideBarProps> = ({ closeSidebar }) => {
 
   const handleLogout = () => {
     setIsOpen(true);
-    // dispatch(logout());
   };
 
   const sidebarItems = isAuthenticated

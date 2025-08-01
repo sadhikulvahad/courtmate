@@ -87,7 +87,7 @@ export class paymentController {
             };
 
             const stripe = new Stripe(process.env.STRIPE_SECRET!, {
-                apiVersion: "2025-06-30.basil",
+                apiVersion: "2025-07-30.basil",
             });
 
             const session = await stripe.checkout.sessions.create({
@@ -133,8 +133,6 @@ export class paymentController {
             const session = event.data.object as Stripe.Checkout.Session;
 
             try {
-                // const notificationRepo = new NotificationRepositoryImplements();
-                // const notificationService = new NotificationService(notificationRepo, io);
                 if (session.mode === "subscription") {
                     if (!session.metadata || !session.metadata.advocateId || !session.metadata.plan || !session.metadata.billingCycle || !session.metadata.userId) {
                         this.logger.error("Missing metadata in session:", { sessioId: session.id })

@@ -31,7 +31,7 @@ export class Postpone {
         const selectedDateTime = new Date(`${date}T${time}`);
 
         const existingSlot = slots.find(slot => {
-            return isEqual(booking.slotId, slot.id)
+            return isEqual(Number(booking.slotId), Number(slot.id))
         })
 
         const matchedSlot = slots.find(slot => {

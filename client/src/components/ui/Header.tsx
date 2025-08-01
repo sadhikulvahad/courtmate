@@ -16,8 +16,6 @@ const Header: React.FC<HeaderProps> = ({
   onSearch, 
   activeTab, 
   onTabChange,
-  sortOption,
-  onSort
 }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 

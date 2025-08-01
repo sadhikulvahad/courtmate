@@ -130,9 +130,13 @@ export const postPoneBooking = async (date: string, time: string, reason: string
   }
 }
 
-export const createPayment = async (advocateId: string | undefined, selectedSlotId: string | undefined) => {
+export const createPayment = async (advocateId: string | undefined, selectedSlotId: string | undefined, token : string | null) => {
   try {
-    const response = await axiosInstance.post('/payment/create-checkout-session', { advocateId, selectedSlotId })
+    const response = await axiosInstance.post('/payment/create-checkout-session', { advocateId, selectedSlotId }, {
+      headers : {
+        Authorization : `Bearer ${token}`
+      }
+    })
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -171,13 +175,16 @@ export const verifyRoomBooking = async (roomId: string, token: string | null) =>
 };
 
 
-export const getBook = async (advocateId: string | null, userId: string | null) => {
+export const getBook = async (advocateId: string | null, userId: string | null, token: string | null) => {
   try {
     const response = await axiosInstance.get('/booking/getBook', {
       params: {
         advocateId,
         userId,
       },
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
     return response;
   } catch (error) {
@@ -221,9 +228,13 @@ export const postponeSlot = async (date: string, time: string, reason: string | 
   }
 }
 
-export const GetHostory = async () => {
+export const GetHostory = async (token: string | null) => {
   try {
-    const response = await axiosInstance.get('/booking/callHistory')
+    const response = await axiosInstance.get('/booking/callHistory', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {

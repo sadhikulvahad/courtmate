@@ -6,7 +6,7 @@ import { GetAllUserAdvocatesParams } from "@/types/Types";
 import axios from "axios";
 // import axiosInstance from "../axiosInstance";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://34.133.238.121:8080/api';
 
 export const getAllUserAdvocates = async ({
   page = 1,
@@ -24,7 +24,7 @@ export const getAllUserAdvocates = async ({
   availability = [],
   specializations = [],
   certifications = [],
-}: GetAllUserAdvocatesParams = {}) => {
+}: GetAllUserAdvocatesParams = {}, token: string | null) => {
   try {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -45,7 +45,11 @@ export const getAllUserAdvocates = async ({
     if (specializations.length > 0) params.append('specializations', specializations.join(','));
     if (certifications.length > 0) params.append('certifications', certifications.join(','));
 
-    const response = await axios.get(`${API_URL}/user/advocates/getAdvocates?${params.toString()}`);
+    const response = await axios.get(`${API_URL}/user/advocates/getAdvocates?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching advocates:", error);
@@ -57,7 +61,7 @@ export const getAllUserAdvocates = async ({
 export const topRatedAdvocates = async () => {
   try {
     const response = await axios.get(`${API_URL}/user/advocates/topRatedAdvocates`)
-    return response 
+    return response
   } catch (error) {
     console.error("Error fetching advocates:", error);
     throw error;

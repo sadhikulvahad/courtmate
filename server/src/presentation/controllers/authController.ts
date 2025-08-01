@@ -114,12 +114,11 @@ export class AuthController {
   async handleSignup(req: Request, res: Response) {
     try {
       const { name, email, phone, password, role } = req.body;
-
       if (!name || !email || !phone || !password || !role) {
         return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'All fields are required' });
       }
 
-      if (!['user'].includes(role)) {
+      if (!['user', 'advocate'].includes(role)) {
         return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'Invalid role' });
       }
 

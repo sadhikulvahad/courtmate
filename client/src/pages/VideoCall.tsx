@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
 
-const socket: Socket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:8080", {
+const socket: Socket = io(import.meta.env.VITE_SOCKET_URL, {
   path: "/socket.io/",
   transports: ["websocket"],
   withCredentials: true,

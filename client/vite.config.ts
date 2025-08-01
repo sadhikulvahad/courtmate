@@ -12,7 +12,9 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     proxy: {
-      '/api': 'http://localhost:8080',
+      // '/api': 'http://localhost:8080',
+      '/api': 'http://34.133.238.121:8080',
+      // '/api': 'https://courtmate-backend.purespeak.in',
     }
   },
   resolve: {

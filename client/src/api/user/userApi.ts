@@ -66,9 +66,13 @@ export const ResetPassword = async (id: string, token: string | null, oldPasswor
   }
 }
 
-export const toggleSaveAdvocate = async (advocateId: string) => {
+export const toggleSaveAdvocate = async (advocateId: string, token: string | null) => {
   try {
-    const response = await axiosInstance.put(`/user/toggleSave/${advocateId}`)
+    const response = await axiosInstance.put(`/user/toggleSave/${advocateId}`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -81,9 +85,13 @@ export const toggleSaveAdvocate = async (advocateId: string) => {
   }
 }
 
-export const GetSavedAdvocates = async () => {
+export const GetSavedAdvocates = async (token: string | null) => {
   try {
-    const response = await axiosInstance.get('/user/savedAdvocates')
+    const response = await axiosInstance.get('/user/savedAdvocates', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {

@@ -22,7 +22,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
   // isAdvocate,
 }) => {
   const navigate = useNavigate();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, token } = useSelector((state: RootState) => state.auth);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "confirmed":
@@ -54,7 +54,6 @@ const BookingCard: React.FC<BookingCardProps> = ({
   };
 
   const startChat = async () => {
-    console.log('kasjd')
     if (!user) {
       toast.error("Please log in to start a chat");
       navigate("/signup");
@@ -69,7 +68,8 @@ const BookingCard: React.FC<BookingCardProps> = ({
     try {
       const conversation = await CreateConversation(
         booking.advocate.id,
-        "advocate"
+        "advocate",
+        token
       );
       navigate(
         `/chat?conversationId=${conversation?.data._id}&advocateId=${conversation?.data.participants[1].userId}`

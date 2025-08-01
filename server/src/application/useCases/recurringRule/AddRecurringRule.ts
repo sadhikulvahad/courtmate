@@ -27,7 +27,7 @@ export class AddRecurringRule {
       if (existingSlot) {
         continue
       }
-      
+
       await this.slotRepository.create(slot);
     }
 

@@ -6,6 +6,7 @@ import { HttpStatus } from '../../domain/share/enums';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../types';
 import { Logger } from 'winston';
+import { zonedTimeToUtc } from 'date-fns-tz';
 
 
 @injectable()
@@ -41,7 +42,7 @@ export class SlotController {
       const slot = await this.AddSlot.execute({
         advocateId,
         date: new Date(date),
-        time: new Date(`${date}T${time}`),
+        time: zonedTimeToUtc(`${date} ${time}`, 'Asia/Kolkata'),
         isAvailable: true,
         status: 'confirmed',
       });
@@ -63,7 +64,7 @@ export class SlotController {
       if (!date || !time || !reason) {
         return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Required data missing' });
       }
-      
+
       const user = req.user as { id: string; role: string; name: string } | undefined;
 
       if (!user?.id) {

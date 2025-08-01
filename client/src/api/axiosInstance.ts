@@ -3,7 +3,7 @@ import { store } from '@/redux/store'; // Adjust based on your store setup
 import { logout, setToken } from '@/features/authSlice';
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
 });
 
@@ -23,7 +23,7 @@ axiosInstance.interceptors.response.use(
   async (error) => {
 
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-    console.log(error.response.data)
+
     if (
       error.response?.status === 403 &&
       ((error.response.data as { message?: string })?.message === 'Account is blocked' || (error.response.data as { error?: string })?.error === 'Account is blocked')

@@ -25,7 +25,9 @@ const VerifyEmail = () => {
       }
 
       try {
+        console.log('asdkjfh')
         const response = await verifyEmail(token);
+        console.log(response)
         if (response.status === 201) {
           setStatus({
             message: "Email verified successfully! Redirecting to login...",

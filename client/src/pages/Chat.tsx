@@ -84,7 +84,9 @@ const Chat = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { user, token, isAuthenticated } = useSelector(
+    (state: RootState) => state.auth
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
@@ -119,7 +121,7 @@ const Chat = () => {
   const fetchConversations = useCallback(async () => {
     try {
       setIsLoading(true);
-      const convResponse = await GetConversation();
+      const convResponse = await GetConversation(token);
       setConversations(convResponse?.data || []);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -133,8 +135,10 @@ const Chat = () => {
   }, []);
 
   useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+    if (isAuthenticated) {
+      fetchConversations();
+    }
+  }, [fetchConversations, isAuthenticated]);
 
   useEffect(() => {
     if (!advocateId) {
@@ -162,9 +166,9 @@ const Chat = () => {
     const fetchMessages = async () => {
       try {
         setIsLoading(true);
-        const response = await GetMessages(selectedChat);
+        const response = await GetMessages(selectedChat, token);
         setMessages(response?.data || []);
-        const getBooking = await getBook(advocateId, userId);
+        const getBooking = await getBook(advocateId, userId, token);
         setBooking(getBooking.data.booking);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -244,7 +248,7 @@ const Chat = () => {
       socket.off("user-stop-typing");
       socket.off("message-read");
     };
-  }, [selectedChat]);
+  }, [selectedChat, user?.id]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -252,8 +256,6 @@ const Chat = () => {
   }, [messages]);
 
   useEffect(() => {
-    console.log("Selected file changed:", selectedFile);
-
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPreviewUrl(url);

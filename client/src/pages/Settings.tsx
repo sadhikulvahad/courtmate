@@ -65,7 +65,7 @@ const AdvocateSettings = () => {
   const [currentSubscription, setCurrentSubscription] =
     useState<Subscription | null>(null);
   const [availablePlans, setAvailablePlans] = useState<Plan[]>([]);
-  const [usageStats, setUsageStats] = useState<UsageStats>({
+  const [usageStats] = useState<UsageStats>({
     caseSearches: 247,
     documentsGenerated: 89,
     aiConsultations: 12,
@@ -91,7 +91,7 @@ const AdvocateSettings = () => {
       }
 
       try {
-        const response = await GetHostory();
+        const response = await GetHostory(token);
         if (response?.status === 200) {
           setCallHistory(response.data.data);
         } else {
@@ -135,7 +135,7 @@ const AdvocateSettings = () => {
 
       try {
         // Load available plans
-        const plans = await getAllSubscription();
+        const plans = await getAllSubscription(token);
         if (plans?.status === 200) {
           setAvailablePlans(plans.data);
         } else {

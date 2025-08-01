@@ -82,7 +82,9 @@ const AdvocateList = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [sortOption, setSortOption] = useState("rating");
   const [savedAdvocates, setSavedAdvocates] = useState<string[]>([]);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated, token } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   // Move filters to parent component to persist state
   const [currentFilters, setCurrentFilters] = useState<FilterOptions>({
@@ -138,7 +140,7 @@ const AdvocateList = () => {
   const fetchAdvocates = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await getAllUserAdvocates(apiParams);
+      const response = await getAllUserAdvocates(apiParams, token);
 
       setAdvocates(response.advocates || []);
       setTotalItems(response.pagination?.totalItems || 0);
@@ -156,9 +158,9 @@ const AdvocateList = () => {
   useEffect(() => {
     const getSavedAdvocates = async () => {
       try {
-        const response = await GetSavedAdvocates();
+        const response = await GetSavedAdvocates(token);
         const saved = response?.data?.advocates || [];
-
+        console.log(saved);
         const savedIds = saved.map((adv: Ad) => adv._id || adv.id);
 
         setSavedAdvocates(savedIds);
@@ -167,8 +169,9 @@ const AdvocateList = () => {
         toast.error("Error loading saved advocates");
       }
     };
-
-    getSavedAdvocates();
+    if (isAuthenticated) {
+      getSavedAdvocates();
+    }
   }, []);
 
   // Debounced search state
@@ -229,7 +232,7 @@ const AdvocateList = () => {
   const toggleSaved = useCallback(async (advocateId: string) => {
     try {
       // Call API
-      const response = await toggleSaveAdvocate(advocateId);
+      const response = await toggleSaveAdvocate(advocateId, token);
 
       if (response?.data?.success) {
         setSavedAdvocates((prev) => {
@@ -295,6 +298,7 @@ const AdvocateList = () => {
 
   const startChat = async (id: string) => {
     if (!user) {
+      console.log("kajh");
       toast.error("Please log in to start a chat");
       navigate("/signup");
       return;
@@ -306,7 +310,7 @@ const AdvocateList = () => {
     }
 
     try {
-      const conversation = await CreateConversation(id, "advocate");
+      const conversation = await CreateConversation(id, "advocate", token);
       navigate(
         `/chat?conversationId=${conversation?.data._id}&advocateId=${conversation?.data.participants[1].userId}`
       );

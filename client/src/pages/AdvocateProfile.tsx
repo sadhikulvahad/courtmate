@@ -13,7 +13,6 @@ import {
   Phone,
   Mail,
   Clock,
-  //   FileText,
   Briefcase,
   Bookmark,
   ChevronLeft,
@@ -115,7 +114,7 @@ const AdvocateProfile = () => {
       if (!advocateId) return;
 
       try {
-        const response = await findReviews(advocateId);
+        const response = await findReviews(advocateId, token);
         if (response?.status === 200) {
           setReviews(response.data.reviews);
         }
@@ -140,7 +139,7 @@ const AdvocateProfile = () => {
     }
 
     try {
-      const conversation = await CreateConversation(id, "advocate");
+      const conversation = await CreateConversation(id, "advocate", token);
       navigate(
         `/chat?conversationId=${conversation?.data._id}&advocateId=${conversation?.data.participants[1].userId}`
       );
@@ -185,7 +184,7 @@ const AdvocateProfile = () => {
     async (advocateId: string) => {
       try {
         // Call API
-        const response = await toggleSaveAdvocate(advocateId);
+        const response = await toggleSaveAdvocate(advocateId, token);
 
         if (response?.data?.success) {
           setSavedAdvocates((prev) => {
@@ -217,7 +216,7 @@ const AdvocateProfile = () => {
   useEffect(() => {
     const getSavedAdvocates = async () => {
       try {
-        const response = await GetSavedAdvocates();
+        const response = await GetSavedAdvocates(token);
         const saved = response?.data?.advocates || [];
         const savedIds = saved.map((adv: Ad) => adv._id || adv.id);
 

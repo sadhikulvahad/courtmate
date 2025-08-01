@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { AdvocateProps } from "@/types/Types";
 import SearchBar from "@/components/SearchBar";
 import { getAllAdminAdvocates } from "@/api/admin/advocatesApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 const Advocates: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,15 +21,20 @@ const Advocates: React.FC = () => {
     itemsPerPage: 10,
   });
 
+  const { token } = useSelector((state: RootState) => state.auth);
+
   useEffect(() => {
     const fetchAdvocates = async (page: number = 1) => {
       try {
-        const response = await getAllAdminAdvocates({
-          page: page,
-          limit: 10,
-          searchTerm: searchTerm,
-          activeTab: selectedTab,
-        });
+        const response = await getAllAdminAdvocates(
+          {
+            page: page,
+            limit: 10,
+            searchTerm: searchTerm,
+            activeTab: selectedTab,
+          },
+          token
+        );
 
         if (response?.status === 200) {
           setAdvocates(response.data.advocates);

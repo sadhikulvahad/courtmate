@@ -85,7 +85,7 @@ export class UserController {
 
     async getSavedAdvocates(req: Request, res: Response) {
         try {
-            const user = req.user as { id: string; role: string; name: string } | undefined; // assuming auth middleware adds this
+            const user = req.user as { id: string; role: string; name: string } | undefined
 
             const result = await this.getSavedAdvocatesUsecase.execute(user?.id!);
 

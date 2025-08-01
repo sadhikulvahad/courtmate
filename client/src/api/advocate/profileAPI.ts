@@ -1,9 +1,6 @@
 import axios, { AxiosResponse } from "axios"
 import axiosInstance from "../axiosInstance";
 
-
-// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-
 export const completeProfile = async (id: string | undefined, token: string | null) => {
     try {
         const response = await axiosInstance.get(`/advProfile/details`, {
@@ -46,9 +43,13 @@ export const profileUpdate = async (form: FormData, token: string): Promise<Axio
     }
 }
 
-export const findReviews = async (advocateId: string | undefined) => {
+export const findReviews = async (advocateId: string | undefined, token: string | null) => {
     try {
-        const response = await axiosInstance.get('/review', { params: { advocateId } })
+        const response = await axiosInstance.get('/review', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }, params: { advocateId }
+        })
         return response
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -71,14 +72,20 @@ export const createReview = async ({
     userId: string | undefined
     review: string;
     rating: number;
-}) => {
+}, token: string | null) => {
     try {
         const response = await axiosInstance.post("/review", {
             advocateId,
             userId,
             review: review,
             rating: rating,
-        });
+
+        },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
         return response
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -100,12 +107,16 @@ export const updateReview = async ({
     reviewId: string | number
     review: string
     rating: number
-}) => {
+}, token: string | null) => {
     try {
         const response = await axiosInstance.put("/review", {
             reviewId,
             review: review,
             rating: rating,
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
         });
         return response
     } catch (error) {
@@ -119,9 +130,13 @@ export const updateReview = async ({
     }
 }
 
-export const deleteReview = async (reviewId: string | undefined) => {
+export const deleteReview = async (reviewId: string | undefined, token: string | null) => {
     try {
-        const response = await axiosInstance.delete(`/review/${reviewId}`);
+        const response = await axiosInstance.delete(`/review/${reviewId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         return response;
     } catch (error) {
         if (axios.isAxiosError(error)) {

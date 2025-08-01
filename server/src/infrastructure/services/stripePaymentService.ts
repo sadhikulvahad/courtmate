@@ -19,7 +19,7 @@ export class PaymentService {
     constructor(
         @inject(TYPES.Logger) private logger: Logger
     ) {
-        this.stripe = new Stripe(process.env.STRIPE_SECRET!, { apiVersion: "2025-06-30.basil" });
+        this.stripe = new Stripe(process.env.STRIPE_SECRET!, { apiVersion: "2025-07-30.basil" });
     }
 
     async createCheckoutSession(

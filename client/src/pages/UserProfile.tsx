@@ -43,7 +43,7 @@ export default function UserProfile() {
         }
 
         // Fetch saved advocates
-        const advocatesResponse = await GetSavedAdvocates();
+        const advocatesResponse = await GetSavedAdvocates(token);
         const saved = advocatesResponse?.data?.advocates || [];
         setSavedAdvocates(saved);
       } catch (error) {
@@ -113,7 +113,7 @@ export default function UserProfile() {
   const toggleSaved = useCallback(
     async (advocateId: string) => {
       try {
-        const response = await toggleSaveAdvocate(advocateId);
+        const response = await toggleSaveAdvocate(advocateId, token);
         if (response?.data?.success) {
           const isCurrentlySaved = savedAdvocates.some(
             (adv) => adv.id === advocateId

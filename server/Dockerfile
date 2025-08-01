@@ -1,37 +1,34 @@
-# Stage 1: Build the application
-FROM node:20 AS builder
+# Stage 1: Build
+FROM node:18-slim AS builder
 
 WORKDIR /app
 
+# Install required build dependencies
+RUN apt-get update && apt-get install -y python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install dependencies
 COPY package*.json ./
 RUN npm install
 
+# Copy the source code and build
 COPY . .
-RUN npm run build && \
-    test -f dist/app.js || (echo "Error: dist/app.js not found" && exit 1)
+RUN npm run build
 
-# Stage 2: Development image
-FROM node:20 AS development
+# Stage 2: Production
+FROM node:18-slim
 
 WORKDIR /app
 
+# Copy package.json and install only production dependencies
 COPY package*.json ./
-RUN npm install  # Include dev dependencies like nodemon
-COPY . .
+RUN npm install --omit=dev
+
+# Copy built files from builder
 COPY --from=builder /app/dist ./dist
-COPY .env ./
-EXPOSE 8088
-CMD ["npm", "run", "dev"]
 
-# Stage 3: Production image
-FROM node:20 AS production
-
-WORKDIR /app
-
-COPY .env ./
-COPY package*.json ./
-RUN npm install --omit=dev && \
-    npm rebuild bcrypt --build-from-source
-COPY --from=builder /app/dist ./dist
+# Expose port 8080 (required by Cloud Run)
 EXPOSE 8080
-CMD ["npm", "run", "start:prod"]
+
+# Start the app directly
+CMD ["node", "dist/app.js"]

@@ -43,17 +43,14 @@ import SubscriptionSuccess from "./components/ui/SubscriptionSuccess";
 import SubscriptionCancel from "./components/SubscriptionCancel";
 // import Loader from "./components/ui/Loading";
 
-export const socket = io(
-  import.meta.env.VITE_SOCKET_URL || "http://localhost:8080",
-  {
-    autoConnect: false,
-    reconnection: true,
-    reconnectionAttempts: 3,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    randomizationFactor: 0.5,
-  }
-);
+export const socket = io(import.meta.env.VITE_SOCKET_URL, {
+  autoConnect: false,
+  reconnection: true,
+  reconnectionAttempts: 3,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  randomizationFactor: 0.5,
+});
 
 function App() {
   const { user, token } = useSelector((state: RootState) => state.auth);
@@ -67,7 +64,7 @@ function App() {
 
       socket.on("connect", () => {
         console.log("Socket connected:", socket.id);
-        socket.emit("join-user", user.id); 
+        socket.emit("join-user", user.id);
       });
 
       socket.on("connect_error", (error) => {
@@ -119,6 +116,8 @@ function App() {
           <Route path="/forgot-Password" element={<ForgotPassword />} />
           <Route path="/advocates" element={<AdvocateList />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/aboutUs" element={<AboutPage />} />
+          <Route path="/contactUs" element={<ContactPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/adProfile/:id" element={<AdvocateProfile />} />
@@ -130,8 +129,6 @@ function App() {
             <Route path="/chat" element={<Chat />} />
             <Route path="/video/:roomId" element={<VideoCallWrapper />} />
             <Route path="/savedAdvocate" element={<SavedAdvocates />} />
-            <Route path="/aboutUs" element={<AboutPage />} />
-            <Route path="/contactUs" element={<ContactPage />} />
             <Route path="/activity" element={<MyActivityPage />} />
             <Route
               path="/subscription/success"

@@ -8,6 +8,8 @@ import {
 } from "@/api/advocate/profileAPI";
 import { toast } from "sonner";
 import ConfirmationModal from "./ConfirmationModal";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface MyComponentProps {
   advocateId: string | undefined;
@@ -427,6 +429,7 @@ const RatingAndReview = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const { token } = useSelector((state: RootState) => state.auth);
 
   // Calculate rating statistics
   const totalReviews = reviews.length;
@@ -451,11 +454,14 @@ const RatingAndReview = ({
       if (isEditing && editingReview) {
         // Update existing review
 
-        const response = await updateReview({
-          reviewId: editingReview._id,
-          review: reviewData.review,
-          rating: reviewData.rating,
-        });
+        const response = await updateReview(
+          {
+            reviewId: editingReview._id,
+            review: reviewData.review,
+            rating: reviewData.rating,
+          },
+          token
+        );
 
         if (response?.status === 200) {
           toast.success("Review updated successfully");
@@ -476,12 +482,15 @@ const RatingAndReview = ({
         }
       } else {
         // Create new review
-        const response = await createReview({
-          advocateId,
-          userId,
-          review: reviewData.review,
-          rating: reviewData.rating,
-        });
+        const response = await createReview(
+          {
+            advocateId,
+            userId,
+            review: reviewData.review,
+            rating: reviewData.rating,
+          },
+          token
+        );
 
         if (response?.status === 201) {
           toast.success("Review added successfully");
@@ -498,7 +507,7 @@ const RatingAndReview = ({
 
   const handleDeleteReview = async (reviewId: string) => {
     try {
-      const response = await deleteReview(reviewId);
+      const response = await deleteReview(reviewId, token);
 
       if (response?.status === 200) {
         toast.success("Review deleted successfully");

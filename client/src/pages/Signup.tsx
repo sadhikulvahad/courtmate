@@ -98,7 +98,7 @@ export function Signup() {
     setIsSubmitting(true);
 
     const role = step === 2 ? "user" : step === 3 ? "advocate" : "";
-
+    console.log(role)
     // Create updated signup details with role
     const updatedSignupDetails = {
       ...signupDetails,

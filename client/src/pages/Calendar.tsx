@@ -246,7 +246,7 @@ const AdvocateProfilePage = () => {
     };
 
     fetchAdvocate();
-  }, []);
+  }, [currentView]);
 
   const handleMonthChange = async (newMonth: Date) => {
     if (!isValid(newMonth)) {
@@ -392,7 +392,11 @@ const AdvocateProfilePage = () => {
 
   const handleProceedToPayment = async () => {
     try {
-      const response = await createPayment(advocate?.id, selectedSlot?.id);
+      const response = await createPayment(
+        advocate?.id,
+        selectedSlot?.id,
+        token
+      );
 
       const data = response.data.url;
       if (data.url) {
@@ -422,6 +426,7 @@ const AdvocateProfilePage = () => {
         date: format(slotDate, "yyyy-MM-dd"),
         time: timeSlot,
       };
+      console.log(slot);
       const newSlot = await addCustomSlot(advocate!.id, slot, token);
       if (newSlot.status === 201) {
         const updatedSlots = [...availableSlots, newSlot.data];

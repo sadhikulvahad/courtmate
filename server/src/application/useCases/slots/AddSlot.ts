@@ -22,13 +22,14 @@ export class AddSlot {
       throw new Error('Cannot create slot in the past');
     }
     const advocateIdStr = typeof props.advocateId === 'string' ? props.advocateId : props.advocateId.toString();
-
+    console.log(props.time)
     const startTime = props.time;
     const endTime = addHours(startTime, 1);
     const existingSlots = await this.slotRepository.getAvailableSlots(
       advocateIdStr,
     );
 
+    console.log(startTime)
     const existingSlot = existingSlots.filter(
       (slot) => isEqual(slot.time, startTime)
     );

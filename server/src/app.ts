@@ -135,9 +135,7 @@ app.use((err: unknown, req: Request, res: Response, next: NextFunction): void =>
 });
 
 
-
-
-server.listen(process.env.PORT ? parseInt(process.env.PORT) : 8080, () => {
+server.listen(process.env.PORT || 8080, () => {
   logger.info(`Server is running on http://localhost:${process.env.PORT || 8080}`);
 });
 

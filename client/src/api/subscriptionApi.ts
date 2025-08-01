@@ -25,9 +25,13 @@ export const getSubscription = async (advocateId: string | undefined, token: str
     }
 }
 
-export const getAllSubscription = async () => {
+export const getAllSubscription = async (token: string | null) => {
     try {
-        const response = await axiosInstance.get(`/subscribe/getAll`)
+        const response = await axiosInstance.get(`/subscribe/getAll`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
         return response
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -55,7 +59,7 @@ export const createSubscription = async (subscriptionData: {
         if (!token) throw new Error("Missing token");
         const response = await axiosInstance.post(`/payment/create-subscription-checkout`, subscriptionData, {
             headers: {
-                Authorization: `Bearer ${ token }`,
+                Authorization: `Bearer ${token}`,
             },
         });
         return response;

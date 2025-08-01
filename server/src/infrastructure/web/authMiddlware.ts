@@ -134,6 +134,7 @@ export class AuthMiddlewareImpl implements AuthMiddleware {
                     allowedRoles: roles,
                     path: req.path
                 });
+
                 return res.status(HttpStatus.FORBIDDEN).json({ error: 'Access Denied' });
             }
             next();

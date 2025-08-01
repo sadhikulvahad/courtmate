@@ -16,7 +16,6 @@ const Advocates: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await topRatedAdvocates();
-      console.log(response?.data.advocates);
       const filteredAdvocates = response?.data.advocates.filter(
         (ad: AdvocateProps) => {
           if (!ad.isBlocked && ad.isAdminVerified === "Accepted") {
@@ -32,7 +31,7 @@ const Advocates: React.FC = () => {
       setIsLoading(false);
     }
   }, []);
-  console.log(advocates);
+
   useEffect(() => {
     fetchAdvocates();
   }, []);
@@ -51,22 +50,6 @@ const Advocates: React.FC = () => {
 
       <div className="mt-10">
         <div className="relative">
-          {/* Scroll Controls */}
-          {/* <button
-            onClick={() => scroll("left")}
-            className="absolute left-0 z-10 flex items-center justify-center w-10 h-10 -translate-y-1/2 bg-white rounded-full shadow-md top-1/2 hover:bg-gray-100"
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <button
-            onClick={() => scroll("right")}
-            className="absolute right-0 z-10 flex items-center justify-center w-10 h-10 -translate-y-1/2 bg-white rounded-full shadow-md top-1/2 hover:bg-gray-100"
-          >
-            <ChevronRight size={20} />
-          </button> */}
-
-          {/* Scrollable Container */}
           <div
             ref={scrollContainerRef}
             className="flex gap-6 pb-4 overflow-x-auto scrollbar-hide snap-x"
