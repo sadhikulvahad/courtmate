@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { User } from "lucide-react";
 import UserModal from "./UserModal";
 import { getAllUsers } from "@/api/admin/usersAPI";
@@ -7,9 +7,16 @@ import { RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
 import { UserData } from "@/types/Types";
 import SearchBar from "@/components/SearchBar";
+import { useDebounce } from "@/utils/debouncing";
+import Pagination from "../Pagination";
 
 const Users: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [users, setUsers] = useState<UserData[]>([]);
 
@@ -25,7 +32,7 @@ const Users: React.FC = () => {
 
     const getUsers = async () => {
       try {
-        const response = await getAllUsers(token);
+        const response = await getAllUsers();
 
         if (response?.status === 200 && response?.data?.success) {
           const rawUsers = response.data.data.users;
@@ -36,22 +43,42 @@ const Users: React.FC = () => {
             email: user.email,
             phone: user.phone,
             isBlocked: user.isBlocked,
+            role: user.role,
           }));
+
           setUsers(formattedUsers);
+          setTotalItems(formattedUsers.length || 0);
+          setTotalPages(Math.ceil(formattedUsers.length / itemsPerPage) || 1);
         }
       } catch (error) {
         console.error("Error fetching users:", error);
+        setTotalItems(0);
+        setTotalPages(1);
       }
     };
 
     getUsers();
   }, [isAuthenticated, token, navigate]);
 
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
+
+  const handleItemsPerPageChange = useCallback((value: number) => {
+    setItemsPerPage(value);
+    setCurrentPage(1);
+  }, []);
+
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      user.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
+
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1 ) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
 
   return (
     <div className="space-y-4">
@@ -72,7 +99,7 @@ const Users: React.FC = () => {
           <div>Actions</div>
         </div>
         <div className="divide-y divide-gray-200">
-          {filteredUsers.map((user) => (
+          {paginatedUsers.map((user) => (
             <div
               key={user?.id}
               className="grid grid-cols-5 gap-4 p-4 hover:bg-gray-50"
@@ -106,7 +133,18 @@ const Users: React.FC = () => {
           user={selectedUser}
           isOpen={!!selectedUser}
           onClose={() => setSelectedUser(null)}
-          token={token} // Add this line
+          token={token}
+        />
+      )}
+
+      {totalItems > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          itemsPerPage={itemsPerPage}
+          totalItems={totalItems}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
       )}
     </div>

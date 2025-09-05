@@ -13,7 +13,11 @@ import {
   Check,
   Share2,
 } from "lucide-react";
-import { Advocate, FilterOptions } from "@/types/Types";
+import {
+  Advocate,
+  FilterOptions,
+  GetAllUserAdvocatesParams,
+} from "@/types/Types";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "@/components/SearchBar";
 import Loader from "@/components/ui/Loading";
@@ -23,6 +27,7 @@ import { toast } from "sonner";
 import { CreateConversation } from "@/api/chatApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { useDebounce } from "@/utils/debouncing";
 
 const RatingStars = ({ rating }: { rating: number }) => {
   return (
@@ -82,65 +87,57 @@ const AdvocateList = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [sortOption, setSortOption] = useState("rating");
   const [savedAdvocates, setSavedAdvocates] = useState<string[]>([]);
-  const { user, isAuthenticated, token } = useSelector(
+  const debouncedSearchTerm = useDebounce(searchTerm, 1000);
+  const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.auth
   );
 
   // Move filters to parent component to persist state
-  const [currentFilters, setCurrentFilters] = useState<FilterOptions>({
-    categories: [],
-    location: "",
-    experience: { min: null, max: null },
-    languages: [],
-    availability: [],
-    minRating: 0,
-    specializations: [],
-    certifications: [],
-  });
+  const [currentFilters, setCurrentFilters] = useState<FilterOptions>({});
 
   // Pagination states - these come from backend
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-
+  console.log(currentFilters);
   const navigate = useNavigate();
 
   // Memoize the API parameters to prevent unnecessary re-renders
-  const apiParams = useMemo(() => {
-    const [sortBy, sortOrder] = sortOption.split("_");
+  const apiParams: GetAllUserAdvocatesParams = useMemo(() => {
+    const [sortBy, sortOrderRaw] = sortOption.split("_");
+
+    // Narrow the type of sortOrder
+    const sortOrder =
+      sortOrderRaw === "asc" || sortOrderRaw === "desc"
+        ? sortOrderRaw
+        : undefined;
 
     return {
-      page: currentPage,
-      limit: itemsPerPage,
-      searchTerm: searchTerm.trim(),
+      page : currentPage,
+      limit : itemsPerPage,
+      searchTerm,
       activeTab,
       sortBy,
-      sortOrder: sortOrder as "asc" | "desc",
-      categories: currentFilters.categories,
-      location: currentFilters.location.trim(),
-      minExperience: currentFilters.experience.min ?? undefined,
-      maxExperience: currentFilters.experience.max ?? undefined,
-      languages: currentFilters.languages,
-      minRating: currentFilters.minRating,
-      availability: currentFilters.availability,
-      specializations: currentFilters.specializations,
-      certifications: currentFilters.certifications,
+      sortOrder,
+      filters: currentFilters,
     };
   }, [
-    currentPage,
     itemsPerPage,
-    searchTerm,
+    debouncedSearchTerm,
     activeTab,
     sortOption,
     currentFilters,
+    searchTerm,
+    currentPage
   ]);
 
+  console.log(apiParams, 'fdhaksdhflakjsdfhlaksf')
   // Single API call function with proper error handling
   const fetchAdvocates = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await getAllUserAdvocates(apiParams, token);
+      const response = await getAllUserAdvocates(apiParams);
 
       setAdvocates(response.advocates || []);
       setTotalItems(response.pagination?.totalItems || 0);
@@ -158,7 +155,7 @@ const AdvocateList = () => {
   useEffect(() => {
     const getSavedAdvocates = async () => {
       try {
-        const response = await GetSavedAdvocates(token);
+        const response = await GetSavedAdvocates();
         const saved = response?.data?.advocates || [];
         console.log(saved);
         const savedIds = saved.map((adv: Ad) => adv._id || adv.id);
@@ -174,22 +171,21 @@ const AdvocateList = () => {
     }
   }, []);
 
-  // Debounced search state
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
-
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
   // Reset to page 1 when filters change (except for pagination changes)
   useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchTerm, activeTab, sortOption, currentFilters]);
+    fetchAdvocates();
+  }, [
+    debouncedSearchTerm,
+    activeTab,
+    sortOption,
+    currentFilters,
+    currentPage,
+    fetchAdvocates,
+  ]);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when filters change
+  }, [currentFilters, debouncedSearchTerm, activeTab, sortOption]);
 
   // Main effect to fetch data - only runs when relevant params change
   useEffect(() => {
@@ -206,6 +202,7 @@ const AdvocateList = () => {
 
   const handleFilterChange = useCallback((filters: FilterOptions) => {
     setCurrentFilters(filters);
+    // setCurrentPage(1); 
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
@@ -232,7 +229,7 @@ const AdvocateList = () => {
   const toggleSaved = useCallback(async (advocateId: string) => {
     try {
       // Call API
-      const response = await toggleSaveAdvocate(advocateId, token);
+      const response = await toggleSaveAdvocate(advocateId);
 
       if (response?.data?.success) {
         setSavedAdvocates((prev) => {
@@ -310,7 +307,7 @@ const AdvocateList = () => {
     }
 
     try {
-      const conversation = await CreateConversation(id, "advocate", token);
+      const conversation = await CreateConversation(id, "advocate");
       navigate(
         `/chat?conversationId=${conversation?.data._id}&advocateId=${conversation?.data.participants[1].userId}`
       );
@@ -327,7 +324,7 @@ const AdvocateList = () => {
     setCurrentFilters({
       categories: [],
       location: "",
-      experience: { min: null, max: null },
+      experience: "",
       languages: [],
       availability: [],
       minRating: 0,
@@ -421,14 +418,6 @@ const AdvocateList = () => {
               {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}{" "}
               advocates
             </p>
-            {/* <div className="flex gap-2">
-              <button className="px-3 py-1 bg-white border border-gray-200 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                View: Grid
-              </button>
-              <button className="px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-md text-sm font-medium text-indigo-600 hover:bg-indigo-100 transition-colors">
-                View: List
-              </button>
-            </div> */}
           </div>
 
           {advocates.map((advocate) => (

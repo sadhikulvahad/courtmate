@@ -15,6 +15,8 @@ import {
   X,
   Users,
   Gavel,
+  Filter,
+  BookImageIcon,
 } from "lucide-react";
 
 import SidebarItem from "./SidebarItem";
@@ -43,7 +45,7 @@ const AdvocateAdminSidebar = () => {
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     ...(user?.role === "advocate"
       ? [
-          { icon: MessageSquare, label: "Messages", path: "/chat" },
+          { icon: MessageSquare, label: "Messages", path: "/advocate/chat" },
           {
             icon: Calendar,
             label: "Appointments",
@@ -55,6 +57,7 @@ const AdvocateAdminSidebar = () => {
             label: "Ratings and Reviews",
             path: "/advocate/reviews",
           },
+          {icon : BookImageIcon, label : 'My bookings', path : '/advocate/bookings'},
           { icon: Briefcase, label: "Cases", path: "/advocate/cases" },
           { icon: UserCircle, label: "Profile", path: "/advocate/adProfile" },
         ]
@@ -63,6 +66,7 @@ const AdvocateAdminSidebar = () => {
       ? [
           { icon: Users, label: "Users", path: "/users" },
           { icon: Gavel, label: "Advocates", path: "/AdAdvocates" },
+          {icon : Filter, label: "Filters", path: '/filters'}
         ]
       : []),
     { icon: Bell, label: "Notifications", path: "/notification" },

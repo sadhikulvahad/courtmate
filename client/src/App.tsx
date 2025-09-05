@@ -12,7 +12,6 @@ import VerifyEmail from "./pages/VerifyEmail";
 import ProtectedRoute from "./components/protectedRoute";
 import Home from "./pages/Home";
 import ForgotPassword from "./pages/ForgotPassword";
-// import DashBoard from "./pages/DashBoard";
 import Users from "./components/ui/admin/Users";
 import Layout from "./components/ui/admin/Layout";
 import Advocates from "./components/ui/admin/Advocates";
@@ -41,6 +40,8 @@ import Dashboard from "./components/ui/advocate/Dashboard";
 import AdminDashboard from "./pages/AdminDashBoard";
 import SubscriptionSuccess from "./components/ui/SubscriptionSuccess";
 import SubscriptionCancel from "./components/SubscriptionCancel";
+import Filters from "./pages/Filters";
+import WalletComponent from "./pages/Wallet";
 // import Loader from "./components/ui/Loading";
 
 export const socket = io(import.meta.env.VITE_SOCKET_URL, {
@@ -93,20 +94,8 @@ function App() {
     };
   }, [user?.id, token]);
 
-  // useEffect(() => {
-  //   // Simulate loading delay or data fetching
-  //   const timer = setTimeout(() => {
-  //     setIsLoading(false);
-  //   }, 2500); // 2.5 seconds delay
-
-  //   return () => clearTimeout(timer); // cleanup
-  // }, []);
-
-  // if (isLoading) return <Loader />;
-
   return (
     <>
-      {/* {isLoading ? <Loader /> : <Home />} */}
       <Router>
         <Toaster richColors position="bottom-right" />
         <Routes>
@@ -130,6 +119,7 @@ function App() {
             <Route path="/video/:roomId" element={<VideoCallWrapper />} />
             <Route path="/savedAdvocate" element={<SavedAdvocates />} />
             <Route path="/activity" element={<MyActivityPage />} />
+            <Route path="/wallet" element={<WalletComponent />} />
             <Route
               path="/subscription/success"
               element={<SubscriptionSuccess />}
@@ -140,6 +130,8 @@ function App() {
             />
             <Route path="/user/notification" element={<Notification />} />
             <Route element={<Layout />}>
+              <Route path="/advocate/bookings" element={<Bookings />} />
+              <Route path="/advocate/chat" element={<Chat />} />
               <Route
                 path="/dashboard"
                 element={
@@ -149,6 +141,7 @@ function App() {
               <Route path="/users" element={<Users />} />
               <Route path="/AdAdvocates" element={<Advocates />} />
               <Route path="/notification" element={<Notification />} />
+              <Route path="/filters" element={<Filters />} />
               <Route path="/advocate/adProfile" element={<LawyerProfile />} />
               <Route
                 path="/advocate/appointments"

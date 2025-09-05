@@ -62,6 +62,7 @@ const SideBar: React.FC<SideBarProps> = ({ closeSidebar }) => {
         { name: "My Bookings", icon: faBookBookmark, path: "/bookings" },
         { name: "Messages", icon: faMessage, path: "/chat" },
         { name: "Saved Advocates", icon: faBookmark, path: "/savedAdvocate" },
+        { name: "My Wallet", icon: faBookmark, path: "/wallet" },
         { name: "Notifications", icon: faBell, path: "/user/notification" },
         {
           name: "Logout",

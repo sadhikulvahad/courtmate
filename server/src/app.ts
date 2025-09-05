@@ -38,6 +38,8 @@ import { SocketServer } from './infrastructure/services/socketServer';
 import { SocketIOService } from './infrastructure/services/SocketIOService';
 import { BookingExpirationJobService } from './infrastructure/services/bookingExpirationJob';
 import { ReminderSchedulerService } from './infrastructure/services/reminderScheduler';
+import filterRoutes from './presentation/routes/filterRoutes';
+import walletRoutes from './presentation/routes/walletRoutes';
 dotenv.config();
 
 
@@ -55,9 +57,11 @@ const socketServer = container.get<SocketServer>(TYPES.SocketIOServer);
 socketServer.initialize(server);
 const socketIOService = container.get<SocketIOService>(TYPES.SocketIOService);
 socketIOService.initialize();
-container.get<PassportService>(TYPES.PassportService);
+const passportService = container.get<PassportService>(TYPES.PassportService);
 container.get<ReminderSchedulerService>(TYPES.ReminderSchedulerService)
 container.get<BookingExpirationJobService>(TYPES.BookingExpirationJob);
+
+passportService.initialize(app)
 
 app.use('/payment', paymentRouter);
 
@@ -91,6 +95,8 @@ app.use('/api/case', caseRouter);
 app.use('/api/subscribe', subscription);
 app.use('/api/advocateDashboard', advocateDashboard);
 app.use('/api/adminDashboard', adminDashboard);
+app.use('/api/filter', filterRoutes);
+app.use('/api/wallet', walletRoutes)
 
 
 app.use((err: unknown, req: Request, res: Response, next: NextFunction): void => {
