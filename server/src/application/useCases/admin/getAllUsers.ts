@@ -1,46 +1,46 @@
 
 
 import { inject, injectable } from "inversify";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { TYPES } from "../../../types";
 import { Logger } from "winston";
-import { UserProps } from "../../../domain/types/EntityProps";
 import { S3Service } from "../../../infrastructure/web/s3Credential";
+import { IGetAllUsers } from "../../../application/interface/admin/GetAllUsersRepo";
+import { GetAllUsersDTO, UserDTO } from "../../../application/dto";
+import { User } from "../../../domain/entities/User";
 
 
 @injectable()
-export class getAllUsers {
+export class getAllUsers implements IGetAllUsers {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.Logger) private logger: Logger,
-        @inject(TYPES.S3Service) private s3Service : S3Service
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.Logger) private _logger: Logger,
     ) { }
 
-    async execute() {
+    async execute(): Promise<GetAllUsersDTO> {
         try {
-            const users = await this.userRepository.findUsers()
-
+            const users = await this._userRepository.findUsers()
             if (!users) {
                 return { success: false, error: "No Users" }
             }
 
-            const mappedAdvocates = await Promise.all(
-                users.map(async (user: UserProps) => {
-                    if (user.profilePhoto) {
-                        user.profilePhoto = await this.s3Service.generateSignedUrl(user.profilePhoto);
-                    }
-                    if (user.bciCertificate) {
-                        user.bciCertificate = await this.s3Service.generateSignedUrl(user.bciCertificate);
-                    }
-                    return user;
+            const mappedAdvocates: UserDTO[] = await Promise.all(
+                users.map(async (user: User) => {
+                    return {
+                        _id: user.id!.toString(),
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        role: user.role,
+                        isBlocked: user.isBlocked,
+                    };
                 })
             );
 
-
-            return { success: true, message: "Users details got successfully", users: mappedAdvocates }
+            return { users: mappedAdvocates }
         } catch (error) {
-            this.logger.error("Error from getAllUsers usecase", { error })
-            return { success: false, error: error }
+            this._logger.error("Error from getAllUsers usecase", { error })
+            return { success: false, error: error instanceof Error ? error.message : String(error) }
         }
     }
 }

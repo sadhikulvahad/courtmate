@@ -1,10 +1,10 @@
 // infrastructure/database/mongodb/SubscriptionRepositoryImpl.ts
 
-import { SubscriptionRepository } from "../../../domain/interfaces/SubscriptionRepository";
+import { ISubscriptionRepository } from "../../../domain/interfaces/SubscriptionRepository";
 import { SubscriptionModel } from "../models/Subscription";
 import { SubscriptionProps } from "../../../domain/types/EntityProps";
 
-export class SubscriptionRepositoryImpl implements SubscriptionRepository {
+export class SubscriptionRepositoryImpl implements ISubscriptionRepository {
   async createSubscription(subscription: SubscriptionProps): Promise<SubscriptionProps> {
     return await SubscriptionModel.create(subscription);
   }

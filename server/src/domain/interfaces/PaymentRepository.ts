@@ -1,5 +1,5 @@
 import { Payment } from "../entities/Payment";
 
-export interface PaymentRepository {
+export interface IPaymentRepository {
   create(payment: Payment): Promise<Payment>;
 }

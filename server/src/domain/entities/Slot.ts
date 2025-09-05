@@ -25,7 +25,7 @@ export class Slot {
   }
 
   static fromDB(props: SlotProps): Slot {
-    return new Slot(props); // no validation
+    return new Slot(props);
   }
 
   get id(): string {

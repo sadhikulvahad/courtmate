@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../types';
-import { BookingRepository } from '../../domain/interfaces/BookingRepository';
-import { SlotRepository } from '../../domain/interfaces/SlotRepository';
+import { IBookingRepository } from '../../domain/interfaces/BookingRepository';
+import { ISlotRepository } from '../../domain/interfaces/SlotRepository';
 import { Logger } from 'winston';
 import { isBefore } from 'date-fns';
 import { BookingStatus } from '../../domain/types/EntityProps';
@@ -10,8 +10,8 @@ import cron from 'node-cron';
 @injectable()
 export class BookingExpirationJobService {
   constructor(
-    @inject(TYPES.BookingRepository) private bookingRepository: BookingRepository,
-    @inject(TYPES.SlotRepository) private slotRepository: SlotRepository,
+    @inject(TYPES.IBookingRepository) private IBookingRepository: IBookingRepository,
+    @inject(TYPES.ISlotRepository) private ISlotRepository: ISlotRepository,
     @inject(TYPES.Logger) private logger: Logger
   ) {
     this.startCronJob();
@@ -33,7 +33,7 @@ export class BookingExpirationJobService {
     const now = new Date();
 
     // Check bookings
-    const bookings = await this.bookingRepository.getAllBookings();
+    const bookings = await this.IBookingRepository.getAllBookings();
     if (bookings?.length) {
       for (const booking of bookings) {
         const bookingDate = new Date(booking.date);
@@ -46,15 +46,15 @@ export class BookingExpirationJobService {
           bookingTime.getMinutes()
         );
 
-        if (isBefore(bookingDateTime, now) && booking.status !== 'expired') {
-          await this.bookingRepository.updateBooking(booking.id.toString(), { status: 'expired' });
+        if (isBefore(bookingDateTime, now) && booking.status !== 'expired' && booking.status !== 'confirmed') {
+          await this.IBookingRepository.updateBooking(booking.id.toString(), { status: 'expired' });
           this.logger.info(`Updated booking ${booking.id} to expired`);
         }
       }
     }
 
     // Check slots
-    const slots = await this.slotRepository.getAllSlots();
+    const slots = await this.ISlotRepository.getAllSlots();
     if (slots?.length) {
       for (const slot of slots) {
         const slotDate = new Date(slot.date);
@@ -69,7 +69,7 @@ export class BookingExpirationJobService {
 
         if (isBefore(slotDateTime, now) && slot.status !== 'expired') {
           slot.markAsExpired();
-          await this.slotRepository.update(slot.id, {
+          await this.ISlotRepository.update(slot.id, {
             ...slot.toJSON(),
             status: slot.toJSON().status as BookingStatus,
           });

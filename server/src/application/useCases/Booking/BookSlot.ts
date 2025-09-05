@@ -1,7 +1,7 @@
 import { addDays, endOfDay, isBefore, isValid, startOfDay } from "date-fns";
 import { Booking } from "../../../domain/entities/Booking";
-import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
-import { SlotRepository } from "../../../domain/interfaces/SlotRepository";
+import { IBookingRepository } from "../../../domain/interfaces/BookingRepository";
+import { ISlotRepository } from "../../../domain/interfaces/SlotRepository";
 import { BookingProps, BookingStatus } from "../../../domain/types/EntityProps";
 import { NotificationService } from "../../../infrastructure/services/notificationService";
 import { Types } from "mongoose";
@@ -9,15 +9,17 @@ import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
-import { UserRepository } from "domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
+import { IBookSlot } from "../../../application/interface/booking/BookSlotRepo";
 
 
 @injectable()
-export class BookSlot {
+export class BookSlot implements IBookSlot {
   constructor(
-    @inject(TYPES.BookingRepository) private bookingRepository: BookingRepository,
-    @inject(TYPES.SlotRepository) private slotRepository: SlotRepository,
-    @inject(TYPES.UserRepository) private userRepository: UserRepository
+    @inject(TYPES.IBookingRepository) private _bookingRepository: IBookingRepository,
+    @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository,
+    @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+    @inject(TYPES.NotificationService) private _notificationService: NotificationService
   ) { }
 
   async execute(
@@ -26,18 +28,15 @@ export class BookSlot {
     userId: string,
     usrname: string,
     notes?: string,
-    user?: {
-      id: string,
-      name: string
-    },
-    notificationService?: NotificationService
+    user?: { id: string; name: string },
+    caseId?: string
   ): Promise<Booking> {
 
     const today = startOfDay(new Date());
     const futureDate = endOfDay(addDays(today, 30));
-    const slots = await this.slotRepository.findByAdvocateId(advocateId, today, futureDate);
+    const slots = await this._slotRepository.findByAdvocateId(advocateId, today, futureDate);
     const slot = slots.find((s) => s?.id.toString() === slotId);
-    const advocate = await this.userRepository.findById(advocateId)
+    const advocate = await this._userRepository.findById(advocateId)
     if (!slot) {
       throw new Error('Slot not found');
     }
@@ -60,10 +59,16 @@ export class BookSlot {
       time: slot.time,
       status: 'confirmed',
       notes,
-      roomId: `room-${uuidv4()}`
+      roomId: `room-${uuidv4()}`,
+      caseId: caseId
     };
+
+    console.log(bookingProps)
+
     const booking = Booking.fromDB(bookingProps);
-    const savedBooking = await this.bookingRepository.create(booking);
+    const savedBooking = await this._bookingRepository.create(booking);
+
+    console.log('askhdfaosgfb', savedBooking)
 
     const date = new Date(slot.date);
     const time = new Date(slot.time);
@@ -78,7 +83,7 @@ export class BookSlot {
 
     const formattedDateTime = format(combinedDateTime, 'yyyy-MM-dd hh:mm a');
 
-    await notificationService?.sendNotification({
+    await this._notificationService?.sendNotification({
       recieverId: new Types.ObjectId(advocateId),
       senderId: new Types.ObjectId(userId),
       message: `${usrname} wants to book your slot on ${formattedDateTime}`,
@@ -87,7 +92,7 @@ export class BookSlot {
       createdAt: new Date()
     })
 
-    await notificationService?.sendNotification({
+    await this._notificationService?.sendNotification({
       recieverId: new Types.ObjectId(userId),
       senderId: new Types.ObjectId(advocateId),
       message: `You have booked Advocate ${advocate?.name}'s Slot At ${formattedDateTime}`,
@@ -97,7 +102,7 @@ export class BookSlot {
     })
 
     slot.markAsBooked()
-    await this.slotRepository.update(slot.id, {
+    await this._slotRepository.update(slot.id, {
       ...slot.toJSON(),
       status: slot.toJSON().status as BookingStatus,
     });

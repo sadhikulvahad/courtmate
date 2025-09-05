@@ -1,30 +1,26 @@
 import { inject, injectable } from "inversify";
-import { User } from "../../../domain/entities/User";
-import { TokenService } from "../../../domain/interfaces/TokenRepository";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { ITokenService } from "../../../domain/interfaces/TokenRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { HashPassword } from "../../../infrastructure/services/passwordHash";
 import { TYPES } from "../../../types";
 import { Logger } from "winston";
+import { ILoginUser } from "../../../application/interface/auth/LoginUsersRepo";
+import { LoginUserDTO } from "../../../application/dto";
 
 
 @injectable()
-export class LoginUser {
+export class LoginUser implements ILoginUser {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.HashPasswordService) private hashPassword: HashPassword,
-        @inject(TYPES.TokenRepository) private tokenService: TokenService,
-        @inject(TYPES.Logger) private logger: Logger
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.HashPasswordService) private _hashPassword: HashPassword,
+        @inject(TYPES.ITokenRepository) private _tokenService: ITokenService,
+        @inject(TYPES.Logger) private _logger: Logger
     ) { }
 
-    async execute(email: string, password: string): Promise<{
-        user?: User
-        token?: string,
-        error?: string,
-        refreshToken?: string
-    }> {
+    async execute(email: string, password: string): Promise<LoginUserDTO> {
         try {
 
-            const user = await this.userRepository.findByEmail(email);
+            const user = await this._userRepository.findByEmail(email);
             if (!user) {
                 return { error: "Invalid Email ID" };
             }
@@ -41,20 +37,20 @@ export class LoginUser {
                 return { error: "Your account has blocked by the admin" }
             }
 
-            const validPassword = await this.hashPassword.compare(password, user.password);
+            const validPassword = await this._hashPassword.compare(password, user.password);
             if (!validPassword) {
                 return { error: "Incorrect password" };
             }
 
-            const accessToken = await this.tokenService.generateToken(user.id, user.role, user.name);
-            const refreshToken = await this.tokenService.generateRefreshToken(user.id)
+            const accessToken = await this._tokenService.generateToken(user.id, user.role, user.name);
+            const refreshToken = await this._tokenService.generateRefreshToken(user.id)
             return {
                 user,
                 token: accessToken,
                 refreshToken
             };
         } catch (error) {
-            this.logger.error("Login error:", { error })
+            this._logger.error("Login error:", { error })
             return { error: "Login failed. Please try again later." };
         }
     }

@@ -1,33 +1,35 @@
 import { inject, injectable } from "inversify"
-import { UserRepository } from "../../../domain/interfaces/UserRepository"
+import { IUserRepository } from "../../../domain/interfaces/UserRepository"
 import { TYPES } from "../../../types"
 import { NotificationService } from "../../../infrastructure/services/notificationService"
+import { IToggleUser } from "../../../application/interface/user/ToggleUserUsecaseRepo"
+import { ReturnDTO } from "../../../application/dto"
 
 
 @injectable()
-export class ToggleUser {
+export class ToggleUser implements IToggleUser {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.NotificationService) private notificationService: NotificationService
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.NotificationService) private _notificationService: NotificationService
     ) { }
 
-    async execute(id: string, advocateId: string) {
+    async execute(id: string, advocateId: string) : Promise<ReturnDTO> {
         if (!id) {
             return { success: false, error: "No id provided" }
         }
 
-        const user = await this.userRepository.findById(id)
+        const user = await this._userRepository.findById(id)
         if (!user) {
             return { success: false, error: "User not found" }
         }
 
         const updatedStatus = !user.isBlocked
 
-        await this.userRepository.update(id, {
+        await this._userRepository.update(id, {
             isBlocked: updatedStatus
         })
 
-        await this.notificationService.sendNotification({
+        await this._notificationService.sendNotification({
             message: `Your Acoount is ${updatedStatus ? 'Blocked' : 'Unblocked'} by CourtMate`,
             read: false,
             recieverId: id,

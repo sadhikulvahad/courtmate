@@ -1,9 +1,9 @@
 import { Types } from "mongoose";
 import { MessageModel } from "../models/MessageModel";
-import { MessageRepository } from "../../../domain/interfaces/MessageRepository";
+import { IMessageRepository } from "../../../domain/interfaces/MessageRepository";
 import { MessageProps } from "../../../domain/types/EntityProps";
 
-export class MessageRepositoryImplements implements MessageRepository {
+export class MessageRepositoryImplements implements IMessageRepository {
   async createMessage(message: Omit<MessageProps, "_id">): Promise<MessageProps> {
     try {
       const newMessage = await MessageModel.create({

@@ -1,19 +1,20 @@
 
 import { Slot } from '../../../domain/entities/Slot';
-import { MongooseSlotRepository } from '../../../infrastructure/dataBase/repositories/SlotRepository';
+import { ISlotRepository } from 'domain/interfaces/SlotRepository';
 import { Types } from 'mongoose';
 import { parse } from 'date-fns';
 import { BookingStatus } from '../../../domain/types/EntityProps';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../../types';
-import { BookingRepository } from '../../../domain/interfaces/BookingRepository';
+import { IBookingRepository } from '../../../domain/interfaces/BookingRepository';
+import { IPostponeSlot } from '../../../application/interface/slots/PostponeSlotRepo';
 
 
 @injectable()
-export class PostponeSlot {
+export class PostponeSlot implements IPostponeSlot {
     constructor(
-        @inject(TYPES.SlotRepository) private slotRepository: MongooseSlotRepository,
-        @inject(TYPES.BookingRepository) private bookingRepository: BookingRepository
+        @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository,
+        @inject(TYPES.IBookingRepository) private _bookingRepository: IBookingRepository
     ) { }
 
     async execute(
@@ -31,7 +32,7 @@ export class PostponeSlot {
         const newTime = parse(`${data.date}T${data.time}`, 'yyyy-MM-dd\'T\'HH:mm', new Date());
 
         // Fetch the slot
-        const slot = await this.slotRepository.findById(slotId);
+        const slot = await this._slotRepository.findById(slotId);
         if (!slot) {
             throw new Error('Slot not found');
         }
@@ -46,9 +47,9 @@ export class PostponeSlot {
 
         // If the slot is booked, update the associated booking
         if (!slot.isAvailable) {
-            const booking = await this.bookingRepository.findBySlotId(slotId);
+            const booking = await this._bookingRepository.findBySlotId(slotId);
             if (booking) {
-                await this.bookingRepository.updateBooking(booking.id, {
+                await this._bookingRepository.updateBooking(booking.id, {
                     date: newDate,
                     time: newTime,
                     status: 'postponed',
@@ -59,7 +60,7 @@ export class PostponeSlot {
         }
 
         // Save the updated slot
-        const updatedSlot = await this.slotRepository.update(slotId, {
+        const updatedSlot = await this._slotRepository.update(slotId, {
             date: slot.date,
             time: slot.time,
             status: slot.status as BookingStatus,

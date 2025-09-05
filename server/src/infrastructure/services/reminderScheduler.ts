@@ -2,20 +2,20 @@
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../types';
-import { EmailService } from '../../domain/interfaces/EmailService';
+import { IEmailService } from '../../domain/interfaces/EmailService';
 import { BookingModel } from '../dataBase/models/BookingModel';
 import cron from 'node-cron';
 import { Logger } from 'winston';
 import { NotificationService } from './notificationService';
-import { UserRepository } from '../../domain/interfaces/UserRepository';
+import { IUserRepository } from '../../domain/interfaces/UserRepository';
 
 @injectable()
 export class ReminderSchedulerService {
   constructor(
-    @inject(TYPES.EmailService) private emailService: EmailService,
+    @inject(TYPES.IEmailService) private IEmailService: IEmailService,
     @inject(TYPES.Logger) private logger: Logger,
     @inject(TYPES.NotificationService) private notificationService: NotificationService,
-    @inject(TYPES.UserRepository) private userRepositroy: UserRepository
+    @inject(TYPES.IUserRepository) private IUserRepository: IUserRepository
   ) {
     this.startScheduler();
   }
@@ -34,7 +34,7 @@ export class ReminderSchedulerService {
   async checkReminders() {
     const now = new Date();
     const reminderTime = new Date(now.getTime() + 10 * 60 * 1000);
-    const courtmate = await this.userRepositroy.findAdmin()
+    const courtmate = await this.IUserRepository.findAdmin()
     const bookings = await BookingModel.find({
       status: 'confirmed',
       date: {
@@ -58,7 +58,7 @@ export class ReminderSchedulerService {
       });
       const roomUrl = `${process.env.REDIRECT_URL}/video/${booking.roomId}`;
 
-      await this.emailService.sendVideoCallReminder(
+      await this.IEmailService.sendVideoCallReminder(
         user.email,
         user.name,
         advocate.name,
@@ -66,7 +66,7 @@ export class ReminderSchedulerService {
         roomUrl
       );
 
-      await this.emailService.sendVideoCallReminder(
+      await this.IEmailService.sendVideoCallReminder(
         advocate.email,
         advocate.name,
         user.name,

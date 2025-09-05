@@ -1,13 +1,17 @@
 import { inject, injectable } from "inversify";
-import { SubscriptionRepository } from "../../../domain/interfaces/SubscriptionRepository";
+import { ISubscriptionRepository } from "../../../domain/interfaces/SubscriptionRepository";
 import { TYPES } from "../../../types";
+import { IGetSubscriptionUsecase } from "../../../application/interface/subscription/GetSubscriptionUsecase";
+import { SubscriptionProps } from "../../../domain/types/EntityProps";
 
 
 @injectable()
-export class GetSubscriptionUseCase {
-  constructor(@inject(TYPES.SubscriptionRepository) private subscriptionRepository: SubscriptionRepository) { }
+export class GetSubscriptionUseCase implements IGetSubscriptionUsecase {
+  constructor(
+    @inject(TYPES.ISubscriptionRepository) private _subscriptionRepository: ISubscriptionRepository
+  ) { }
 
-  async execute(advocateId: string) {
-    return await this.subscriptionRepository.getSubscriptionByAdvocateId(advocateId);
+  async execute(advocateId: string) :Promise<SubscriptionProps | null> {
+    return await this._subscriptionRepository.getSubscriptionByAdvocateId(advocateId);
   }
 }

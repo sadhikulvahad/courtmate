@@ -1,21 +1,23 @@
 import { inject, injectable } from "inversify";
-import { NotificationRepository } from "../../domain/interfaces/NotificationRepository";
+import { INotificationRepository } from "../../domain/interfaces/NotificationRepository";
 import { TYPES } from "../../types";
+import { IMarkAsRead } from "../../application/interface/MarkAsReadRepo";
+import { ReturnDTO } from "../../application/dto";
 
 
 @injectable()
-export class MarkAsRead {
+export class MarkAsRead implements IMarkAsRead {
 
     constructor(
-        @inject(TYPES.NotificationRepository) private notificationRepository: NotificationRepository
+        @inject(TYPES.INotificationRepository) private _notificationRepository: INotificationRepository
     ) { }
 
-    async execute(id: string) {
+    async execute(id: string) : Promise<ReturnDTO> {
         if (!id) {
             return { success: false, error: "No id found" }
         }
 
-        await this.notificationRepository.update(id, {
+        await this._notificationRepository.update(id, {
             read: true,
         })
 

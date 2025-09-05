@@ -3,13 +3,13 @@
 export interface accessTokenDecoded {
     email: string
     name: string
-    userId: string
+    id: string
     iat?: number
     exp?: number
 }
 
 export interface RefreshTokenPayload {
-    userId: string;
+    id: string;
     iat: number;
     exp: number;
 }

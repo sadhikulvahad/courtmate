@@ -1,39 +1,41 @@
 
 import { eachDayOfInterval, isSameDay, isValid, isBefore, startOfDay, format } from 'date-fns';
-import { RecurringRuleRepository } from '../../../domain/interfaces/RecurringRuleRepository';
-import { SlotRepository } from '../../../domain/interfaces/SlotRepository';
+import { IRecurringRuleRepository } from '../../../domain/interfaces/RecurringRuleRepository';
+import { ISlotRepository } from '../../../domain/interfaces/SlotRepository';
 import { RecurringRule } from '../../../domain/entities/recurringRule';
 import { Slot } from '../../../domain/entities/Slot';
 import { RecurringRuleProps } from '../../../domain/types/EntityProps';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../../types';
+import { RecurringRulePropsDTO } from '../../../application/dto';
+import { IAddRecurringRule } from '../../../application/interface/recurringRule/AddRecurringRuleRepo';
 
 
 @injectable()
-export class AddRecurringRule {
+export class AddRecurringRule implements IAddRecurringRule {
   constructor(
-    @inject(TYPES.ReccurringRepository) private recurringRuleRepository: RecurringRuleRepository,
-    @inject(TYPES.SlotRepository) private slotRepository: SlotRepository,
+    @inject(TYPES.IReccurringRepository) private _recurringRuleRepository: IRecurringRuleRepository,
+    @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository,
   ) { }
 
-  async execute(ruleData: Omit<RecurringRuleProps, '_id'>): Promise<any> {
+  async execute(ruleData: Omit<RecurringRuleProps, '_id'>): Promise<RecurringRulePropsDTO> {
     const rule = new RecurringRule(ruleData);
 
 
     const slots: Slot[] = this.generateSlots(rule);
     for (const slot of slots) {
-      const existingSlot = await this.slotRepository.findByAdvocateId(slot.advocateId, new Date(slot.date), new Date(slot.time))
+      const existingSlot = await this._slotRepository.findByAdvocateId(slot.advocateId, new Date(slot.date), new Date(slot.time))
 
       if (existingSlot) {
         continue
       }
 
-      await this.slotRepository.create(slot);
+      await this._slotRepository.create(slot);
     }
 
     try {
 
-      const savedRule = await this.recurringRuleRepository.create(rule);
+      const savedRule = await this._recurringRuleRepository.create(rule);
 
       return {
         ...savedRule.toJSON(),

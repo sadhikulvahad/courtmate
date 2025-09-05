@@ -1,18 +1,20 @@
 import { inject, injectable } from "inversify";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { HashPassword } from "../../../infrastructure/services/passwordHash";
 import { TYPES } from "../../../types";
+import { IResetForgotPassword } from "../../../application/interface/auth/ResetForgotPasswordRepo";
+import { ReturnDTO } from "../../../application/dto";
 
 
 @injectable()
-export class ResetForgotPassword {
+export class ResetForgotPassword implements IResetForgotPassword {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.HashPasswordService) private hashPassword: HashPassword
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.HashPasswordService) private _hashPassword: HashPassword
     ) { }
 
-    async execute(password: string, email: string) {
-        const existingUser = await this.userRepository.findByEmail(email)
+    async execute(password: string, email: string) :Promise<ReturnDTO> {
+        const existingUser = await this._userRepository.findByEmail(email)
 
         if (!existingUser) {
             return { success: false, error: "Invalide email id" }
@@ -30,9 +32,9 @@ export class ResetForgotPassword {
             return { success: false, error: "You signed with google, please use google auth" }
         }
 
-        const hashedPassword = await this.hashPassword.hash(password)
+        const hashedPassword = await this._hashPassword.hash(password)
 
-        await this.userRepository.update(existingUser.id, {
+        await this._userRepository.update(existingUser.id, {
             password: hashedPassword
         })
 

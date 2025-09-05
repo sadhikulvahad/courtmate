@@ -1,14 +1,17 @@
 import { inject, injectable } from "inversify";
-import { CaseRepository } from "../../../domain/interfaces/CaseRepository";
+import { ICaseRepository } from "../../../domain/interfaces/CaseRepository";
 import { TYPES } from "../../../types";
+import { IDeleteCaseUsecase } from "../../../application/interface/case/DeleteCaseUsecaseRepo";
 
 
 @injectable()
-export class DeleteCaseUseCase {
-    constructor(@inject(TYPES.CaseRepository) private caseRepository: CaseRepository) { }
+export class DeleteCaseUseCase implements IDeleteCaseUsecase{
+    constructor(
+        @inject(TYPES.ICaseRepository) private _caseRepository: ICaseRepository
+    ) { }
 
     async execute(id: string): Promise<boolean> {
-        const result = await this.caseRepository.delete(id);
+        const result = await this._caseRepository.delete(id);
         if (!result) {
             throw new Error("Case not found");
         }

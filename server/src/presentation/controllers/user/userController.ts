@@ -1,20 +1,20 @@
 import { Request, Response } from 'express';
-import { ToggleUser } from '../../../application/useCases/user/ToggleUserUsecase';
-import { ResetPassword } from '../../../application/useCases/user/ResetPasswordUseCase';
-import { ToggleSavedAdvocate } from '../../../application/useCases/user/ToggleSavedAdvovate';
-import { GetSavedAdvocates } from '../../../application/useCases/user/GetSavedAdvocates';
 import { HttpStatus } from '../../../domain/share/enums';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../../types';
+import { IToggleUser } from '../../../application/interface/user/ToggleUserUsecaseRepo';
+import { IResetPassword } from '../../../application/interface/user/ResetPasswordUsecaseRepo';
+import { IToggleSavedAdvocate } from '../../../application/interface/user/ToggleSavedAdvocatesRepo';
+import { IGetSavedAdvocates } from '../../../application/interface/user/GetSavedAdvocatesRepo';
 
 
 @injectable()
 export class UserController {
     constructor(
-        @inject(TYPES.ToggleUser) private toggleUser: ToggleUser,
-        @inject(TYPES.ResetPassword) private resetPasswordUseCase: ResetPassword,
-        @inject(TYPES.ToggleSavedAdvocate) private toggleSavedAdvocates: ToggleSavedAdvocate,
-        @inject(TYPES.GetSavedAdvocates) private getSavedAdvocatesUsecase: GetSavedAdvocates
+        @inject(TYPES.IToggleUser) private _toggleUser: IToggleUser,
+        @inject(TYPES.IResetPassword) private _resetPasswordUseCase: IResetPassword,
+        @inject(TYPES.IToggleSavedAdvocate) private _toggleSavedAdvocates: IToggleSavedAdvocate,
+        @inject(TYPES.IGetSavedAdvocates) private _getSavedAdvocatesUsecase: IGetSavedAdvocates
     ) { }
 
     async toggleUserisBlocked(req: Request, res: Response) {
@@ -27,7 +27,7 @@ export class UserController {
 
             const user = req.user as { id: string; role: string; name: string } | undefined;
 
-            const result = await this.toggleUser.execute(id, user?.id!);
+            const result = await this._toggleUser.execute(id, user?.id!);
 
             if (!result.success) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error });
@@ -47,7 +47,7 @@ export class UserController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'Id is not provided' })
             }
 
-            const result = await this.resetPasswordUseCase.execute(id, oldPassword, newPassword)
+            const result = await this._resetPasswordUseCase.execute(id, oldPassword, newPassword)
 
             if (!result?.success) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result?.error })
@@ -63,13 +63,13 @@ export class UserController {
     async toggleSaveAdvocate(req: Request, res: Response) {
         try {
             const user = req.user as { id: string; role: string; name: string } | undefined;
-            const { advocateId } = req.params
+            const { advocateId } = req.query
 
             if (!user?.id || !advocateId) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: "User ID or Advocate ID is missing" });
             }
 
-            const result = await this.toggleSavedAdvocates.execute(user.id, advocateId);
+            const result = await this._toggleSavedAdvocates.execute(user.id, advocateId.toString());
 
             if (!result.success) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error });
@@ -87,7 +87,7 @@ export class UserController {
         try {
             const user = req.user as { id: string; role: string; name: string } | undefined
 
-            const result = await this.getSavedAdvocatesUsecase.execute(user?.id!);
+            const result = await this._getSavedAdvocatesUsecase.execute(user?.id!);
 
             if (!result.success) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error });

@@ -2,12 +2,12 @@
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../types';
-import { TokenService } from '../../domain/interfaces/TokenRepository';
+import { ITokenService } from '../../domain/interfaces/TokenRepository';
 import jwt from 'jsonwebtoken';
 import { Logger } from 'winston';
 
 @injectable()
-export class JwtTokenService implements TokenService {
+export class JwtTokenService implements ITokenService {
   private accessTokenSecret: string;
   private refreshTokenSecret: string;
 

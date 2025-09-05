@@ -1,18 +1,18 @@
 import { Request, Response } from 'express';
-import { AddRecurringRule } from '../../application/useCases/recurringRule/AddRecurringRule';
-import { GetRecurringRulesByAdvocate } from '../../application/useCases/recurringRule/GetRecurringRule';
 import { HttpStatus } from '../../domain/share/enums';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../types';
 import { Logger } from 'winston';
+import { IAddRecurringRule } from '../../application/interface/recurringRule/AddRecurringRuleRepo';
+import { IGetRecurringRules } from '../../application/interface/recurringRule/GetRecurringRuleRepo';
 
 
 @injectable()
 export class RecurringRuleController {
   constructor(
-    @inject(TYPES.AddRecurringRule) private addRecurringRuleUseCase: AddRecurringRule,
-    @inject(TYPES.GetRecurringRulesByAdvocate) private GetRecurringRuleUsecase: GetRecurringRulesByAdvocate,
-    @inject(TYPES.Logger) private logger: Logger
+    @inject(TYPES.IAddRecurringRule) private _addRecurringRuleUseCase: IAddRecurringRule,
+    @inject(TYPES.IGetRecurringRules) private _getRecurringRuleUsecase: IGetRecurringRules,
+    @inject(TYPES.Logger) private _logger: Logger
   ) { }
 
   async getRecurringRule(req: Request, res: Response) {
@@ -23,7 +23,7 @@ export class RecurringRuleController {
         return res.status(HttpStatus.BAD_REQUEST).json({ error: 'advocateId required' });
       }
 
-      const rules = await this.GetRecurringRuleUsecase.execute(advocateId as string)
+      const rules = await this._getRecurringRuleUsecase.execute(advocateId as string)
       res.status(HttpStatus.OK).json({ status: true, message: 'Fetched successfully', rules });
 
       // return 
@@ -76,7 +76,7 @@ export class RecurringRuleController {
         return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Invalid exception dates' });
       }
 
-      const rule = await this.addRecurringRuleUseCase.execute({
+      const rule = await this._addRecurringRuleUseCase.execute({
         advocateId,
         description,
         startDate,

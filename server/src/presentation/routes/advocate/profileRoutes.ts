@@ -32,7 +32,7 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 router.use(authMiddleware.auth.bind(authMiddleware))
 router.use(authMiddleware.authorizeRoles('advocate', 'user'))
 
-router.get('/getUser/:id', asyncHandler(profileController.getUser.bind(profileController)));
+router.get('/getUser', asyncHandler(profileController.getUser.bind(profileController)));
 router.get('/details', asyncHandler(profileController.getAdvocateDetail.bind(profileController)));
 router.put('/updateAdvProfile', multerService.getProfileUpload(), asyncHandler(profileController.updateAdvocateProfile.bind(profileController)));
 router.put('/updateAdvocate', multerService.getProfileUpload(), asyncHandler(profileController.updateAdvocate.bind(profileController)));

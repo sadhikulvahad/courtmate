@@ -48,13 +48,27 @@ export class Booking {
 
 
 
-  get advocate(): { id: string; name: string; email: string; phone?: string } | undefined {
+  get advocate(): { id: string; name: string; email: string; phone?: string; role?: string } | undefined {
     if (isPopulatedAdvocate(this.props.advocateId)) {
       return {
         id: this.props.advocateId._id,
         name: this.props.advocateId.name,
         email: this.props.advocateId.email,
         phone: this.props.advocateId.phone,
+        role: this.props.advocateId.role
+      };
+    }
+    return undefined;
+  }
+
+  get user(): { id: string; name: string; email: string; phone?: string; role?: string } | undefined {
+    if (isPopulatedUser(this.props.userId)) {
+      return {
+        id: this.props.userId._id,
+        name: this.props.userId.name,
+        email: this.props.userId.email,
+        phone: this.props.userId.phone,
+        role: this.props.userId.role
       };
     }
     return undefined;
@@ -66,10 +80,16 @@ export class Booking {
   }
 
   get advocateId(): string {
+    if (typeof this.props.advocateId === "object" && "_id" in this.props.advocateId) {
+      return this.props.advocateId._id.toString();
+    }
     return this.props.advocateId?.toString?.() ?? '';
   }
 
   get userId(): string {
+    if (typeof this.props.userId === "object" && "_id" in this.props.userId) {
+      return this.props.userId._id.toString();
+    }
     return this.props.userId?.toString?.() ?? '';
   }
 
@@ -109,12 +129,19 @@ export class Booking {
     return this.props.roomId
   }
 
-  toJSON() {
+  get caseId(): string | undefined {
+    if (typeof this.props.caseId === "object" && "_id" in this.props.caseId) {
+      return this.props.caseId._id.toString();
+    }
+    return this.props.caseId?.toString?.() ?? '';
+  }
 
+  toJSON() {
     return {
       id: this.id,
       advocateId: this.advocateId,
       advocate: this.advocate,
+      user: this.user,
       userId: this.userId,
       slotId: this.slotId,
       date: this.date,
@@ -124,19 +151,34 @@ export class Booking {
       updatedAt: this.updatedAt,
       notes: this.notes,
       postponeReason: this.postponeReason,
-      roomId: this.roomId
+      roomId: this.roomId,
+      caseId: this.caseId
     };
   }
 
 }
 
 function isPopulatedAdvocate(
-  advocate: Types.ObjectId | { _id: string; name: string; email: string; phone?: string } | string | undefined
-): advocate is { _id: string; name: string; email: string; phone?: string } {
+  advocate: Types.ObjectId | { _id: string; name: string; email: string; phone?: string; role?: string } | string | undefined
+): advocate is { _id: string; name: string; email: string; phone?: string; role?: string } {
   return (
     advocate !== null &&
     typeof advocate === 'object' &&
     'name' in advocate &&
-    'email' in advocate
+    'email' in advocate &&
+    'role' in advocate
+  );
+}
+
+
+function isPopulatedUser(
+  user: Types.ObjectId | { _id: string; name: string; email: string; phone?: string; role?: string } | string | undefined
+): user is { _id: string; name: string; email: string; phone?: string; role?: string } {
+  return (
+    user !== null &&
+    typeof user === 'object' &&
+    'name' in user &&
+    'email' in user &&
+    'role' in user
   );
 }

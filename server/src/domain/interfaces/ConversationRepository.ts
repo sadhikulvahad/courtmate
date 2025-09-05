@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { ConversationProps } from "../types/EntityProps";
 
-export interface ConversationRepository {
+export interface IConversationRepository {
     getConversationsByUserId(userId: Types.ObjectId): Promise<ConversationProps[]>;
     createConversation(conversation: Omit<ConversationProps, "_id">): Promise<ConversationProps>;
     updateLastMessage(conversationId: Types.ObjectId, messageId: Types.ObjectId): Promise<void>;

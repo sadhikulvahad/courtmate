@@ -1,21 +1,16 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
-import { RedisService } from "../../../domain/interfaces/RedisService";
+import { IRedisService } from "../../../domain/interfaces/RedisService";
 import { jwtDecode } from "jwt-decode";
-
-interface LogoutResponse {
-    success: boolean;
-}
+import { ILogoutUsecase } from "../../../application/interface/auth/LogoutUsecaseRepo";
+import { LogoutResponse } from "../../../application/dto";
 
 
 @injectable()
-export class LogoutUseCase {
+export class LogoutUseCase implements ILogoutUsecase {
     constructor(
-        @inject(TYPES.RedisService)
-        private redisService: RedisService
+        @inject(TYPES.IRedisService) private _redisService: IRedisService
     ) { }
-
-
 
     async execute(token: string): Promise<LogoutResponse> {
 
@@ -31,7 +26,7 @@ export class LogoutUseCase {
             return { success: true };
         }
 
-        await this.redisService.blacklistToken(token, expiresIn);
+        await this._redisService.blacklistToken(token, expiresIn);
 
         return { success: true }
     }

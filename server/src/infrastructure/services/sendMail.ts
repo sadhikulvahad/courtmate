@@ -1,6 +1,6 @@
 // infrastructure/services/EmailService.ts
 import nodemailer from "nodemailer";
-import { EmailService } from "../../domain/interfaces/EmailService";
+import { IEmailService } from "../../domain/interfaces/EmailService";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { Logger } from "winston";
@@ -18,7 +18,7 @@ type EmailConfig = {
 
 
 @injectable()
-export class NodemailerEmailService implements EmailService {
+export class NodemailerEmailService implements IEmailService {
   private transporter: nodemailer.Transporter;
 
   constructor(

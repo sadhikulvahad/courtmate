@@ -1,30 +1,30 @@
 import { Types } from "mongoose";
-import { NotificationRepository } from "../../../domain/interfaces/NotificationRepository";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { Status } from "../../../domain/types/status";
 import { NotificationService } from "../../../infrastructure/services/notificationService";
-import { EmailService } from "../../../domain/interfaces/EmailService";
+import { IEmailService } from "../../../domain/interfaces/EmailService";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
+import { IUpdateAdvocateStatus } from "../../../application/interface/admin/UpdateAdvocateStatusRepo";
+import { UpdateAdvocateStatussDTO } from "../../../application/dto";
 
 
 @injectable()
-export class UpdateAdvocateStatus {
+export class UpdateAdvocateStatus implements IUpdateAdvocateStatus {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.NotificationRepository) private notificationRepository: NotificationRepository,
-        @inject(TYPES.EmailService) private emailService: EmailService,
-        @inject(TYPES.NotificationService) private notificationService: NotificationService
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.IEmailService) private _emailService: IEmailService,
+        @inject(TYPES.NotificationService) private _notificationService: NotificationService
     ) { }
 
-    async execute(status: string, id: string, admin: any) {
+    async execute(status: string, id: string, admin: any) : Promise<UpdateAdvocateStatussDTO> {
         if (!id) {
             return { success: false, error: 'Id is not provided' }
         }
         if (!status) {
             return { success: false, error: 'Status is not defined' }
         }
-        const updated = await this.userRepository.update(id, {
+        const updated = await this._userRepository.update(id, {
             isAdminVerified: status as Status
         })
 
@@ -35,15 +35,15 @@ export class UpdateAdvocateStatus {
             content = "Your application is rejected, please contact the admin"
         }
 
-        const user = await this.userRepository.findById(id)
+        const user = await this._userRepository.findById(id)
 
         if (!user || !user.email) {
             return { success: false, error: "User or user email not found" };
         }
 
-        await this.emailService.sendGenericNotification(user?.email, `Your Requst to join CortMate is ${status}`, content)
+        await this._emailService.sendGenericNotification(user?.email, `Your Requst to join CortMate is ${status}`, content)
 
-        await this.notificationService.sendNotification({
+        await this._notificationService.sendNotification({
             recieverId: new Types.ObjectId(updated.id),
             senderId: new Types.ObjectId(admin.id as string),
             message: content,
@@ -52,6 +52,6 @@ export class UpdateAdvocateStatus {
             createdAt: new Date()
         })
 
-        return { success: true, message: "Status updated successfully", advocate: updated }
+        return { advocate: updated }
     }
 }

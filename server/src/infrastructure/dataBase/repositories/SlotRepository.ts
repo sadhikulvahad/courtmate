@@ -1,11 +1,11 @@
 import { Types } from "mongoose";
 import { Slot } from "../../../domain/entities/Slot";
-import { SlotRepository } from "../../../domain/interfaces/SlotRepository";
+import { ISlotRepository } from "../../../domain/interfaces/SlotRepository";
 import { SlotModel } from "../models/SlotModel";
 
 
 
-export class MongooseSlotRepository implements SlotRepository {
+export class MongooseSlotRepository implements ISlotRepository {
   async findByAdvocateId(advocateId: string, startDate: Date, endDate: Date): Promise<Slot[]> {
     const objectId = new Types.ObjectId(advocateId)
     const slots = await SlotModel.find({

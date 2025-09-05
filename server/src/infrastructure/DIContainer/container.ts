@@ -1,11 +1,11 @@
 import { Container } from 'inversify';
 import { TYPES } from '../../types';
-import { UserRepository } from '../../domain/interfaces/UserRepository';
-import { NotificationRepository } from '../../domain/interfaces/NotificationRepository';
-import { MessageRepository } from '../../domain/interfaces/MessageRepository';
-import { ConversationRepository } from '../../domain/interfaces/ConversationRepository';
-import { EmailService } from '../../domain/interfaces/EmailService';
-import { TokenService } from '../../domain/interfaces/TokenRepository';
+import { IUserRepository } from '../../domain/interfaces/UserRepository';
+import { INotificationRepository } from '../../domain/interfaces/NotificationRepository';
+import { IMessageRepository } from '../../domain/interfaces/MessageRepository';
+import { IConversationRepository } from '../../domain/interfaces/ConversationRepository';
+import { IEmailService } from '../../domain/interfaces/EmailService';
+import { ITokenService } from '../../domain/interfaces/TokenRepository';
 import { UserRepositoryImplement } from '../dataBase/repositories/UserRepository';
 import { NotificationRepositoryImplements } from '../dataBase/repositories/NotificationRepository';
 import { MessageRepositoryImplements } from '../dataBase/repositories/MessageRepository';
@@ -44,8 +44,6 @@ import { AuthMiddleware, AuthMiddlewareImpl } from '../../infrastructure/web/aut
 import { PassportService } from '../services/passport';
 import { MulterService } from '../../infrastructure/web/multer';
 import { S3Service } from '../../infrastructure/web/s3Credential';
-import { Server as SocketIOServer } from 'socket.io';
-import http from 'http';
 import { UserController } from '../../presentation/controllers/user/userController';
 import { UserController as AdminUserController } from '../../presentation/controllers/admin/usersController';
 import { getAllUsers } from '../../application/useCases/admin/GetAllUsers';
@@ -87,17 +85,17 @@ import { getAllNotification } from '../../application/useCases/getAllNotificatio
 import { MarkAllAsRead } from '../../application/useCases/MarkAllAsRead';
 import { MarkAsRead } from '../../application/useCases/MarkasRead';
 import { PaymentUsecase } from '../../application/useCases/PaymentUsecase';
-import { BookingRepository } from '../../domain/interfaces/BookingRepository';
+import { IBookingRepository } from '../../domain/interfaces/BookingRepository';
 import { BookingRepositoryImplements } from '../../infrastructure/dataBase/repositories/BookingRepository';
-import { CaseRepository } from '../../domain/interfaces/CaseRepository';
+import { ICaseRepository } from '../../domain/interfaces/CaseRepository';
 import { CaseRepositoryImplements } from '../../infrastructure/dataBase/repositories/CaseRepository';
-import { RecurringRuleRepository } from '../../domain/interfaces/RecurringRuleRepository';
+import { IRecurringRuleRepository } from '../../domain/interfaces/RecurringRuleRepository';
 import { RecurringRuleRepositoryImplement } from '../../infrastructure/dataBase/repositories/RecurringRuleRepository';
-import { ReviewRepository } from '../../domain/interfaces/ReviewRepository';
+import { IReviewRepository } from '../../domain/interfaces/ReviewRepository';
 import { ReviewRepositoryImplements } from '../../infrastructure/dataBase/repositories/ReviewRepository';
-import { SlotRepository } from '../../domain/interfaces/SlotRepository';
+import { ISlotRepository } from '../../domain/interfaces/SlotRepository';
 import { MongooseSlotRepository } from '../../infrastructure/dataBase/repositories/SlotRepository';
-import { SubscriptionRepository } from '../../domain/interfaces/SubscriptionRepository';
+import { ISubscriptionRepository } from '../../domain/interfaces/SubscriptionRepository';
 import { SubscriptionRepositoryImpl } from '../../infrastructure/dataBase/repositories/SubscriptionRepository';
 import { ChatFileController } from '../../presentation/controllers/chatFileController';
 import { paymentController } from '../../presentation/controllers/paymentController';
@@ -106,7 +104,7 @@ import { BookingController } from '../../presentation/controllers/bookingControl
 import { SlotController } from '../../presentation/controllers/slotController';
 import { RecurringRuleController } from '../../presentation/controllers/recurringRuleController';
 import { PaymentService } from '../../infrastructure/services/stripePaymentService';
-import { PaymentRepository } from '../../domain/interfaces/PaymentRepository';
+import { IPaymentRepository } from '../../domain/interfaces/PaymentRepository';
 import { PaymentRepositoryImplement } from '../../infrastructure/dataBase/repositories/PaymentRepository';
 import { ConversationController } from '../../presentation/controllers/conversationController';
 import { ReviewController } from '../../presentation/controllers/reviewController';
@@ -117,9 +115,95 @@ import { AdvocateDashboardController } from '../../presentation/controllers/advo
 import { SocketServer } from '../../infrastructure/services/socketServer';
 import { GetAllAdminAdvocates } from '../../application/useCases/admin/GetAllAdminAdvocates';
 import { ReminderSchedulerService } from '../../infrastructure/services/reminderScheduler';
-import { RedisService } from '../../domain/interfaces/RedisService';
+import { IRedisService } from '../../domain/interfaces/RedisService';
 import { RedisServiceImplement } from '../../infrastructure/services/redisService';
 import { LogoutUseCase } from '../../application/useCases/auth/LogoutUseCase';
+import { IGetAdminDashboardRepo } from '../../application/interface/admin/GetAdminDashboardRepo';
+import { IGetAdvocateDashboard } from '../../application/interface/advocate/GetAdvocateDashboardRepo';
+import { IFilterRepository } from '../../domain/interfaces/FilterRepository';
+import { FilterRespository } from '../../infrastructure/dataBase/repositories/FilterRepository';
+import { FilterController } from '../../presentation/controllers/filterController';
+import { IGetAllFilter } from '../../application/interface/GetAllFiltersRepo';
+import { GetAllFilter } from '../../application/useCases/GetAllFilters';
+import { IAddFilter } from '../../application/interface/AddFiltersRepo';
+import { AddFilter } from '../../application/useCases/AddFilter';
+import { IAddCategory } from '../../application/interface/AddCategoryRepo';
+import { AddCategory } from '../../application/useCases/AddCategory';
+import { IBookSlot } from '../../application/interface/booking/BookSlotRepo';
+import { IGetBookingThisHour } from '../../application/interface/booking/GetBookRepo';
+import { IGetBookSlot } from '../../application/interface/booking/GetBookSlotRepo';
+import { IGetCallHistoryUsecase } from '../../application/interface/booking/GetCallHistoryUsecaseRepo';
+import { IPostpone } from '../../application/interface/booking/PostponeRepo';
+import { IVerifyRoom } from '../../application/interface/booking/VerifyRoomRepo';
+import { ICreateCaseUsecase } from '../../application/interface/case/CreateCaseUsecaseRepo';
+import { IDeleteCaseUsecase } from '../../application/interface/case/DeleteCaseUsecaseRepo';
+import { IGetAllCasesUsecase } from '../../application/interface/case/GetAllCasesUsecaseRepo';
+import { IUpdateCaseUsecase } from '../../application/interface/case/UpdateCaseUsecaseRepo';
+import { IUpdateHearingUsecase } from '../../application/interface/case/UpdateHearingUsecaseRepo';
+import { ICreateConversation } from '../../application/interface/messages/CreateConversationRepo';
+import { IGetConversation } from '../../application/interface/messages/GetConversationRepo';
+import { IGetMessages } from '../../application/interface/messages/GetMessageRepo';
+import { IUpdateMessageStatus } from '../../application/interface/messages/UpdateMessageStatusRepo';
+import { IAddRecurringRule } from '../../application/interface/recurringRule/AddRecurringRuleRepo';
+import { IGetRecurringRules } from '../../application/interface/recurringRule/GetRecurringRuleRepo';
+import { ICreateReview } from '../../application/interface/review/CreateReviewRepo';
+import { IDeleteReviewUsecase } from '../../application/interface/review/DeleteReviewUsecaseRepo';
+import { IGetReviews } from '../../application/interface/review/GetReviewRepo';
+import { IUpdateReviewUsecase } from '../../application/interface/review/UpdateReviewUsecaseRepo';
+import { IAddSlot } from '../../application/interface/slots/AddSlotRepo';
+import { IGetSlots } from '../../application/interface/slots/GetSlotRepo';
+import { IPostponeSlot } from '../../application/interface/slots/PostponeSlotRepo';
+import { ICreateSubscriptionUsecase } from '../../application/interface/subscription/CreateSubscriptionUsecaseRepo';
+import { IGetAllSubscriptionsUsecase } from '../../application/interface/subscription/GetAllSubscriptionUsecaseRepo';
+import { IGetSubscriptionUsecase } from '../../application/interface/subscription/GetSubscriptionUsecase';
+import { IGetSavedAdvocates } from '../../application/interface/user/GetSavedAdvocatesRepo';
+import { IResetPassword } from '../../application/interface/user/ResetPasswordUsecaseRepo';
+import { IToggleSavedAdvocate } from '../../application/interface/user/ToggleSavedAdvocatesRepo';
+import { IToggleUser } from '../../application/interface/user/ToggleUserUsecaseRepo';
+import { ICreateCheckoutSessionUsecase } from '../../application/interface/CreateCheckoutSessionUsecaseRepo';
+import { IGetAllNotification } from '../../application/interface/GetAllNotificationRepo';
+import { IMarkAllAsRead } from '../../application/interface/MarkAllAsReadRepo';
+import { IMarkAsRead } from '../../application/interface/MarkAsReadRepo';
+import { IPaymentUsecase } from '../../application/interface/PaymentUsecaseRepo';
+import { IGetAllAdvocates } from '../../application/interface/admin/GetAllAdvocatesRepo';
+import { IGetAllUserAdvocates } from '../../application/interface/user/GetAllUserAdvocatesRepo';
+import { IUpdateAdvocateStatus } from '../../application/interface/admin/UpdateAdvocateStatusRepo';
+import { ITopRatedAdvocatesUsecase } from '../../application/interface/user/TopRatedAdvocateUsecaseRepo';
+import { ICreateMessage } from '../../application/interface/messages/CreateMessageRepo';
+import { ISignupUser } from '../../application/interface/auth/SignupUserRepo';
+import { IVerifyEmail } from '../../application/interface/auth/VerifyEmailRepo';
+import { ILoginUser } from '../../application/interface/auth/LoginUsersRepo';
+import { IGoogleAuth } from '../../application/interface/auth/GoogleAuthRepo';
+import { IForgotPasswordSendMail } from '../../application/interface/auth/ForgotPasswordSendMailRepo';
+import { IVerifyForgotPasswordMail } from '../../application/interface/auth/VerifyForgotPasswordMailRepo';
+import { IResetForgotPassword } from '../../application/interface/auth/ResetForgotPasswordRepo';
+import { IRefreshTokenUsecase } from '../../application/interface/auth/RefreshtokenUsecaseRepo';
+import { IGetAdvocateDetails } from '../../application/interface/advocate/GetDetailsRepo';
+import { IUpdateAdvocateProfile } from '../../application/interface/advocate/UpdateAdvocateProfileRepo';
+import { IUpdateAdvocate } from '../../application/interface/advocate/UpdateAdvocateRepo';
+import { IFindUser } from '../../application/interface/advocate/FindUserRepo';
+import { IGetAllUsers } from '../../application/interface/admin/GetAllUsersRepo';
+import { IGetAllAdminAdvocates } from '../../application/interface/admin/GetAllAdminAdvocatesRepo';
+import { ILogoutUsecase } from '../../application/interface/auth/LogoutUsecaseRepo';
+import { IDeleteCategory } from '../../application/interface/DeleteCategory';
+import { DeleteCategory } from '../../application/useCases/DeleteCategory';
+import { IDeletFilter } from '../../application/interface/DeleteFilter';
+import { DeleteFilter } from '../../application/useCases/DeleteFilter';
+import { IAddCaseHearing } from '../../application/interface/case/AddCaseHearingUsecaseRepo';
+import { AddHearingDataUsecase } from '../../application/useCases/case/AddCaseHearingUsecase';
+import { IGetCaseHearingRepo } from '../../application/interface/case/GetCaseHearingDataRepo';
+import { GetCaseHearingDataUsecase } from '../../application/useCases/case/GetCaseHearingDataUsecase';
+import { IUpdateCaseHearingDataRepo } from '../../application/interface/case/UpdateCaseHearingDataRepo';
+import { UpdateCaseHearingDataUsecase } from '../../application/useCases/case/UpdateCaseHearingDataUsecase';
+import { IDeleteCaseHearingRepo } from '../../application/interface/case/DeleteCaseHearingDataRepo';
+import { DeleteCaseHearingUsecase } from '../../application/useCases/case/DeleteCaseHearingDataUsecase';
+import { ICancelBookingRepo } from '../../application/interface/booking/CancelBookingRepo';
+import { CancelBooking } from '../../application/useCases/Booking/CancelBooking';
+import { IWalletRepository } from '../../domain/interfaces/WalletRepository';
+import { WalletRepository } from '../../infrastructure/dataBase/repositories/WalletRepository';
+import { WalletController } from '../../presentation/controllers/walletController';
+import { IGetWallet } from '../../application/interface/Wallet/GetWalletRepo';
+import { GetWallet } from '../../application/useCases/Wallet/GetWalletUsecase';
 
 type EmailConfig = {
     service: string;
@@ -154,29 +238,31 @@ const logger = createLogger({
 const container = new Container();
 // container.bind<HttpServer>('Server').toConstantValue(server);
 // Repositories
-container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImplement).inSingletonScope();
-container.bind<NotificationRepository>(TYPES.NotificationRepository).to(NotificationRepositoryImplements).inSingletonScope();
-container.bind<MessageRepository>(TYPES.MessageRepository).to(MessageRepositoryImplements).inSingletonScope();
-container.bind<ConversationRepository>(TYPES.ConversationRepository).to(ConversationRepositoryImplements).inSingletonScope();
-container.bind<TokenService>(TYPES.TokenRepository).to(JwtTokenService).inSingletonScope();
-container.bind<BookingRepository>(TYPES.BookingRepository).to(BookingRepositoryImplements).inSingletonScope()
-container.bind<CaseRepository>(TYPES.CaseRepository).to(CaseRepositoryImplements).inSingletonScope()
-container.bind<RecurringRuleRepository>(TYPES.ReccurringRepository).to(RecurringRuleRepositoryImplement).inSingletonScope()
-container.bind<ReviewRepository>(TYPES.ReviewRepository).to(ReviewRepositoryImplements).inSingletonScope()
-container.bind<SlotRepository>(TYPES.SlotRepository).to(MongooseSlotRepository).inSingletonScope()
-container.bind<SubscriptionRepository>(TYPES.SubscriptionRepository).to(SubscriptionRepositoryImpl).inSingletonScope()
-container.bind<PaymentRepository>(TYPES.PaymentRepository).to(PaymentRepositoryImplement).inSingletonScope()
+container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepositoryImplement).inSingletonScope();
+container.bind<INotificationRepository>(TYPES.INotificationRepository).to(NotificationRepositoryImplements).inSingletonScope();
+container.bind<IMessageRepository>(TYPES.IMessageRepository).to(MessageRepositoryImplements).inSingletonScope();
+container.bind<IConversationRepository>(TYPES.IConversationRepository).to(ConversationRepositoryImplements).inSingletonScope();
+container.bind<ITokenService>(TYPES.ITokenRepository).to(JwtTokenService).inSingletonScope();
+container.bind<IBookingRepository>(TYPES.IBookingRepository).to(BookingRepositoryImplements).inSingletonScope()
+container.bind<ICaseRepository>(TYPES.ICaseRepository).to(CaseRepositoryImplements).inSingletonScope()
+container.bind<IRecurringRuleRepository>(TYPES.IReccurringRepository).to(RecurringRuleRepositoryImplement).inSingletonScope()
+container.bind<IReviewRepository>(TYPES.IReviewRepository).to(ReviewRepositoryImplements).inSingletonScope()
+container.bind<ISlotRepository>(TYPES.ISlotRepository).to(MongooseSlotRepository).inSingletonScope()
+container.bind<ISubscriptionRepository>(TYPES.ISubscriptionRepository).to(SubscriptionRepositoryImpl).inSingletonScope()
+container.bind<IPaymentRepository>(TYPES.IPaymentRepository).to(PaymentRepositoryImplement).inSingletonScope()
+container.bind<IFilterRepository>(TYPES.IFilterRepository).to(FilterRespository).inSingletonScope()
+container.bind<IWalletRepository>(TYPES.IWalletRepository).to(WalletRepository).inSingletonScope()
 
 // Services
 container.bind<EmailConfig>(TYPES.EmailConfig).toConstantValue(createEmailConfig());
-container.bind<EmailService>(TYPES.EmailService).to(NodemailerEmailService).inSingletonScope();
+container.bind<IEmailService>(TYPES.IEmailService).to(NodemailerEmailService).inSingletonScope();
 
 container.bind<NotificationService>(TYPES.NotificationService).toDynamicValue(() => {
     const notificationRepo = new NotificationRepositoryImplements();
     const socketIOService = container.get<SocketIOService>(TYPES.SocketIOService);
     return new NotificationService(notificationRepo, socketIOService);
 }).inSingletonScope();
-container.bind<RedisService>(TYPES.RedisService).to(RedisServiceImplement)
+container.bind<IRedisService>(TYPES.IRedisService).to(RedisServiceImplement)
 container.bind<SocketIOService>(TYPES.SocketIOService).to(SocketIOService).inSingletonScope();
 container.bind<SocketServer>(TYPES.SocketIOServer).to(SocketServer).inSingletonScope();
 container.bind<Logger>(TYPES.Logger).toConstantValue(logger);
@@ -191,73 +277,84 @@ container.bind<ReminderSchedulerService>(TYPES.ReminderSchedulerService).to(Remi
 
 
 // Use Cases
-container.bind<GetAdminDashboard>(TYPES.GetAdminDashboard).to(GetAdminDashboard);
-container.bind<GetAdvocateDashboard>(TYPES.GetAdvocateDashboard).to(GetAdvocateDashboard);
-container.bind<BookSlot>(TYPES.BookSlot).to(BookSlot);
-container.bind<GetBookingThisHourUseCase>(TYPES.GetBookingThisHourUseCase).to(GetBookingThisHourUseCase);
-container.bind<GetBookSlot>(TYPES.GetBookSlot).to(GetBookSlot);
-container.bind<GetCallHistoryUseCase>(TYPES.GetCallHistoryUseCase).to(GetCallHistoryUseCase);
-container.bind<Postpone>(TYPES.Postpone).to(Postpone);
-container.bind<VerifyRoom>(TYPES.VerifyRoom).to(VerifyRoom);
-container.bind<CreateCaseUseCase>(TYPES.CreateCaseUseCase).to(CreateCaseUseCase);
-container.bind<DeleteCaseUseCase>(TYPES.DeleteCaseUseCase).to(DeleteCaseUseCase);
-container.bind<GetAllCasesUseCase>(TYPES.GetAllCasesUseCase).to(GetAllCasesUseCase);
-container.bind<UpdateCaseUseCase>(TYPES.UpdateCaseUseCase).to(UpdateCaseUseCase);
-container.bind<UpdateHearingHistoryUseCase>(TYPES.UpdateHearingHistoryUseCase).to(UpdateHearingHistoryUseCase);
-container.bind<CreateConversationUseCase>(TYPES.CreateConversationUseCase).to(CreateConversationUseCase);
-container.bind<GetConversationsUseCase>(TYPES.GetConversationsUseCase).to(GetConversationsUseCase);
-container.bind<GetMessagesUseCase>(TYPES.GetMessagesUseCase).to(GetMessagesUseCase);
-container.bind<UpdateMessageStatusUseCase>(TYPES.UpdateMessageStatusUseCase).to(UpdateMessageStatusUseCase);
-container.bind<AddRecurringRule>(TYPES.AddRecurringRule).to(AddRecurringRule);
-container.bind<GetRecurringRulesByAdvocate>(TYPES.GetRecurringRulesByAdvocate).to(GetRecurringRulesByAdvocate);
-container.bind<CreateReviewUseCase>(TYPES.CreateReviewUseCase).to(CreateReviewUseCase);
-container.bind<DeleteReviewUseCase>(TYPES.DeleteReviewUseCase).to(DeleteReviewUseCase);
-container.bind<GetReviewsUseCase>(TYPES.GetReviewsUseCase).to(GetReviewsUseCase);
-container.bind<UpdateReviewUseCase>(TYPES.UpdateReviewUseCase).to(UpdateReviewUseCase);
-container.bind<AddSlot>(TYPES.AddSlot).to(AddSlot);
-container.bind<GetSlots>(TYPES.GetSlots).to(GetSlots);
-container.bind<PostponeSlot>(TYPES.PostponeSlot).to(PostponeSlot);
-container.bind<CreateSubscriptionUseCase>(TYPES.CreateSubscriptionUseCase).to(CreateSubscriptionUseCase);
-container.bind<GetAllSubscriptionsUseCase>(TYPES.GetAllSubscriptionsUseCase).to(GetAllSubscriptionsUseCase);
-container.bind<GetSubscriptionUseCase>(TYPES.GetSubscriptionUseCase).to(GetSubscriptionUseCase);
-container.bind<GetSavedAdvocates>(TYPES.GetSavedAdvocates).to(GetSavedAdvocates);
-container.bind<ResetPassword>(TYPES.ResetPassword).to(ResetPassword);
-container.bind<ToggleSavedAdvocate>(TYPES.ToggleSavedAdvocate).to(ToggleSavedAdvocate);
-container.bind<ToggleUser>(TYPES.ToggleUser).to(ToggleUser);
-container.bind<CreateCheckoutSessionUseCase>(TYPES.CreateCheckoutSessionUseCase).to(CreateCheckoutSessionUseCase);
-container.bind<getAllNotification>(TYPES.GetAllNotification).to(getAllNotification);
-container.bind<MarkAllAsRead>(TYPES.MarkAllAsRead).to(MarkAllAsRead);
-container.bind<MarkAsRead>(TYPES.MarkAsRead).to(MarkAsRead);
-container.bind<PaymentUsecase>(TYPES.PaymentUseCase).to(PaymentUsecase);
-container.bind<GetAllAdvocates>(TYPES.GetAllAdvocates).to(GetAllAdvocates);
-container.bind<GetAllUserAdvocates>(TYPES.GetAllUserAdvocates).to(GetAllUserAdvocates);
-container.bind<UpdateAdvocateStatus>(TYPES.UpdateAdvocateStatus).to(UpdateAdvocateStatus);
-container.bind<TopRatedAdvocatesUseCase>(TYPES.TopRatedAdvocatesUseCase).to(TopRatedAdvocatesUseCase);
-container.bind<CreateMessageUseCase>(TYPES.CreateMessageUseCase).to(CreateMessageUseCase);
-container.bind<SignupUser>(TYPES.SignupUser).to(SignupUser);
-container.bind<verifyEmail>(TYPES.VerifyEmail).to(verifyEmail);
-container.bind<LoginUser>(TYPES.LoginUser).to(LoginUser);
-container.bind<GoogleAuth>(TYPES.GoogleAuth).to(GoogleAuth);
-container.bind<forgotPasswordSendMail>(TYPES.ForgotPasswordSendMail).to(forgotPasswordSendMail);
-container.bind<VerifyForgotPasswordMail>(TYPES.VerifyForgotPasswordMail).to(VerifyForgotPasswordMail);
-container.bind<ResetForgotPassword>(TYPES.ResetForgotPassword).to(ResetForgotPassword);
-container.bind<RefreshTokenUseCase>(TYPES.RefreshTokenUseCase).to(RefreshTokenUseCase);
-container.bind<GetAdvocateDetails>(TYPES.GetAdvocateDetails).to(GetAdvocateDetails);
-container.bind<UpdateAdvocateProfile>(TYPES.UpdateAdvocateProfile).to(UpdateAdvocateProfile);
-container.bind<UpdateAdvocate>(TYPES.UpdateAdvocate).to(UpdateAdvocate);
-container.bind<FindUser>(TYPES.FindUser).to(FindUser);
-container.bind<getAllUsers>(TYPES.GetAllUsers).to(getAllUsers)
-container.bind<GetAllAdminAdvocates>(TYPES.GetAllAdminAdvocates).to(GetAllAdminAdvocates)
-container.bind<LogoutUseCase>(TYPES.LogoutUseCase).to(LogoutUseCase)
+container.bind<IGetAdminDashboardRepo>(TYPES.IGetAdminDashboard).to(GetAdminDashboard).inSingletonScope()
+container.bind<IGetAdvocateDashboard>(TYPES.IGetAdvocateDashboard).to(GetAdvocateDashboard).inSingletonScope()
+container.bind<IBookSlot>(TYPES.IBookSlot).to(BookSlot).inSingletonScope()
+container.bind<IGetBookingThisHour>(TYPES.IGetBookingThisHourUseCase).to(GetBookingThisHourUseCase).inSingletonScope()
+container.bind<IGetBookSlot>(TYPES.IGetBookSlot).to(GetBookSlot).inSingletonScope()
+container.bind<IGetCallHistoryUsecase>(TYPES.IGetCallHistoryUseCase).to(GetCallHistoryUseCase).inSingletonScope()
+container.bind<IPostpone>(TYPES.IPostpone).to(Postpone).inSingletonScope()
+container.bind<IVerifyRoom>(TYPES.IVerifyRoom).to(VerifyRoom).inSingletonScope()
+container.bind<ICreateCaseUsecase>(TYPES.ICreateCaseUseCase).to(CreateCaseUseCase).inSingletonScope()
+container.bind<IDeleteCaseUsecase>(TYPES.IDeleteCaseUseCase).to(DeleteCaseUseCase).inSingletonScope()
+container.bind<IGetAllCasesUsecase>(TYPES.IGetAllCasesUseCase).to(GetAllCasesUseCase).inSingletonScope()
+container.bind<IUpdateCaseUsecase>(TYPES.IUpdateCaseUseCase).to(UpdateCaseUseCase).inSingletonScope()
+container.bind<IUpdateHearingUsecase>(TYPES.IUpdateHearingUsecase).to(UpdateHearingHistoryUseCase).inSingletonScope()
+container.bind<ICreateConversation>(TYPES.ICreateConversation).to(CreateConversationUseCase).inSingletonScope()
+container.bind<IGetConversation>(TYPES.IGetConversation).to(GetConversationsUseCase).inSingletonScope()
+container.bind<IGetMessages>(TYPES.IGetMessages).to(GetMessagesUseCase).inSingletonScope()
+container.bind<IUpdateMessageStatus>(TYPES.IUpdateMessageStatus).to(UpdateMessageStatusUseCase).inSingletonScope()
+container.bind<IAddRecurringRule>(TYPES.IAddRecurringRule).to(AddRecurringRule).inSingletonScope()
+container.bind<IGetRecurringRules>(TYPES.IGetRecurringRules).to(GetRecurringRulesByAdvocate).inSingletonScope()
+container.bind<ICreateReview>(TYPES.ICreateReview).to(CreateReviewUseCase).inSingletonScope()
+container.bind<IDeleteReviewUsecase>(TYPES.IDeleteReviewUseCase).to(DeleteReviewUseCase).inSingletonScope()
+container.bind<IGetReviews>(TYPES.IGetReviews).to(GetReviewsUseCase).inSingletonScope()
+container.bind<IUpdateReviewUsecase>(TYPES.IUpdateReviewUseCase).to(UpdateReviewUseCase).inSingletonScope()
+container.bind<IAddSlot>(TYPES.IAddSlot).to(AddSlot).inSingletonScope()
+container.bind<IGetSlots>(TYPES.IGetSlots).to(GetSlots).inSingletonScope()
+container.bind<IPostponeSlot>(TYPES.IPostponeSlot).to(PostponeSlot).inSingletonScope()
+container.bind<ICreateSubscriptionUsecase>(TYPES.ICreateSubscriptionUseCase).to(CreateSubscriptionUseCase).inSingletonScope()
+container.bind<IGetAllSubscriptionsUsecase>(TYPES.IGetAllSubscriptionsUseCase).to(GetAllSubscriptionsUseCase).inSingletonScope()
+container.bind<IGetSubscriptionUsecase>(TYPES.IGetSubscriptionUseCase).to(GetSubscriptionUseCase).inSingletonScope()
+container.bind<IGetSavedAdvocates>(TYPES.IGetSavedAdvocates).to(GetSavedAdvocates).inSingletonScope()
+container.bind<IResetPassword>(TYPES.IResetPassword).to(ResetPassword).inSingletonScope()
+container.bind<IToggleSavedAdvocate>(TYPES.IToggleSavedAdvocate).to(ToggleSavedAdvocate).inSingletonScope()
+container.bind<IToggleUser>(TYPES.IToggleUser).to(ToggleUser).inSingletonScope()
+container.bind<ICreateCheckoutSessionUsecase>(TYPES.ICreateCheckoutSessionUseCase).to(CreateCheckoutSessionUseCase).inSingletonScope()
+container.bind<IGetAllNotification>(TYPES.IGetAllNotification).to(getAllNotification).inSingletonScope()
+container.bind<IMarkAllAsRead>(TYPES.IMarkAllAsRead).to(MarkAllAsRead).inSingletonScope()
+container.bind<IMarkAsRead>(TYPES.IMarkAsRead).to(MarkAsRead).inSingletonScope()
+container.bind<IPaymentUsecase>(TYPES.IPaymentUseCase).to(PaymentUsecase).inSingletonScope()
+container.bind<IGetAllAdvocates>(TYPES.IGetAllAdvocates).to(GetAllAdvocates).inSingletonScope()
+container.bind<IGetAllUserAdvocates>(TYPES.IGetAllUserAdvocates).to(GetAllUserAdvocates).inSingletonScope()
+container.bind<IUpdateAdvocateStatus>(TYPES.IUpdateAdvocateStatus).to(UpdateAdvocateStatus).inSingletonScope()
+container.bind<ITopRatedAdvocatesUsecase>(TYPES.ITopRatedAdvocatesUseCase).to(TopRatedAdvocatesUseCase).inSingletonScope()
+container.bind<ICreateMessage>(TYPES.ICreateMessage).to(CreateMessageUseCase).inSingletonScope()
+container.bind<ISignupUser>(TYPES.ISignupUser).to(SignupUser).inSingletonScope()
+container.bind<IVerifyEmail>(TYPES.IVerifyEmail).to(verifyEmail).inSingletonScope()
+container.bind<ILoginUser>(TYPES.ILoginUser).to(LoginUser).inSingletonScope()
+container.bind<IGoogleAuth>(TYPES.IGoogleAuth).to(GoogleAuth).inSingletonScope()
+container.bind<IForgotPasswordSendMail>(TYPES.IForgotPasswordSendMail).to(forgotPasswordSendMail).inSingletonScope()
+container.bind<IVerifyForgotPasswordMail>(TYPES.IVerifyForgotPasswordMail).to(VerifyForgotPasswordMail).inSingletonScope()
+container.bind<IResetForgotPassword>(TYPES.IResetForgotPassword).to(ResetForgotPassword).inSingletonScope()
+container.bind<IRefreshTokenUsecase>(TYPES.IRefreshTokenUseCase).to(RefreshTokenUseCase).inSingletonScope()
+container.bind<IGetAdvocateDetails>(TYPES.IGetAdvocateDetails).to(GetAdvocateDetails).inSingletonScope()
+container.bind<IUpdateAdvocateProfile>(TYPES.IUpdateAdvocateProfile).to(UpdateAdvocateProfile).inSingletonScope()
+container.bind<IUpdateAdvocate>(TYPES.IUpdateAdvocate).to(UpdateAdvocate).inSingletonScope()
+container.bind<IFindUser>(TYPES.IFindUser).to(FindUser).inSingletonScope()
+container.bind<IGetAllUsers>(TYPES.IGetAllUsers).to(getAllUsers).inSingletonScope()
+container.bind<IGetAllAdminAdvocates>(TYPES.IGetAllAdminAdvocates).to(GetAllAdminAdvocates).inSingletonScope()
+container.bind<ILogoutUsecase>(TYPES.ILogoutUseCase).to(LogoutUseCase).inSingletonScope()
+container.bind<IGetAllFilter>(TYPES.IGetAllFilter).to(GetAllFilter).inSingletonScope()
+container.bind<IAddFilter>(TYPES.IAddFilter).to(AddFilter).inSingletonScope()
+container.bind<IAddCategory>(TYPES.IAddCategory).to(AddCategory).inSingletonScope()
+container.bind<IDeleteCategory>(TYPES.IDeleteCategory).to(DeleteCategory).inSingletonScope()
+container.bind<IDeletFilter>(TYPES.IDeleteFilter).to(DeleteFilter).inSingletonScope()
+container.bind<IAddCaseHearing>(TYPES.IAddCaseHearing).to(AddHearingDataUsecase).inSingletonScope()
+container.bind<IGetCaseHearingRepo>(TYPES.IGetCaseHearingRepo).to(GetCaseHearingDataUsecase).inSingletonScope()
+container.bind<IUpdateCaseHearingDataRepo>(TYPES.IUpdateCaseHearingDataRepo).to(UpdateCaseHearingDataUsecase).inSingletonScope()
+container.bind<IDeleteCaseHearingRepo>(TYPES.IDeleteCaseHearingRepo).to(DeleteCaseHearingUsecase).inSingletonScope()
+container.bind<ICancelBookingRepo>(TYPES.ICancelBookingRepo).to(CancelBooking).inSingletonScope()
+container.bind<IGetWallet>(TYPES.IGetWallet).to(GetWallet).inSingletonScope()
 
 // Middleware
 container.bind<AuthMiddleware>(TYPES.AuthMiddleware).toDynamicValue(() => {
     const jwtService = container.get<JwtTokenService>(TYPES.JwtTokenService);
-    const refreshTokenUseCase = container.get<RefreshTokenUseCase>(TYPES.RefreshTokenUseCase);
-    const userRepository = container.get<UserRepository>(TYPES.UserRepository);
+    const refreshTokenUseCase = container.get<RefreshTokenUseCase>(TYPES.IRefreshTokenUseCase);
+    const IuserRepository = container.get<IUserRepository>(TYPES.IUserRepository);
     const logger = container.get<Logger>(TYPES.Logger);
-    const redisService = container.get<RedisService>(TYPES.RedisService)
-    return new AuthMiddlewareImpl(jwtService, refreshTokenUseCase, userRepository, redisService, logger);
+    const redisService = container.get<IRedisService>(TYPES.IRedisService)
+    return new AuthMiddlewareImpl(jwtService, refreshTokenUseCase, IuserRepository, redisService, logger);
 }).inSingletonScope();
 
 // Controllers
@@ -278,6 +375,7 @@ container.bind<CaseController>(TYPES.CaseController).to(CaseController)
 container.bind<SubscriptionController>(TYPES.SubscriptionController).to(SubscriptionController)
 container.bind<AdminDashboardController>(TYPES.AdminDashboardController).to(AdminDashboardController)
 container.bind<AdvocateDashboardController>(TYPES.AdvocateDashboardController).to(AdvocateDashboardController)
-
+container.bind<FilterController>(TYPES.FilterController).to(FilterController)
+container.bind<WalletController>(TYPES.WalletController).to(WalletController)
 
 export { container };

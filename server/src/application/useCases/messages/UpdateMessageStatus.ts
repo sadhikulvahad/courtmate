@@ -1,13 +1,16 @@
 import { Types } from "mongoose";
-import { MessageRepository } from "../../../domain/interfaces/MessageRepository";
+import { IMessageRepository } from "../../../domain/interfaces/MessageRepository";
 import { MessageProps } from "../../../domain/types/EntityProps";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
+import { IUpdateMessageStatus } from "../../../application/interface/messages/UpdateMessageStatusRepo";
 
 
 @injectable()
-export class UpdateMessageStatusUseCase {
-  constructor(@inject(TYPES.MessageRepository) private messageRepository: MessageRepository) { }
+export class UpdateMessageStatusUseCase implements IUpdateMessageStatus {
+  constructor(
+    @inject(TYPES.IMessageRepository) private _messageRepository: IMessageRepository
+  ) { }
 
   async execute(
     messageId: string,
@@ -18,7 +21,7 @@ export class UpdateMessageStatusUseCase {
         throw new Error("Message ID and status are required");
       }
 
-      const updatedMessage = await this.messageRepository.updateMessageStatus(
+      const updatedMessage = await this._messageRepository.updateMessageStatus(
         new Types.ObjectId(messageId),
         status
       );

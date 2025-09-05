@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { ReviewProps } from "../types/EntityProps";
 
-export interface ReviewRepository {
+export interface IReviewRepository {
     create(reviewProps: ReviewProps): Promise<ReviewProps>;
     getReviewsByAdvocateId(advocatId: Types.ObjectId): Promise<ReviewProps[]>
     updateReview(data: { reviewId: string; review?: string; rating?: number }): Promise<ReviewProps | null>;

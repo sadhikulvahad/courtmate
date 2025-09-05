@@ -1,15 +1,18 @@
 import { addHours, isBefore, isEqual, isValid, startOfDay } from "date-fns";
 import { Slot } from "../../../domain/entities/Slot";
-import { SlotRepository } from "../../../domain/interfaces/SlotRepository";
+import { ISlotRepository } from "../../../domain/interfaces/SlotRepository";
 import { SlotProps } from "../../../domain/types/EntityProps";
 import { Types } from "mongoose";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
+import { IAddSlot } from "../../../application/interface/slots/AddSlotRepo";
 
 
 @injectable()
-export class AddSlot {
-  constructor(@inject(TYPES.SlotRepository) private slotRepository: SlotRepository) { }
+export class AddSlot implements IAddSlot {
+  constructor(
+    @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository
+  ) { }
 
   async execute(props: SlotProps): Promise<Slot> {
     if (!props.advocateId || !props.date || !props.time || props.isAvailable === undefined) {
@@ -25,11 +28,10 @@ export class AddSlot {
     console.log(props.time)
     const startTime = props.time;
     const endTime = addHours(startTime, 1);
-    const existingSlots = await this.slotRepository.getAvailableSlots(
+    const existingSlots = await this._slotRepository.getAvailableSlots(
       advocateIdStr,
     );
 
-    console.log(startTime)
     const existingSlot = existingSlots.filter(
       (slot) => isEqual(slot.time, startTime)
     );
@@ -44,6 +46,6 @@ export class AddSlot {
       advocateId: new Types.ObjectId(advocateIdStr), // Ensure correct type
     });
 
-    return await this.slotRepository.create(slot);
+    return await this._slotRepository.create(slot);
   }
 }

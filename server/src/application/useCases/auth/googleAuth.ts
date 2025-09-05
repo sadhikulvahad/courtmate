@@ -1,14 +1,17 @@
 
 
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { User } from "../../../domain/entities/User";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
+import { IGoogleAuth } from "../../../application/interface/auth/GoogleAuthRepo";
 
 
 @injectable()
-export class GoogleAuth {
-    constructor(@inject(TYPES.UserRepository) private userRepository: UserRepository) { }
+export class GoogleAuth implements IGoogleAuth {
+    constructor(
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository
+    ) { }
 
     async execute(profile: {
         id: string;
@@ -16,10 +19,10 @@ export class GoogleAuth {
         emails: { value: string }[];
     }): Promise<User> {
         const email = profile.emails[0].value;
-        const existingUser = await this.userRepository.findByEmail(email);
+        const existingUser = await this._userRepository.findByEmail(email);
         if (existingUser) {
             if (!existingUser.googleId) {
-                const updatedUser = await this.userRepository.update(existingUser.id, {
+                const updatedUser = await this._userRepository.update(existingUser.id, {
                     googleId: profile.id,
                     authMethod: 'google',
                     isVerified: true,
@@ -47,6 +50,6 @@ export class GoogleAuth {
             isAdminVerified: "Request"
         });
 
-        return await this.userRepository.save(newUser);
+        return await this._userRepository.save(newUser);
     }
 }

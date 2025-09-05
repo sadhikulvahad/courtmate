@@ -28,6 +28,6 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 router.use(authMiddleware.auth.bind(authMiddleware))
 router.use(authMiddleware.authorizeRoles('admin'))
 
-router.get('/:adminId', asyncHandler(adminDashboardController.getAdminDashboardData.bind(adminDashboardController)));
+router.get('/', asyncHandler(adminDashboardController.getAdminDashboardData.bind(adminDashboardController)));
 
 export default router;

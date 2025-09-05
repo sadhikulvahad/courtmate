@@ -1,20 +1,24 @@
 import { Types } from "mongoose";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
+import { IToggleSavedAdvocate } from "../../../application/interface/user/ToggleSavedAdvocatesRepo";
+import { ToggleSavedAdvocateDTO } from "../../../application/dto";
 
 
 @injectable()
-export class ToggleSavedAdvocate {
-    constructor(@inject(TYPES.UserRepository) private userRepository: UserRepository) { }
+export class ToggleSavedAdvocate implements IToggleSavedAdvocate {
+    constructor(
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository
+    ) { }
 
-    async execute(userId: string, advocateId: string) {
-        const user = await this.userRepository.findById(userId);
+    async execute(userId: string, advocateId: string) : Promise<ToggleSavedAdvocateDTO> {
+        const user = await this._userRepository.findById(userId);
         if (!user) {
             return { success: false, error: "User not found" };
         }
 
-        const advocate = await this.userRepository.findById(advocateId);
+        const advocate = await this._userRepository.findById(advocateId);
         if (!advocate || advocate.role !== "advocate") {
             return { success: false, error: "Advocate not found or invalid" };
         }
@@ -36,7 +40,7 @@ export class ToggleSavedAdvocate {
             updatedAdvocates = [...user.savedAdvocates, advocateObjectId];
         }
 
-        const updatedUser = await this.userRepository.update(userId, {
+        const updatedUser = await this._userRepository.update(userId, {
             savedAdvocates: updatedAdvocates,
         });
 

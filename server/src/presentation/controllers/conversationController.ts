@@ -1,24 +1,22 @@
 import { Request, Response } from "express";
-import { GetConversationsUseCase } from "../../application/useCases/messages/GetConversation";
-import { CreateConversationUseCase } from "../../application/useCases/messages/CreateConversation";
-import { GetMessagesUseCase } from "../../application/useCases/messages/GetMessage";
-import { CreateMessageUseCase } from "../../application/useCases/messages/CreateMessage";
-import { UpdateMessageStatusUseCase } from "../../application/useCases/messages/UpdateMessageStatus";
 import { HttpStatus } from "../../domain/share/enums";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { Logger } from "winston";
+import { IGetConversation } from "../../application/interface/messages/GetConversationRepo";
+import { ICreateConversation } from "../../application/interface/messages/CreateConversationRepo";
+import { IGetMessages } from "../../application/interface/messages/GetMessageRepo";
+import { IUpdateMessageStatus } from "../../application/interface/messages/UpdateMessageStatusRepo";
 
 
 @injectable()
 export class ConversationController {
     constructor(
-        @inject(TYPES.GetConversationsUseCase) private getConversationsUseCase: GetConversationsUseCase,
-        @inject(TYPES.CreateConversationUseCase) private createConversationUseCase: CreateConversationUseCase,
-        @inject(TYPES.GetMessagesUseCase) private getMessage: GetMessagesUseCase,
-        @inject(TYPES.CreateMessageUseCase) private createMessage: CreateMessageUseCase,
-        @inject(TYPES.UpdateMessageStatusUseCase) private UpdateMessageStatus: UpdateMessageStatusUseCase,
-        @inject(TYPES.Logger) private logger: Logger
+        @inject(TYPES.IGetConversation) private _getConversationsUseCase: IGetConversation,
+        @inject(TYPES.ICreateConversation) private _createConversationUseCase: ICreateConversation,
+        @inject(TYPES.IGetMessages) private _getMessage: IGetMessages,
+        @inject(TYPES.IUpdateMessageStatus) private _updateMessageStatus: IUpdateMessageStatus,
+        @inject(TYPES.Logger) private _logger: Logger
     ) { }
 
     async getConversation(req: Request, res: Response) {
@@ -29,10 +27,10 @@ export class ConversationController {
                 return res.status(HttpStatus.UNAUTHORIZED).json({ error: "Unauthorized: User not logged in" });
             }
 
-            const conversations = await this.getConversationsUseCase.execute(user.id);
+            const conversations = await this._getConversationsUseCase.execute(user.id);
             res.status(HttpStatus.OK).json(conversations);
         } catch (error) {
-            this.logger.error("Error fetching conversations:", { error })
+            this._logger.error("Error fetching conversations:", { error })
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message || "Server error" });
         }
     }
@@ -45,7 +43,7 @@ export class ConversationController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Participant Id required' });
             }
 
-            if(!role) {
+            if (!role) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Role is missing' });
             }
 
@@ -55,7 +53,7 @@ export class ConversationController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: "Missing user or participant ID" });
             }
 
-            const conversation = await this.createConversationUseCase.execute({
+            const conversation = await this._createConversationUseCase.execute({
                 userId: user.id,
                 participantId,
                 participantRole: role,
@@ -67,7 +65,7 @@ export class ConversationController {
                 startedAt: conversation.startedAt
             });
         } catch (error) {
-            this.logger.error("Error creating conversations:", { error })
+            this._logger.error("Error creating conversations:", { error })
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message || "Server error" });
         }
     }
@@ -79,16 +77,16 @@ export class ConversationController {
                 return res.status(HttpStatus.UNAUTHORIZED).json({ error: "Unauthorized: User not logged in" });
             }
 
-            const { id: conversationId } = req.params;
+            const { id: conversationId } = req.query;
 
             if (!conversationId) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: "Conversation ID is required" });
             }
 
-            const messages = await this.getMessage.execute(conversationId);
+            const messages = await this._getMessage.execute(conversationId.toString());
             res.status(HttpStatus.OK).json(messages);
         } catch (error) {
-            this.logger.error("Error fetching messages:", { error })
+            this._logger.error("Error fetching messages:", { error })
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message || "Server error" });
         }
     }
@@ -105,10 +103,10 @@ export class ConversationController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: "Message ID and status are required" });
             }
 
-            const updatedMessage = await this.UpdateMessageStatus.execute(messageId, status);
+            const updatedMessage = await this._updateMessageStatus.execute(messageId, status);
             res.status(HttpStatus.OK).json(updatedMessage);
         } catch (error) {
-            this.logger.error("Error updating message status:", { error })
+            this._logger.error("Error updating message status:", { error })
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message || "Server error" });
         }
     }

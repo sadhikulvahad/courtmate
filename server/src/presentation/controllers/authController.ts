@@ -1,41 +1,35 @@
 import { injectable, inject } from 'inversify';
 import { Request, Response } from 'express';
-import { UserRepository } from '../../domain/interfaces/UserRepository';
-import { EmailService } from '../../domain/interfaces/EmailService';
-import { HashPassword } from '../../infrastructure/services/passwordHash';
-import { JwtTokenService } from '../../infrastructure/services/jwt';
-import { SignupUser } from '../../application/useCases/auth/SignupUser';
-import { verifyEmail } from '../../application/useCases/auth/VerifyEmail';
-import { LoginUser } from '../../application/useCases/auth/LoginUser';
-import { GoogleAuth } from '../../application/useCases/auth/GoogleAuth';
-import { forgotPasswordSendMail } from '../../application/useCases/auth/ForgotPasswordSendMail';
-import { VerifyForgotPasswordMail } from '../../application/useCases/auth/VerifyForgotPasswordMail';
-import { ResetForgotPassword } from '../../application/useCases/auth/ResetForgotPassword';
-import { RefreshTokenUseCase } from '../../application/useCases/auth/RefreshTokenUseCase';
+import { IEmailService } from '../../domain/interfaces/EmailService';
+import { ITokenService } from 'domain/interfaces/TokenRepository';
 import { User } from '../../domain/entities/User';
 import { HttpStatus } from '../../domain/share/enums';
 import { Logger } from 'winston';
 import passport from 'passport';
 import { TYPES } from '../../types';
-import { LogoutUseCase } from '../../application/useCases/auth/LogoutUseCase';
+import { ISignupUser } from '../../application/interface/auth/SignupUserRepo';
+import { IVerifyEmail } from '../../application/interface/auth/VerifyEmailRepo';
+import { ILoginUser } from '../../application/interface/auth/LoginUsersRepo';
+import { IForgotPasswordSendMail } from '../../application/interface/auth/ForgotPasswordSendMailRepo';
+import { IVerifyForgotPasswordMail } from '../../application/interface/auth/VerifyForgotPasswordMailRepo';
+import { IResetForgotPassword } from '../../application/interface/auth/ResetForgotPasswordRepo';
+import { IRefreshTokenUsecase } from '../../application/interface/auth/RefreshtokenUsecaseRepo';
+import { ILogoutUsecase } from '../../application/interface/auth/LogoutUsecaseRepo';
 
 @injectable()
 export class AuthController {
   constructor(
-    @inject(TYPES.UserRepository) private userRepository: UserRepository,
-    @inject(TYPES.HashPasswordService) private hashPasswordService: HashPassword,
-    @inject(TYPES.EmailService) private emailService: EmailService,
-    @inject(TYPES.JwtTokenService) private jwtService: JwtTokenService,
-    @inject(TYPES.SignupUser) private signupUser: SignupUser,
-    @inject(TYPES.VerifyEmail) private verifyEmail: verifyEmail,
-    @inject(TYPES.LoginUser) private loginUser: LoginUser,
-    @inject(TYPES.GoogleAuth) private googleAuth: GoogleAuth,
-    @inject(TYPES.ForgotPasswordSendMail) private forgotPasswordSendMail: forgotPasswordSendMail,
-    @inject(TYPES.VerifyForgotPasswordMail) private VerifyForgotPasswordMail: VerifyForgotPasswordMail,
-    @inject(TYPES.ResetForgotPassword) private resetForgotPassword: ResetForgotPassword,
-    @inject(TYPES.RefreshTokenUseCase) private refreshTokenUseCase: RefreshTokenUseCase,
-    @inject(TYPES.LogoutUseCase) private logoutUsecase: LogoutUseCase,
-    @inject(TYPES.Logger) private logger: Logger
+    @inject(TYPES.IEmailService) private _emailService: IEmailService,
+    @inject(TYPES.ITokenRepository) private _tokenSErvice: ITokenService,
+    @inject(TYPES.ISignupUser) private _signupUser: ISignupUser,
+    @inject(TYPES.IVerifyEmail) private _verifyEmail: IVerifyEmail,
+    @inject(TYPES.ILoginUser) private _loginUser: ILoginUser,
+    @inject(TYPES.IForgotPasswordSendMail) private _forgotPasswordSendMail: IForgotPasswordSendMail,
+    @inject(TYPES.IVerifyForgotPasswordMail) private _verifyForgotPasswordMail: IVerifyForgotPasswordMail,
+    @inject(TYPES.IResetForgotPassword) private _resetForgotPassword: IResetForgotPassword,
+    @inject(TYPES.IRefreshTokenUseCase) private _refreshTokenUseCase: IRefreshTokenUsecase,
+    @inject(TYPES.ILogoutUseCase) private _logoutUsecase: ILogoutUsecase,
+    @inject(TYPES.Logger) private _logger: Logger
   ) { }
 
   async refreshToken(req: Request, res: Response) {
@@ -45,7 +39,7 @@ export class AuthController {
         return res.status(HttpStatus.UNAUTHORIZED).json({ error: 'Refresh token required' });
       }
 
-      const result = await this.refreshTokenUseCase.execute(refreshToken);
+      const result = await this._refreshTokenUseCase.execute(refreshToken);
       if (!result.success) {
         return res.status(HttpStatus.UNAUTHORIZED).json({
           success: false,
@@ -66,7 +60,7 @@ export class AuthController {
 
       return res.json({ accessToken: result.accessToken });
     } catch (error: unknown) {
-      this.logger.error('Error in refreshToken', { error });
+      this._logger.error('Error in refreshToken', { error });
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: 'Server Error' });
     }
   }
@@ -80,7 +74,7 @@ export class AuthController {
         session: false
       })(req, res);
     } catch (error: unknown) {
-      this.logger.error('Error in handleGoogleAuth', { error });
+      this._logger.error('Error in handleGoogleAuth', { error });
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: 'Server Error' });
     }
   }
@@ -88,13 +82,13 @@ export class AuthController {
   async handleGoogleCallback(req: Request, res: Response) {
     try {
       const user = req?.user as unknown as User;
+      console.log('user', user)
 
       if (!user) {
         return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'User is missing' })
       }
-
-      const accessToken = await this.jwtService.generateToken(user.id, user.role, user.name);
-      const refreshToken = await this.jwtService.generateRefreshToken(user.id);
+      const accessToken = await this._tokenSErvice.generateToken(user.id, user.role, user.name);
+      const refreshToken = await this._tokenSErvice.generateRefreshToken(user.id);
 
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
@@ -106,7 +100,7 @@ export class AuthController {
 
       res.redirect(`${process.env.REDIRECT_URL}/signup?token=${accessToken}&email=${user.email}`);
     } catch (error: unknown) {
-      this.logger.error('Error in handleGoogleCallback', { error });
+      this._logger.error('Error in handleGoogleCallback', { error });
       res.redirect(`${process.env.REDIRECT_URL}/signup?error=AuthenticationFailed`);
     }
   }
@@ -122,7 +116,7 @@ export class AuthController {
         return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'Invalid role' });
       }
 
-      const result = await this.signupUser.execute({
+      const result = await this._signupUser.execute({
         name,
         email,
         phone,
@@ -135,31 +129,31 @@ export class AuthController {
         return res.status(statusCode).json({ success: false, error: result.error });
       }
 
-      const verificationToken = this.jwtService.generateEmailVerificationToken(email);
-      await this.emailService.sendVerificationEmail(email, verificationToken);
+      const verificationToken = this._tokenSErvice.generateEmailVerificationToken(email);
+      await this._emailService.sendVerificationEmail(email, verificationToken);
       return res.status(HttpStatus.CREATED).json({ success: true, message: 'Verification Email sent' });
     } catch (error: unknown) {
-      this.logger.error('Error in handleSignup', { error });
+      this._logger.error('Error in handleSignup', { error });
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: 'Server Error' });
     }
   }
 
   async verifyEmailController(req: Request, res: Response) {
     try {
-      const { token } = req.query;
+      const { token } = req.params;
 
       if (!token || typeof token !== 'string') {
         return res.status(HttpStatus.UNAUTHORIZED).json({ error: 'Invalid token, please check your email' });
       }
 
-      const result = await this.verifyEmail.execute(token);
+      const result = await this._verifyEmail.execute(token);
       if (!result.success) {
         return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Email' });
       }
 
       return res.status(HttpStatus.CREATED).json({ message: 'Email verified successfully' });
     } catch (error: unknown) {
-      this.logger.error('Error in verifyEmailController', { error });
+      this._logger.error('Error in verifyEmailController', { error });
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Server error' });
     }
   }
@@ -171,7 +165,7 @@ export class AuthController {
         return res.status(HttpStatus.BAD_REQUEST).json({ error: 'All fields are required' });
       }
 
-      const result = await this.loginUser.execute(email, password);
+      const result = await this._loginUser.execute(email, password);
 
       if ('error' in result) {
         return res.status(HttpStatus.UNAUTHORIZED).json({ error: result.error });
@@ -193,7 +187,7 @@ export class AuthController {
           user: result.user
         });
     } catch (error: unknown) {
-      this.logger.error('Error in handleLogin', { error });
+      this._logger.error('Error in handleLogin', { error });
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Server Error' });
     }
   }
@@ -206,14 +200,14 @@ export class AuthController {
         return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Email required' });
       }
 
-      const result = await this.forgotPasswordSendMail.execute(email);
+      const result = await this._forgotPasswordSendMail.execute(email);
       if (result.success) {
         return res.status(HttpStatus.OK).json({ success: true, message: result.message });
       } else {
         return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error });
       }
     } catch (error: unknown) {
-      this.logger.error('Error in handleForgotPasswordMailService', { error });
+      this._logger.error('Error in handleForgotPasswordMailService', { error });
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Server Error' });
     }
   }
@@ -225,13 +219,13 @@ export class AuthController {
       if (!token) {
         return res.redirect(`${process.env.REDIRECT_URL}/forgot-Password?error=${'No token provided'}&step=1`);
       }
-      const result = await this.VerifyForgotPasswordMail.execute(token as string);
+      const result = await this._verifyForgotPasswordMail.execute(token as string);
       if (!result.success) {
         return res.redirect(`${process.env.REDIRECT_URL}/forgot-Password?error=${result.error}&step=1`);
       }
       return res.redirect(`${process.env.REDIRECT_URL}/forgot-Password?token=${token}&step=2`);
     } catch (error: unknown) {
-      this.logger.error('Error in verifyForgotPasswordMail', { error });
+      this._logger.error('Error in verifyForgotPasswordMail', { error });
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: 'Server error' });
     }
   }
@@ -243,14 +237,14 @@ export class AuthController {
       if (!password || !email) {
         return res.status(HttpStatus.BAD_REQUEST).json({ error: 'All fields are required' });
       }
-      const result = await this.resetForgotPassword.execute(password, email);
+      const result = await this._resetForgotPassword.execute(password, email);
       if (!result.success) {
         return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error });
       }
 
       return res.status(HttpStatus.OK).json({ success: true, message: 'Password changed successfully' });
     } catch (error: unknown) {
-      this.logger.error('Error in forgotResetPassword', { error });
+      this._logger.error('Error in forgotResetPassword', { error });
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: 'Server error' });
     }
   }
@@ -263,7 +257,7 @@ export class AuthController {
         return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'Token is missing' })
       }
 
-      const result = await this.logoutUsecase.execute(token)
+      const result = await this._logoutUsecase.execute(token)
 
       if (!result.success) {
         return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Something Wrong in logging out', success: false })
@@ -278,7 +272,7 @@ export class AuthController {
 
       return res.status(HttpStatus.OK).json({ success: true, message: 'Logged out successfully' });
     } catch (error: unknown) {
-      this.logger.error('Error in logout', { error });
+      this._logger.error('Error in logout', { error });
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: 'Server Error' });
     }
   }

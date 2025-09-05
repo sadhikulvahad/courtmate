@@ -35,6 +35,6 @@ router.get('/', asyncHandler(reviewController.getReviewsByAdvocate.bind(reviewCo
 
 router.put('/', asyncHandler(reviewController.updateReview.bind(reviewController)));
 
-router.delete('/:reviewId', asyncHandler(reviewController.deleteReview.bind(reviewController)));
+router.delete('/', asyncHandler(reviewController.deleteReview.bind(reviewController)));
 
 export default router;

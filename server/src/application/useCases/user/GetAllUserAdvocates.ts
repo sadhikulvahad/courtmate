@@ -1,16 +1,18 @@
 import { inject, injectable } from "inversify";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { TYPES } from "../../../types";
+import { IGetAllUserAdvocates } from "../../../application/interface/user/GetAllUserAdvocatesRepo";
+import { GetAllUserAdvocatesDTO } from "../../../application/dto";
 
 
 @injectable()
-export class GetAllUserAdvocates {
+export class GetAllUserAdvocates implements IGetAllUserAdvocates {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository
     ) { }
 
-    async execute() {
-        const advocates = await this.userRepository.findAdvocates()
+    async execute() : Promise<GetAllUserAdvocatesDTO> {
+        const advocates = await this._userRepository.findAdvocates()
 
         if (!advocates) {
             return { success: false, error: 'No Advocates' }

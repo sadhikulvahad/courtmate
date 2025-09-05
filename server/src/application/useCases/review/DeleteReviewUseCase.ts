@@ -1,15 +1,23 @@
-import { ReviewRepository } from "domain/interfaces/ReviewRepository";
+import { IReviewRepository } from "domain/interfaces/ReviewRepository";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
+import { IDeleteReviewUsecase } from "../../../application/interface/review/DeleteReviewUsecaseRepo";
+import { ReturnDTO } from "../../../application/dto";
 
 @injectable()
-export class DeleteReviewUseCase {
-    constructor(@inject(TYPES.ReviewRepository) private reviewRepository: ReviewRepository) { }
+export class DeleteReviewUseCase implements IDeleteReviewUsecase {
+    constructor(
+        @inject(TYPES.IReviewRepository) private _reviewRepository: IReviewRepository
+    ) { }
 
-    async execute(reviewId: string) {
-        const existingReview = await this.reviewRepository.deleteReview(reviewId);
+    async execute(reviewId: string) : Promise<ReturnDTO> {
+        const existingReview = await this._reviewRepository.deleteReview(reviewId);
         if (!existingReview) {
             throw new Error("Review not found");
+        }
+        return {
+            success : true,
+            message : 'Review Deleted Successfully'
         }
     }
 }

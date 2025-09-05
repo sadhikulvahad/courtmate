@@ -1,8 +1,8 @@
 import { Payment } from "../../../domain/entities/Payment";
-import { PaymentRepository } from "../../../domain/interfaces/PaymentRepository";
+import { IPaymentRepository } from "../../../domain/interfaces/PaymentRepository";
 import { PaymentModel } from "../models/PaymentModel";
 
-export class PaymentRepositoryImplement implements PaymentRepository {
+export class PaymentRepositoryImplement implements IPaymentRepository {
     async create(payment: Payment): Promise<Payment> {
         try {
             const newPayment = new PaymentModel(payment.toJSON());

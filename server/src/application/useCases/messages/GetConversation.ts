@@ -1,18 +1,21 @@
 import { Types } from "mongoose";
-import { ConversationRepository } from "../../../domain/interfaces/ConversationRepository";
+import { IConversationRepository } from "../../../domain/interfaces/ConversationRepository";
 import { ConversationProps } from "../../../domain/types/EntityProps";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
+import { IGetConversation } from "../../../application/interface/messages/GetConversationRepo";
 
 
 @injectable()
-export class GetConversationsUseCase {
-  constructor(@inject(TYPES.ConversationRepository) private conversationRepository: ConversationRepository) { }
+export class GetConversationsUseCase implements IGetConversation {
+  constructor(
+    @inject(TYPES.IConversationRepository) private _conversationRepository: IConversationRepository
+  ) { }
 
   async execute(userId: string): Promise<ConversationProps[]> {
     try {
       // Fetch conversations where the user is a participant
-      const conversations = await this.conversationRepository.getConversationsByUserId(
+      const conversations = await this._conversationRepository.getConversationsByUserId(
         new Types.ObjectId(userId)
       );
       return conversations;

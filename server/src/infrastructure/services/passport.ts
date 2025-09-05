@@ -10,7 +10,7 @@ import { VerifyCallback } from 'passport-oauth2';
 @injectable()
 export class PassportService {
   constructor(
-    @inject(TYPES.GoogleAuth) private googleAuth: GoogleAuth,
+    @inject(TYPES.IGoogleAuth) private googleAuth: GoogleAuth,
     @inject(TYPES.Logger) private logger: Logger
   ) {
     this.configureGoogleStrategy();

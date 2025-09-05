@@ -31,6 +31,6 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 router.use(authMiddleware.auth.bind(authMiddleware))
 router.use(authMiddleware.authorizeRoles('advocate'))
 
-router.get('/:advocateId', asyncHandler(advocateDashboardController.getAdvocateDashboardData.bind(advocateDashboardController)))
+router.get('/', asyncHandler(advocateDashboardController.getAdvocateDashboardData.bind(advocateDashboardController)))
 
 export default router

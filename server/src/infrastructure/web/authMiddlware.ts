@@ -1,13 +1,13 @@
 import { injectable, inject } from 'inversify';
 import { Request, Response, NextFunction } from 'express';
 import { TYPES } from '../../types';
-import { JwtTokenService } from '../services/jwt';
+import { ITokenService } from 'domain/interfaces/TokenRepository';
 import { RefreshTokenUseCase } from '../../application/useCases/auth/RefreshTokenUseCase';
-import { UserRepository } from '../../domain/interfaces/UserRepository';
+import { IUserRepository } from '../../domain/interfaces/UserRepository';
 import { HttpStatus } from '../../domain/share/enums';
 import { Logger } from 'winston';
 import { JwtUserPayload } from '../../domain/types/express/index';
-import { RedisService } from 'domain/interfaces/RedisService';
+import { IRedisService } from 'domain/interfaces/RedisService';
 
 export interface AuthMiddleware {
     auth(req: Request, res: Response, next: NextFunction): Promise<void>;
@@ -17,10 +17,10 @@ export interface AuthMiddleware {
 @injectable()
 export class AuthMiddlewareImpl implements AuthMiddleware {
     constructor(
-        @inject(TYPES.JwtTokenService) private tokenService: JwtTokenService,
-        @inject(TYPES.RefreshTokenUseCase) private refreshTokenUseCase: RefreshTokenUseCase,
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.RedisService) private redisService: RedisService,
+        @inject(TYPES.ITokenRepository) private ITokenService: ITokenService,
+        @inject(TYPES.IRefreshTokenUseCase) private refreshTokenUseCase: RefreshTokenUseCase,
+        @inject(TYPES.IUserRepository) private IUserRepository: IUserRepository,
+        @inject(TYPES.IRedisService) private IRedisService: IRedisService,
         @inject(TYPES.Logger) private logger: Logger
     ) { }
 
@@ -32,15 +32,15 @@ export class AuthMiddlewareImpl implements AuthMiddleware {
             // Try to authenticate with access token
             if (accessToken) {
 
-                const isBlacklisted = await this.redisService.isTokenBlacklisted(accessToken)
+                const isBlacklisted = await this.IRedisService.isTokenBlacklisted(accessToken)
                 if (isBlacklisted) {
                     res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Token is BlackListed' })
                     return
                 }
 
                 try {
-                    const decoded = await this.tokenService.verifyToken(accessToken);
-                    const user = await this.userRepository.findById(decoded.id);
+                    const decoded = await this.ITokenService.verifyToken(accessToken);
+                    const user = await this.IUserRepository.findById(decoded.id);
                     if (!user || user.isBlocked) {
                         this.logger.warn('Account is blocked', { userId: decoded.id, path: req.path });
                         res.status(HttpStatus.FORBIDDEN).json({ error: 'Account is blocked' });
@@ -65,7 +65,7 @@ export class AuthMiddlewareImpl implements AuthMiddleware {
                 return;
             }
 
-            const isBlacklisted = await this.redisService.isTokenBlacklisted(refreshToken)
+            const isBlacklisted = await this.IRedisService.isTokenBlacklisted(refreshToken)
             if (isBlacklisted) {
                 res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Token is BlackListed' })
                 return
@@ -96,8 +96,8 @@ export class AuthMiddlewareImpl implements AuthMiddleware {
             res.header('x-access-token', result.accessToken);
 
             // Verify user with new access token
-            const decoded = await this.tokenService.verifyToken(result.accessToken);
-            const user = await this.userRepository.findById(decoded.id);
+            const decoded = await this.ITokenService.verifyToken(result.accessToken);
+            const user = await this.IUserRepository.findById(decoded.id);
             if (!user || user.isBlocked) {
                 this.logger.warn('Account is blocked after refresh', { userId: decoded.id, path: req.path });
                 res.status(HttpStatus.FORBIDDEN).json({ error: 'Account is blocked' });

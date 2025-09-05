@@ -1,24 +1,25 @@
 
-import { Types } from "mongoose";
-import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IBookingRepository } from "../../../domain/interfaces/BookingRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
+import { AdminDashboardDTO } from "../../../application/dto";
+import { IGetAdminDashboardRepo } from "../../../application/interface/admin/GetAdminDashboardRepo";
 
 
 @injectable()
-export class GetAdminDashboard {
+export class GetAdminDashboard implements IGetAdminDashboardRepo {
     constructor(
-        @inject(TYPES.BookingRepository) private bookRepositoty: BookingRepository,
-        @inject(TYPES.UserRepository) private userRepository: UserRepository
+        @inject(TYPES.IBookingRepository) private _bookRepositoty: IBookingRepository,
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository
     ) { }
 
-    async execute() {
-        const totalBookings = await this.bookRepositoty.findAll()
-        const totalusers = await this.userRepository.findUsers()
-        const totalAdvocates = await this.userRepository.findAdvocates()
+    async execute(): Promise<AdminDashboardDTO> {
+        const totalBookings = await this._bookRepositoty.findAll()
+        const totalusers = await this._userRepository.findUsers()
+        const totalAdvocates = await this._userRepository.findAdvocates()
 
-        const DashboardData = {
+        const DashboardData  = {
             totalBooking: totalBookings.length,
             totalUser: totalusers.length,
             advocates: totalAdvocates

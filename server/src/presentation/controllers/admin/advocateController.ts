@@ -1,23 +1,23 @@
 import { Request, Response } from "express";
-import { UpdateAdvocateStatus } from "../../../application/useCases/admin/UpdateAdvocateStatus";
-import { NotificationService } from "../../../infrastructure/services/notificationService";
 import { AdvocateFilterOptions } from "../../../application/types/UpdateAdvocateProfileDTO ";
 import { HttpStatus } from '../../../domain/share/enums'
-import { TopRatedAdvocatesUseCase } from "../../../application/useCases/user/TopRatedAdvocatesUseCase";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
 import { Logger } from "winston";
-import { GetAllAdminAdvocates } from "../../../application/useCases/admin/GetAllAdminAdvocates";
-import { GetAllAdvocates } from "../../../application/useCases/admin/GetAllAdvocates";
+import { IGetAllAdminAdvocates } from "../../../application/interface/admin/GetAllAdminAdvocatesRepo";
+import { IGetAllAdvocates } from "../../../application/interface/admin/GetAllAdvocatesRepo";
+import { IUpdateAdvocateStatus } from "../../../application/interface/admin/UpdateAdvocateStatusRepo";
+import { ITopRatedAdvocatesUsecase } from "../../../application/interface/user/TopRatedAdvocateUsecaseRepo";
+import { normalizeQueryValue } from "../../../infrastructure/web/normalizeQueryValue";
 
 @injectable()
 export class AdvocateController {
 
     constructor(
-        @inject(TYPES.GetAllAdminAdvocates) private getAllAdminAdvocates: GetAllAdminAdvocates,
-        @inject(TYPES.GetAllAdvocates) private getAllAdvocates: GetAllAdvocates,
-        @inject(TYPES.UpdateAdvocateStatus) private updateAdvocateStatus: UpdateAdvocateStatus,
-        @inject(TYPES.TopRatedAdvocatesUseCase) private topRatedAdvocatesUsecase: TopRatedAdvocatesUseCase,
+        @inject(TYPES.IGetAllAdminAdvocates) private _getAllAdminAdvocates: IGetAllAdminAdvocates,
+        @inject(TYPES.IGetAllAdvocates) private _getAllAdvocates: IGetAllAdvocates,
+        @inject(TYPES.IUpdateAdvocateStatus) private _updateAdvocateStatus: IUpdateAdvocateStatus,
+        @inject(TYPES.ITopRatedAdvocatesUseCase) private _topRatedAdvocatesUsecase: ITopRatedAdvocatesUsecase,
         @inject(TYPES.Logger) private logger: Logger
     ) { }
 
@@ -32,20 +32,16 @@ export class AdvocateController {
 
             this.logger.info("Received filters for getAdminAdvocates", { filters });
 
-            const result = await this.getAllAdminAdvocates.execute(filters);
-
-            if (!result.success) {
-                return res.status(HttpStatus.NOT_FOUND).json({ success: false, error: result.error });
-            }
+            const result = await this._getAllAdminAdvocates.execute(filters);
 
             res.status(HttpStatus.OK).json({
                 success: true,
-                message: result.message,
-                advocates: result.data?.advocates,
+                message: 'Admin advocates fetched successfully',
+                advocates: result.advocates,
                 pagination: {
-                    totalItems: result.data?.totalCount,
-                    totalPages: result.data?.totalPages,
-                    currentPage: result.data?.currentPage,
+                    totalItems: result.totalCount,
+                    totalPages: result.totalPages,
+                    currentPage: result.currentPage,
                     itemsPerPage: filters.limit,
                 },
             });
@@ -55,51 +51,56 @@ export class AdvocateController {
         }
     }
 
+
     async getUserAdvocates(req: Request, res: Response) {
         try {
+            const { page, limit, searchTerm, activeTab, sortBy, sortOrder, ...rest } = req.query;
+
             const filters: AdvocateFilterOptions = {
-                page: Number(req.query.page) || 1,
-                limit: Number(req.query.limit) || 5,
-                searchTerm: req.query.searchTerm?.toString(),
-                activeTab: req.query.activeTab?.toString() || 'all',
-                categories: req.query.categories?.toString().split(','),
-                location: req.query.location?.toString(),
-                minExperience: Number(req.query.minExperience) || undefined,
-                maxExperience: Number(req.query.maxExperience) || undefined,
-                languages: req.query.languages?.toString().split(','),
-                minRating: Number(req.query.minRating) || undefined,
-                availability: req.query.availability?.toString().split(','),
-                specializations: req.query.specializations?.toString().split(','),
-                certifications: req.query.certifications?.toString().split(','),
-                sortBy: req.query.sortBy?.toString() as 'rating' | 'experience' | 'createdAt' || 'rating',
-                sortOrder: req.query.sortOrder?.toString() as 'asc' | 'desc' || 'desc'
+                page: page ? Number(page) : 1,
+                limit: limit ? Number(limit) : 5,
+                searchTerm: searchTerm?.toString(),
+                activeTab: activeTab?.toString() || "all",
+                sortBy: (sortBy as "rating" | "experience" | "createdAt") || "rating",
+                sortOrder: (sortOrder as "asc" | "desc") || "desc",
+
+                filters: Object.fromEntries(
+                    Object.entries(rest)
+                        .filter(([_, value]) => value !== undefined && value !== "")
+                        .map(([key, value]) => [
+                            key,
+                            normalizeQueryValue(
+                                Array.isArray(value)
+                                    ? value.map(String)   // if it's an array
+                                    : value?.toString()   // if it's single
+                            )!
+                        ])
+                ),
             };
 
-            const result = await this.getAllAdvocates.execute(filters);
-
-            if (!result.success) {
-                return res.status(HttpStatus.NOT_FOUND).json(result);
-            }
+            const result = await this._getAllAdvocates.execute(filters);
 
             res.status(HttpStatus.OK).json({
                 success: true,
-                message: result.message,
-                advocates: result.data?.advocates,
+                message: "Advocates fetched successfully",
+                advocates: result.advocates,
                 pagination: {
-                    totalItems: result.data?.totalCount,
-                    totalPages: result.data?.totalPages,
-                    currentPage: result.data?.currentPage,
-                    itemsPerPage: filters.limit
-                }
+                    totalItems: result.totalCount,
+                    totalPages: result.totalPages,
+                    currentPage: result.currentPage,
+                    itemsPerPage: filters.limit,
+                },
             });
         } catch (error) {
-            this.logger.error("Error in getUserAdvocates:", { error })
+            this.logger.error("Error in getUserAdvocates:", { error });
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                error: "Internal server error"
+                error: "Internal server error",
             });
         }
     }
+
+
 
     async advocateStatusUpdate(req: Request, res: Response) {
         try {
@@ -118,9 +119,9 @@ export class AdvocateController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: "Status not found" })
             }
 
-            const result = await this.updateAdvocateStatus.execute(status, id, admin)
+            const result = await this._updateAdvocateStatus.execute(status, id, admin)
             if (result?.success) {
-                return res.status(HttpStatus.OK).json({ success: true, message: result.message })
+                return res.status(HttpStatus.OK).json({ success: true, message: 'Status Updated Succesfully' })
             } else {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result?.error })
             }
@@ -134,12 +135,12 @@ export class AdvocateController {
 
     async getTopRatedAdvocates(req: Request, res: Response) {
         try {
-            const result = await this.topRatedAdvocatesUsecase.execute();
+            const result = await this._topRatedAdvocatesUsecase.execute();
 
             return res.status(HttpStatus.OK).json({
                 success: true,
                 message: 'Advocates fetched successfully',
-                advocates : result,
+                advocates: result,
             });
         } catch (error) {
             this.logger.error('Error from topRatedAdvocate Controller', { error });
@@ -150,3 +151,4 @@ export class AdvocateController {
         }
     }
 }
+

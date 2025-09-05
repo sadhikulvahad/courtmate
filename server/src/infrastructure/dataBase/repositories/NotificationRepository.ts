@@ -1,12 +1,12 @@
 import { Types } from "mongoose";
 import { Notification } from "../../../domain/entities/Notificaiton";
-import { NotificationRepository } from "../../../domain/interfaces/NotificationRepository";
+import { INotificationRepository } from "../../../domain/interfaces/NotificationRepository";
 import NotificationModel from "../models/NotificationModel";
 import { NotificationProps } from "../../../domain/types/EntityProps";
 import { TypeOfNotification } from "../../../domain/types/status";
 
 
-export class NotificationRepositoryImplements implements NotificationRepository {
+export class NotificationRepositoryImplements implements INotificationRepository {
     async findById(id: string): Promise<Notification | null> {
         const Notificaiton = await NotificationModel.findOne({ _id: id })
         return Notificaiton ? this.newNotification(Notificaiton) : null

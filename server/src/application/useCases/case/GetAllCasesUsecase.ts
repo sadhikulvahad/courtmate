@@ -1,14 +1,17 @@
 import { inject, injectable } from "inversify";
-import { CaseRepository } from "../../../domain/interfaces/CaseRepository";
+import { ICaseRepository } from "../../../domain/interfaces/CaseRepository";
 import { CaseProps } from "../../../domain/types/EntityProps";
 import { TYPES } from "../../../types";
+import { IGetAllCasesUsecase } from "../../../application/interface/case/GetAllCasesUsecaseRepo";
 
 
 @injectable()
-export class GetAllCasesUseCase {
-    constructor(@inject(TYPES.CaseRepository) private caseRepository: CaseRepository) { }
+export class GetAllCasesUseCase implements IGetAllCasesUsecase {
+    constructor(
+        @inject(TYPES.ICaseRepository) private _caseRepository: ICaseRepository
+    ) { }
 
     async execute(userId: string): Promise<CaseProps[]> {
-        return await this.caseRepository.findAll(userId);
+        return await this._caseRepository.findAll(userId);
     }
 }

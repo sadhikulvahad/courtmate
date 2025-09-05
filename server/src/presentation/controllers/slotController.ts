@@ -1,21 +1,21 @@
 import { Request, Response } from 'express';
-import { GetSlots } from '../../application/useCases/slots/GetSlot';
-import { AddSlot } from '../../application/useCases/slots/AddSlot';
-import { PostponeSlot } from '../../application/useCases/slots/PostponeSlot';
 import { HttpStatus } from '../../domain/share/enums';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../types';
 import { Logger } from 'winston';
 import { zonedTimeToUtc } from 'date-fns-tz';
+import { IGetSlots } from '../../application/interface/slots/GetSlotRepo';
+import { IAddSlot } from '../../application/interface/slots/AddSlotRepo';
+import { IPostponeSlot } from '../../application/interface/slots/PostponeSlotRepo';
 
 
 @injectable()
 export class SlotController {
   constructor(
-    @inject(TYPES.GetSlots) private GetSlots: GetSlots,
-    @inject(TYPES.AddSlot) private AddSlot: AddSlot,
-    @inject(TYPES.PostponeSlot) private postponeSlotUseCase: PostponeSlot,
-    @inject(TYPES.Logger) private logger: Logger
+    @inject(TYPES.IGetSlots) private _getSlots: IGetSlots,
+    @inject(TYPES.IAddSlot) private _addSlot: IAddSlot,
+    @inject(TYPES.IPostponeSlot) private _postponeSlotUseCase: IPostponeSlot,
+    @inject(TYPES.Logger) private _logger: Logger
   ) { }
 
   async getSlots(req: Request, res: Response) {
@@ -25,7 +25,7 @@ export class SlotController {
       if (!advocateId || !month) {
         return res.status(HttpStatus.BAD_REQUEST).json({ message: 'advocateId and month are required' });
       }
-      const slots = await this.GetSlots.execute(advocateId as string, new Date(month as string));
+      const slots = await this._getSlots.execute(advocateId as string, new Date(month as string));
       res.json(slots.map((slot) => slot.toJSON()));
     } catch (error: any) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
@@ -39,7 +39,7 @@ export class SlotController {
       if (!advocateId || !date || !time) {
         return res.status(HttpStatus.BAD_REQUEST).json({ message: 'advocateId, date, and time are required' });
       }
-      const slot = await this.AddSlot.execute({
+      const slot = await this._addSlot.execute({
         advocateId,
         date: new Date(date),
         time: zonedTimeToUtc(`${date} ${time}`, 'Asia/Kolkata'),
@@ -54,7 +54,7 @@ export class SlotController {
 
   async postponeSlot(req: Request, res: Response) {
     try {
-      const { id } = req.params;
+      const { id } = req.query;
       const { date, time, reason } = req.body;
 
       if (!id) {
@@ -74,7 +74,7 @@ export class SlotController {
         return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Date and time are required' });
       }
 
-      const slot = await this.postponeSlotUseCase.execute(id, user.id, {
+      const slot = await this._postponeSlotUseCase.execute(id.toString(), user.id, {
         date,
         time,
         reason,

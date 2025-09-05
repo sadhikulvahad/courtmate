@@ -33,6 +33,6 @@ router.get('/', asyncHandler(slotController.getSlots.bind(slotController)));
 
 router.post('/', asyncHandler(slotController.addSlot.bind(slotController)));
 
-router.put('/:id', asyncHandler(slotController.postponeSlot.bind(slotController)));
+router.put('/', asyncHandler(slotController.postponeSlot.bind(slotController)));
 
 export default router;

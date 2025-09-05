@@ -1,9 +1,9 @@
 import { Types } from "mongoose";
 import { ConversationModel } from "../models/ConversationModel";
-import { ConversationRepository } from "../../../domain/interfaces/ConversationRepository";
+import { IConversationRepository } from "../../../domain/interfaces/ConversationRepository";
 import { ConversationProps } from "../../../domain/types/EntityProps";
 
-export class ConversationRepositoryImplements implements ConversationRepository {
+export class ConversationRepositoryImplements implements IConversationRepository {
     async getConversationsByUserId(userId: Types.ObjectId): Promise<ConversationProps[]> {
         try {
             const conversations = await ConversationModel.find({

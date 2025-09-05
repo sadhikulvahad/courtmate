@@ -28,18 +28,12 @@ export interface AdvocateFilterOptions {
   page?: number;
   limit?: number;
   searchTerm?: string;
-  // Admin specific
   activeTab?: string;
-  // User filters
-  categories?: string[];
-  location?: string;
-  minExperience?: number;
-  maxExperience?: number;
-  languages?: string[];
-  minRating?: number;
-  availability?: string[];
-  specializations?: string[];
-  certifications?: string[];
-  sortBy?: 'rating' | 'experience' | 'createdAt';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "rating" | "experience" | "createdAt";
+  sortOrder?: "asc" | "desc";
+
+  // 🔥 Dynamic filters
+  filters?: {
+    [key: string]: string | number | (string | number)[];
+  };
 }

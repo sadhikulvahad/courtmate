@@ -32,13 +32,17 @@ router.use(authMiddleware.authorizeRoles('user', 'advocate'))
 
 router.get('/', asyncHandler(bookingController.getBookSlot.bind(bookingController)))
 
+router.get('/advocateBooking', asyncHandler(bookingController.getAdvocateBookings.bind(bookingController)))
+
 router.put('/postpone', asyncHandler(bookingController.postPoneBookedSlot.bind(bookingController)))
 
-router.get('/verify/:roomId', asyncHandler(bookingController.verifyRoom.bind(bookingController)))
+router.get('/verify', asyncHandler(bookingController.verifyRoom.bind(bookingController)))
 
 router.get('/getBook', asyncHandler(bookingController.getBook.bind(bookingController)))
 
 router.get('/callHistory', asyncHandler(bookingController.callHistory.bind(bookingController)))
+
+router.put('/cancel', asyncHandler(bookingController.cancelBooking.bind(bookingController)))
 
 
 export default router

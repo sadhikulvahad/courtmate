@@ -1,26 +1,27 @@
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
 import { S3Service } from "../../../infrastructure/web/s3Credential";
 import { UserProps } from "../../../domain/types/EntityProps";
+import { ITopRatedAdvocatesUsecase } from "../../../application/interface/user/TopRatedAdvocateUsecaseRepo";
 
 @injectable()
-export class TopRatedAdvocatesUseCase {
+export class TopRatedAdvocatesUseCase implements ITopRatedAdvocatesUsecase {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.S3Service) private s3Service: S3Service
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.S3Service) private _s3Service: S3Service
     ) { }
 
-    async execute() {
-        const advocates = await this.userRepository.topRatedAdvocates();
+    async execute(): Promise<UserProps[]> {
+        const advocates = await this._userRepository.topRatedAdvocates();
 
         const mappedAdvocates = await Promise.all(
             advocates.map(async (user) => {
                 if (user.profilePhoto) {
-                    user.updateProfilePhoto(await this.s3Service.generateSignedUrl(user.profilePhoto));
+                    user.updateProfilePhoto(await this._s3Service.generateSignedUrl(user.profilePhoto));
                 }
                 if (user.bciCertificate) {
-                    user.updateBciCirtificate(await this.s3Service.generateSignedUrl(user.bciCertificate));
+                    user.updateBciCirtificate(await this._s3Service.generateSignedUrl(user.bciCertificate));
                 }
                 // ✅ Return everything from props, fully.
                 return user.toJSON()

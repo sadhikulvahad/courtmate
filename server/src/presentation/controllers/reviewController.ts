@@ -1,20 +1,20 @@
 import { Request, Response } from "express";
-import { CreateReviewUseCase } from "../../application/useCases/review/CreateReview";
-import { GetReviewsUseCase } from "../../application/useCases/review/GetReviews";
-import { UpdateReviewUseCase } from "../../application/useCases/review/UpdateReviewUseCase";
-import { DeleteReviewUseCase } from "../../application/useCases/review/DeleteReviewUseCase";
 import { HttpStatus } from "../../domain/share/enums";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
+import { ICreateReview } from "../../application/interface/review/CreateReviewRepo";
+import { IGetReviews } from "../../application/interface/review/GetReviewRepo";
+import { IUpdateReviewUsecase } from "../../application/interface/review/UpdateReviewUsecaseRepo";
+import { IDeleteReviewUsecase } from "../../application/interface/review/DeleteReviewUsecaseRepo";
 
 
 @injectable()
 export class ReviewController {
     constructor(
-        @inject(TYPES.CreateReviewUseCase) private CreateReview: CreateReviewUseCase,
-        @inject(TYPES.GetReviewsUseCase) private GetReview: GetReviewsUseCase,
-        @inject(TYPES.UpdateReviewUseCase) private UpdateReview: UpdateReviewUseCase,
-        @inject(TYPES.DeleteReviewUseCase) private DeleteReview: DeleteReviewUseCase
+        @inject(TYPES.ICreateReview) private _createReview: ICreateReview,
+        @inject(TYPES.IGetReviews) private _getReview: IGetReviews,
+        @inject(TYPES.IUpdateReviewUseCase) private _updateReview: IUpdateReviewUsecase,
+        @inject(TYPES.IDeleteReviewUseCase) private _deleteReview: IDeleteReviewUsecase
     ) { }
 
     // Create Review
@@ -26,7 +26,7 @@ export class ReviewController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: "Missing required fields" });
             }
 
-            const createdReview = await this.CreateReview.execute({
+            const createdReview = await this._createReview.execute({
                 advocateId,
                 userId,
                 review,
@@ -49,7 +49,7 @@ export class ReviewController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: "Advocate ID is required" });
             }
 
-            const reviews = await this.GetReview.execute(advocateId.toString());
+            const reviews = await this._getReview.execute(advocateId.toString());
             res.status(HttpStatus.OK).json({ success: true, reviews });
         } catch (error) {
             console.error("Error Fetching Reviews:", error);
@@ -65,7 +65,7 @@ export class ReviewController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: "Review ID and at least one field (review or rating) are required" });
             }
 
-            const updatedReview = await this.UpdateReview.execute({
+            const updatedReview = await this._updateReview.execute({
                 reviewId,
                 review,
                 rating,
@@ -80,13 +80,12 @@ export class ReviewController {
 
     async deleteReview(req: Request, res: Response) {
         try {
-            const { reviewId } = req.params;
-            
+            const { reviewId } = req.query;
             if (!reviewId) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: "Review ID is required" });
             }
 
-            await this.DeleteReview.execute(reviewId);
+            await this._deleteReview.execute(reviewId.toString());
             res.status(HttpStatus.OK).json({ success: true, message: "Review deleted successfully" });
         } catch (error) {
             console.error("Error Deleting Review:", error);

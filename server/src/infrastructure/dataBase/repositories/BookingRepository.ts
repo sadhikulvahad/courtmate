@@ -1,24 +1,44 @@
 import { Types } from "mongoose";
 import { Booking } from "../../../domain/entities/Booking";
-import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
+import { IBookingRepository } from "../../../domain/interfaces/BookingRepository";
 import { BookingProps } from "../../../domain/types/EntityProps";
 import { BookingModel } from "../models/BookingModel";
 
 
-export class BookingRepositoryImplements implements BookingRepository {
-  async findByUserId(userId: string): Promise<Booking[]> {
-    const bookings = await BookingModel.find({ userId })
-      .populate("advocateId", "name email phone")
-      .sort({ createdAt: -1 })
-      .lean()
-      .exec();
-
+export class BookingRepositoryImplements implements IBookingRepository {
+  async findByUserId(userId: string, role: string): Promise<Booking[]> {
+    let bookings
+    if (role === 'advocate') {
+      bookings = await BookingModel.find({ advocateId: userId })
+        .populate("userId", "name email phone role")
+        .populate("advocateId", "name email phone role")
+        .sort({ createdAt: -1 })
+        .lean()
+        .exec();
+    } else {
+      bookings = await BookingModel.find({ userId })
+        .populate("advocateId", "name email phone")
+        .populate("userId", "name email phone")
+        .sort({ createdAt: -1 })
+        .lean()
+        .exec();
+    }
     return bookings.map((booking) => Booking.fromDB(booking));
   }
 
   async create(booking: Booking): Promise<Booking> {
+    console.log(booking)
     const bookingProps = booking.toJSON();
-    const newBooking = new BookingModel(bookingProps);
+
+    const dbBookingProps = {
+      ...bookingProps,
+      advocateId: new Types.ObjectId(bookingProps.advocateId),
+      userId: new Types.ObjectId(bookingProps.userId),
+      slotId: new Types.ObjectId(bookingProps.slotId),
+      caseId: bookingProps.caseId
+    };
+
+    const newBooking = new BookingModel(dbBookingProps);
     const savedBooking = await newBooking.save();
     const populatedBooking = await BookingModel.findById(savedBooking._id)
       .populate("advocateId", "name email phone")
@@ -97,28 +117,30 @@ export class BookingRepositoryImplements implements BookingRepository {
     return Booking.fromDB(booking);
   }
 
-  async getPastBookingsByUserId(userId: string): Promise<Booking[]> {
-    const now = new Date();
-
-    const pastBookings = await BookingModel.find({
-      userId,
-      time: { $lt: now }, // Only bookings before now
-    })
-      .populate("advocateId", "name email phone")
-      .sort({ time: -1 })
-      .lean();
-
-    return pastBookings.map(Booking.fromDB);
-  }
-
   async findByAdvocateId(advocateId: string): Promise<Booking[]> {
     const bookedSlots = await BookingModel.find({ advocateId: advocateId }).lean()
     return bookedSlots.map(Booking.fromDB)
   }
 
   async findAll(): Promise<Booking[]> {
-    const Bookings = await BookingModel.find()
+    const Bookings = await BookingModel.find({ status: { $in: ['confirmed', 'expired'] } })
     return Bookings.map(Booking.fromDB)
+  }
+
+  async getPastBookingsByUserId(userId: string): Promise<Booking[]> {
+    const now = new Date();
+
+    const pastBookings = await BookingModel.find({
+      userId,
+      time: { $lt: now },
+    })
+      .populate("userId", "name email phone role")
+      .populate("advocateId", "name email phone role")
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
+
+    return pastBookings.map(Booking.fromDB);
   }
 
   async getPastBookingsByAdvocateId(userId: string): Promise<Booking[]> {
@@ -126,11 +148,13 @@ export class BookingRepositoryImplements implements BookingRepository {
 
     const pastBookings = await BookingModel.find({
       advocateId: userId,
-      time: { $lt: now }, // Only bookings before now
+      time: { $lt: now },
     })
-      .populate("advocateId", "name email phone")
-      .sort({ time: -1 })
-      .lean();
+      .populate("userId", "name email phone role")
+      .populate("advocateId", "name email phone role")
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
 
     return pastBookings.map(Booking.fromDB);
   }

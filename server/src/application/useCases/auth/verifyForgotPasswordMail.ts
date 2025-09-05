@@ -1,8 +1,10 @@
 import { inject, injectable } from "inversify";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { JwtTokenService } from "../../../infrastructure/services/jwt";
 import { jwtDecode, JwtPayload } from "jwt-decode";
 import { TYPES } from "../../../types";
+import { IVerifyForgotPasswordMail } from "../../../application/interface/auth/VerifyForgotPasswordMailRepo";
+import { ReturnDTO } from "../../../application/dto";
 
 interface JwtPayloadWithEmail extends JwtPayload {
     email: string;
@@ -10,18 +12,18 @@ interface JwtPayloadWithEmail extends JwtPayload {
 
 
 @injectable()
-export class VerifyForgotPasswordMail {
+export class VerifyForgotPasswordMail implements IVerifyForgotPasswordMail {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.JwtTokenService) private tokenService: JwtTokenService
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.JwtTokenService) private _tokenService: JwtTokenService
     ) { }
 
-    async execute(token: string) {
+    async execute(token: string): Promise<ReturnDTO> {
         if (!token) {
             return { success: false, error: "No token available" }
         }
 
-        const isvalidToken = await this.tokenService.verifyToken(token)
+        const isvalidToken = await this._tokenService.verifyToken(token)
 
         if (!isvalidToken) {
             return { success: false, error: "Invalid token" }
@@ -33,7 +35,7 @@ export class VerifyForgotPasswordMail {
             return { success: false, error: "No email availble" }
         }
 
-        const existingUser = await this.userRepository.findByEmail(decoded.email)
+        const existingUser = await this._userRepository.findByEmail(decoded.email)
 
         if (!existingUser) {
             return { success: false, error: "No user found with this email" }

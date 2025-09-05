@@ -1,8 +1,18 @@
 
 import mongoose, { Schema } from "mongoose";
-import { CaseProps, MessageProps } from "../../../domain/types/EntityProps";
+import { CaseProps } from "../../../domain/types/EntityProps";
+import { v4 as uuidv4 } from "uuid";
+
+const generateCaseId = () => `case-${uuidv4().split("-")[0]}`;
 
 const CaseSchema = new Schema<CaseProps>({
+    caseId: {
+        type: String,
+        default: generateCaseId,
+        unique: true,
+        index: true,
+        requred: true
+    },
     advocateId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

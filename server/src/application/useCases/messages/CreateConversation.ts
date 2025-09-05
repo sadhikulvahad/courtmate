@@ -1,16 +1,19 @@
 import { Types } from "mongoose";
-import { ConversationRepository } from "../../../domain/interfaces/ConversationRepository";
+import { IConversationRepository } from "../../../domain/interfaces/ConversationRepository";
 import userModel from "../../../infrastructure/dataBase/models/UserModel";
 import { ConversationProps } from "../../../domain/types/EntityProps";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
+import { ICreateConversation } from "../../../application/interface/messages/CreateConversationRepo";
 
 
 @injectable()
-export class CreateConversationUseCase {
-  constructor(@inject(TYPES.ConversationRepository) private conversationRepository: ConversationRepository) { }
+export class CreateConversationUseCase implements ICreateConversation {
+  constructor(
+    @inject(TYPES.IConversationRepository) private _conversationRepository: IConversationRepository
+  ) { }
 
-  async execute(data: { userId: string; participantId: string; participantRole: string; userRole: string }) {
+  async execute(data: { userId: string; participantId: string; participantRole: string; userRole: string }) : Promise<ConversationProps> {
     const { userId, participantId, participantRole, userRole } = data;
 
     if (!userId || !participantId || !participantRole || !userRole) {
@@ -25,7 +28,7 @@ export class CreateConversationUseCase {
     const userObjectId = new Types.ObjectId(userId);
     const participantObjectId = new Types.ObjectId(participantId);
 
-    const existingConversation = await this.conversationRepository.findConversationBetweenParticipants(
+    const existingConversation = await this._conversationRepository.findConversationBetweenParticipants(
       userObjectId,
       participantObjectId
     );
@@ -42,6 +45,6 @@ export class CreateConversationUseCase {
       startedAt: new Date(),
     };
 
-    return this.conversationRepository.createConversation(conversationData);
+    return this._conversationRepository.createConversation(conversationData);
   }
 }

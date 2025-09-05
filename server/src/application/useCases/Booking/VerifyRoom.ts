@@ -1,18 +1,18 @@
-// src/application/useCases/Booking/VerifyRoom.ts
+
 import { inject, injectable } from "inversify";
-import { Booking } from "../../../domain/entities/Booking";
-import { BookingRepository } from "../../../domain/interfaces/BookingRepository";
+import { IBookingRepository } from "../../../domain/interfaces/BookingRepository";
 import { TYPES } from "../../../types";
 import { NotificationService } from "../../../infrastructure/services/notificationService";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
+import { IVerifyRoom } from "../../../application/interface/booking/VerifyRoomRepo";
 
 
 @injectable()
-export class VerifyRoom {
+export class VerifyRoom implements IVerifyRoom {
     constructor(
-        @inject(TYPES.BookingRepository) private bookingRepository: BookingRepository,
-        @inject(TYPES.NotificationService) private notificationService: NotificationService,
-        @inject(TYPES.UserRepository) private userRepository: UserRepository
+        @inject(TYPES.IBookingRepository) private _bookingRepository: IBookingRepository,
+        @inject(TYPES.NotificationService) private _notificationService: NotificationService,
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository
     ) { }
 
     async execute(userId: string, roomId: string): Promise<{ isAuthorized: boolean; message: string }> {
@@ -20,8 +20,8 @@ export class VerifyRoom {
             throw new Error("userId and roomId are required");
         }
 
-        const booking = await this.bookingRepository.findByRoomId(roomId);
-        const user = await this.userRepository.findById(userId)
+        const booking = await this._bookingRepository.findByRoomId(roomId);
+        const user = await this._userRepository.findById(userId)
 
         if (!booking) {
             return { isAuthorized: false, message: "Booking not found" };
@@ -84,7 +84,7 @@ export class VerifyRoom {
         }
 
         if (booking.userId === userId) {
-            await this.notificationService.sendNotification({
+            await this._notificationService.sendNotification({
                 senderId: booking.userId,
                 recieverId: booking.advocateId,
                 message: `${user?.name} Joined Video call`,
@@ -93,7 +93,7 @@ export class VerifyRoom {
                 createdAt: new Date()
             })
         } else if (booking.advocateId === userId) {
-            await this.notificationService.sendNotification({
+            await this._notificationService.sendNotification({
                 senderId: booking.advocateId,
                 recieverId: booking.userId,
                 message: `${user?.name} Joined Video call`,

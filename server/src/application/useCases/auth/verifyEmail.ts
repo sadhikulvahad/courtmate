@@ -1,9 +1,11 @@
 import { jwtDecode, JwtPayload } from "jwt-decode";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { JwtTokenService } from "../../../infrastructure/services/jwt";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
 import { Logger } from "winston";
+import { IVerifyEmail } from "../../../application/interface/auth/VerifyEmailRepo";
+import { ReturnDTO } from "../../../application/dto";
 
 interface JwtPayloadWithEmail extends JwtPayload {
     email: string;
@@ -11,23 +13,17 @@ interface JwtPayloadWithEmail extends JwtPayload {
 
 
 @injectable()
-export class verifyEmail {
+export class verifyEmail implements IVerifyEmail {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.JwtTokenService) private tokenRepository: JwtTokenService,
-        @inject(TYPES.Logger) private logger: Logger
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.JwtTokenService) private _tokenRepository: JwtTokenService,
+        @inject(TYPES.Logger) private _logger: Logger
     ) { }
 
-    async execute(token: string): Promise<{ success: boolean; message?: string; error?: string }> {
+    async execute(token: string): Promise<ReturnDTO> {
         try {
-            // const isUsedToken = await this.tokenRepository.isTokenUsed(token)
-            // if(isUsedToken){
-            //     return {success: false, error: 'Already verified'}
-            // }
 
-            const isvalidToken = await this.tokenRepository.verifyToken(token)
-
-            console.log(isvalidToken)
+            const isvalidToken = await this._tokenRepository.verifyToken(token)
 
             if (!isvalidToken) {
                 return { success: false, error: 'Invalid token' }
@@ -38,13 +34,13 @@ export class verifyEmail {
                 return { success: false, error: 'Invalid Email' }
             }
 
-            const existingUser = await this.userRepository.findByEmail(decoded.email)
+            const existingUser = await this._userRepository.findByEmail(decoded.email)
 
             if (!existingUser) {
                 return { success: false, error: 'Invalid Email Id' }
             }
 
-            await this.userRepository.update(existingUser.id, {
+            await this._userRepository.update(existingUser.id, {
                 isActive: true,
                 isVerified: true,
                 verifiedAt: new Date()
@@ -54,7 +50,7 @@ export class verifyEmail {
 
             return { success: true, message: "Email verified successfully" }
         } catch (error) {
-            this.logger.error("error from verify email usecases", { error })
+            this._logger.error("error from verify email usecases", { error })
             return { success: false, error: "Failed to verify. Please try again" }
         }
     }

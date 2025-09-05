@@ -1,11 +1,11 @@
 import { Types } from 'mongoose';
 import { RecurringRule } from '../../../domain/entities/recurringRule';
-import { RecurringRuleRepository } from '../../../domain/interfaces/RecurringRuleRepository';
+import { IRecurringRuleRepository } from '../../../domain/interfaces/RecurringRuleRepository';
 import { RecurringRuleModel } from '../models/RecurringRuleModel';
 import { RecurringRuleProps } from 'domain/types/EntityProps';
 
 
-export class RecurringRuleRepositoryImplement implements RecurringRuleRepository {
+export class RecurringRuleRepositoryImplement implements IRecurringRuleRepository {
 
   async findByAdvocateId(advocateId: string): Promise<RecurringRuleProps[]> {
     const rules = await RecurringRuleModel.find({ advocateId: new Types.ObjectId(advocateId) }).lean().exec();

@@ -2,7 +2,7 @@ import { User } from "../../domain/entities/User";
 import { AdvocateFilterOptions } from "../../application/types/UpdateAdvocateProfileDTO ";
 import { UserProps } from "domain/types/EntityProps";
 
-export interface UserRepository {
+export interface IUserRepository {
   findByBCINumber(BCINumber: string): Promise<User | null>;
   findUsers(): Promise<User[]>;
   findAdvocates(): Promise<User[]>;

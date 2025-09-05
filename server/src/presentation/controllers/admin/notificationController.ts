@@ -1,39 +1,39 @@
 
 
 import { Request, Response } from 'express'
-import { getAllNotification } from '../../../application/useCases/getAllNotification'
-import { MarkAsRead } from '../../../application/useCases/MarkasRead'
-import { MarkAllAsRead } from '../../../application/useCases/MarkAllAsRead'
 import { HttpStatus } from '../../../domain/share/enums'
 import { inject, injectable } from 'inversify'
 import { TYPES } from '../../../types'
 import { Logger } from 'winston'
+import { IGetAllNotification } from '../../../application/interface/GetAllNotificationRepo'
+import { IMarkAsRead } from '../../../application/interface/MarkAsReadRepo'
+import { IMarkAllAsRead } from '../../../application/interface/MarkAllAsReadRepo'
 
 
 @injectable()
 export class NotificationController {
 
     constructor(
-        @inject(TYPES.GetAllNotification) private readonly GetAllNotification: getAllNotification,
-        @inject(TYPES.MarkAsRead) private readonly MarkAsReadnotification: MarkAsRead,
-        @inject(TYPES.MarkAllAsRead) private readonly MarkAllAsReadNotification: MarkAllAsRead,
-        @inject(TYPES.Logger) private logger: Logger
+        @inject(TYPES.IGetAllNotification) private readonly _getAllNotification: IGetAllNotification,
+        @inject(TYPES.IMarkAsRead) private readonly _markAsReadnotification: IMarkAsRead,
+        @inject(TYPES.IMarkAllAsRead) private readonly _markAllAsReadNotification: IMarkAllAsRead,
+        @inject(TYPES.Logger) private _logger: Logger
     ) { }
 
     async getAdminNotifications(req: Request, res: Response) {
         try {
-            const { id } = req.params
+            const { id } = req.query
             if (!id) {
                 return res.status(HttpStatus.NOT_FOUND).json({ success: false, error: "No id found" })
             }
 
-            const result = await this.GetAllNotification.execute(id)
+            const result = await this._getAllNotification.execute(id.toString())
             if (!result.success) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error })
             }
             return res.status(HttpStatus.OK).json({ success: true, message: result.message, notifications: result.Notifications })
         } catch (error) {
-            this.logger.error('Error from get AdminNotification controller', { error })
+            this._logger.error('Error from get AdminNotification controller', { error })
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: "Server Error" })
         }
     }
@@ -46,13 +46,13 @@ export class NotificationController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'Id missing' })
             }
 
-            const result = await this.MarkAsReadnotification.execute(id)
+            const result = await this._markAsReadnotification.execute(id)
             if (!result.success) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error })
             }
             res.status(HttpStatus.OK).json({ success: true, message: result.message })
         } catch (error) {
-            this.logger.error('Error from Mark as read controller', { error })
+            this._logger.error('Error from Mark as read controller', { error })
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: "Server Error" })
         }
     }
@@ -65,13 +65,13 @@ export class NotificationController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'Id missing' })
             }
 
-            const result = await this.MarkAllAsReadNotification.execute(id)
+            const result = await this._markAllAsReadNotification.execute(id)
             if (!result.success) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: result.error })
             }
             res.status(HttpStatus.OK).json({ success: true, message: result.message })
         } catch (error) {
-            this.logger.error('Error from Mark as read controller', { error })
+            this._logger.error('Error from Mark as read controller', { error })
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: "Server Error" })
         }
     }

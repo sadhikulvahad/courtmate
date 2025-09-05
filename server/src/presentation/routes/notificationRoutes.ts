@@ -29,7 +29,7 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 router.use(authMiddleware.auth.bind(authMiddleware))
 router.use(authMiddleware.authorizeRoles('admin', 'advocate', 'user'))
 
-router.get('/:id', asyncHandler(notificationController.getAdminNotifications.bind(notificationController)));
+router.get('/', asyncHandler(notificationController.getAdminNotifications.bind(notificationController)));
 
 router.put('/markAsRead', asyncHandler(notificationController.markAsRead.bind(notificationController)));
 

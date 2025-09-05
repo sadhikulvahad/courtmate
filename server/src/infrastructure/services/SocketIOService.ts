@@ -14,7 +14,7 @@ export class SocketIOService {
   constructor(
     @inject(TYPES.SocketIOServer) private socketServer: SocketServer,
     @inject(TYPES.Logger) private logger: Logger,
-    @inject(TYPES.CreateMessageUseCase) private createMessage: CreateMessageUseCase
+    @inject(TYPES.ICreateMessage) private createMessage: CreateMessageUseCase
   ) { }
 
   initialize() {

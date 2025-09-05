@@ -1,50 +1,48 @@
 import { inject, injectable } from "inversify";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { AdvocateFilterOptions } from "../../../application/types/UpdateAdvocateProfileDTO ";
 import { TYPES } from "../../../types";
 import { Logger } from "winston";
 import { User } from "../../../domain/entities/User";
 import { UserProps } from "../../../domain/types/EntityProps";
 import { S3Service } from "../../../infrastructure/web/s3Credential";
+import { IGetAllAdminAdvocates } from "../../../application/interface/admin/GetAllAdminAdvocatesRepo";
+import { AllAdminAdvocatesDTO, ReturnDTO } from "../../../application/dto";
 
 @injectable()
-export class GetAllAdminAdvocates {
+export class GetAllAdminAdvocates implements IGetAllAdminAdvocates {
   constructor(
-    @inject(TYPES.UserRepository) private userRepository: UserRepository,
-    @inject(TYPES.Logger) private logger: Logger,
-    @inject(TYPES.S3Service) private s3Service: S3Service
+    @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+    @inject(TYPES.Logger) private _logger: Logger,
+    @inject(TYPES.S3Service) private _s3Service: S3Service
   ) { }
 
-  async execute(filters: AdvocateFilterOptions = {}) {
+  async execute(filters: AdvocateFilterOptions = {}) : Promise<AllAdminAdvocatesDTO> {
     try {
-      const result = await this.userRepository.findAdminAdvocates(filters);
+      const result = await this._userRepository.findAdminAdvocates(filters);
 
       const mappedAdvocates = await Promise.all(
         result.advocates.map(async (mongooseUser: UserProps) => {
           const user = this.toDomainEntity(mongooseUser);
 
           if (user.profilePhoto) {
-            user.updateProfilePhoto(await this.s3Service.generateSignedUrl(user.profilePhoto));
+            user.updateProfilePhoto(await this._s3Service.generateSignedUrl(user.profilePhoto));
           }
           if (user.bciCertificate) {
-            user.updateBciCirtificate(await this.s3Service.generateSignedUrl(user.bciCertificate));
+            user.updateBciCirtificate(await this._s3Service.generateSignedUrl(user.bciCertificate));
           }
 
           return user;
         })
       );
       return {
-        success: true,
-        message: "Admin advocates fetched successfully",
-        data: {
-          advocates: mappedAdvocates,
-          totalCount: result.totalCount,
-          totalPages: result.totalPages,
-          currentPage: result.currentPage,
-        },
+        advocates: mappedAdvocates,
+        totalCount: result.totalCount,
+        totalPages: result.totalPages,
+        currentPage: result.currentPage,
       };
     } catch (error) {
-      this.logger.error("Error fetching admin advocates:", { error });
+      this._logger.error("Error fetching admin advocates:", { error });
       return {
         success: false,
         error: "Failed to fetch admin advocates",

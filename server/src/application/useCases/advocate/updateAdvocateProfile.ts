@@ -1,21 +1,23 @@
 
 
 import { Types } from "mongoose";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { NotificationService } from "../../../infrastructure/services/notificationService";
 import { UpdateAdvocateProfileDTO } from "../../types/UpdateAdvocateProfileDTO ";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
-import { Logger } from "winston";
+import { IUpdateAdvocateProfile } from "../../../application/interface/advocate/UpdateAdvocateProfileRepo";
+import { ReturnDTO } from "../../../application/dto";
 
 
 @injectable()
-export class UpdateAdvocateProfile {
+export class UpdateAdvocateProfile implements IUpdateAdvocateProfile {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.NotificationService) private readonly _notificationService: NotificationService,
     ) { }
 
-    async execute(data: UpdateAdvocateProfileDTO, notificationService: NotificationService) {
+    async execute(data: UpdateAdvocateProfileDTO) :Promise<ReturnDTO> {
 
         if (!data.id) {
             return { success: false, error: "Id is missing" }
@@ -43,8 +45,8 @@ export class UpdateAdvocateProfile {
         const onlineConsultation = data.onlineConsultation == 'true';
         const yearsOfPractice = Number(data.yearsOfPractice || 0)
 
-        const user = await this.userRepository.findById(data.id)
-        const isBCINumberExist = await this.userRepository.findByBCINumber(data.barCouncilNumber)
+        const user = await this._userRepository.findById(data.id)
+        const isBCINumberExist = await this._userRepository.findByBCINumber(data.barCouncilNumber)
 
 
         if (!user) {
@@ -55,7 +57,7 @@ export class UpdateAdvocateProfile {
             return { success: false, error: "This Bar Council India Reg No. is already Used, if it is not by you, please Contact the authorized person" }
         }
 
-        await this.userRepository.update(data.id, {
+        await this._userRepository.update(data.id, {
             age: Number(data.age),
             barCouncilRegisterNumber: data.barCouncilNumber,
             category: data.category,
@@ -76,9 +78,9 @@ export class UpdateAdvocateProfile {
             isAdminVerified: 'Pending'
         })
 
-        const admin = await this.userRepository.findByEmail('sadhikulvahad@gmail.com')
+        const admin = await this._userRepository.findByEmail('sadhikulvahad@gmail.com')
 
-        await notificationService.sendNotification({
+        await this._notificationService.sendNotification({
             recieverId: new Types.ObjectId(admin?.id),
             senderId: new Types.ObjectId(user?.id),
             message: `${user.name} sended Advocate Request`,

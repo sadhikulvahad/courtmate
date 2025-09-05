@@ -42,7 +42,7 @@ router.put(
 );
 
 router.put(
-  '/toggleSave/:advocateId',
+  '/toggleSave',
   authMiddleware.authorizeRoles('user'),
   asyncHandler(userController.toggleSaveAdvocate.bind(userController))
 );

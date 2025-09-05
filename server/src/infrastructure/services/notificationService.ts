@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { Notification } from '../../domain/entities/Notificaiton';
-import { NotificationRepository } from '../../domain/interfaces/NotificationRepository';
+import { INotificationRepository } from '../../domain/interfaces/NotificationRepository';
 import { NotificationProps } from '../../domain/types/EntityProps';
 import { SocketIOService } from '../../infrastructure/services/SocketIOService';
 import { TYPES } from '../../types';
@@ -8,13 +8,13 @@ import { TYPES } from '../../types';
 @injectable()
 export class NotificationService {
   constructor(
-    @inject(TYPES.NotificationRepository) private notificationRepository: NotificationRepository,
+    @inject(TYPES.INotificationRepository) private INotificationRepository: INotificationRepository,
     @inject(TYPES.SocketIOService) private socketIOService: SocketIOService
   ) { }
 
   async sendNotification(props: Omit<NotificationProps, '_id'>): Promise<Notification> {
     const notification = new Notification(props);
-    const savedNotification = await this.notificationRepository.save(notification);
+    const savedNotification = await this.INotificationRepository.save(notification);
 
     this.socketIOService.sendGeneralNotification(props.recieverId.toString(), props.message, {
       type: props.type,

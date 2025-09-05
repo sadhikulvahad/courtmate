@@ -1,10 +1,10 @@
 import { Types } from "mongoose";
 import { ReviewModel } from "../models/ReviewModel";
-import { ReviewRepository } from "../../../domain/interfaces/ReviewRepository";
+import { IReviewRepository } from "../../../domain/interfaces/ReviewRepository";
 import { ReviewProps } from "../../../domain/types/EntityProps";
 import { Review } from "../../../domain/entities/Review";
 
-export class ReviewRepositoryImplements implements ReviewRepository {
+export class ReviewRepositoryImplements implements IReviewRepository {
     async create(reviewProps: ReviewProps): Promise<ReviewProps> {
         try {
             const review = await ReviewModel.create({

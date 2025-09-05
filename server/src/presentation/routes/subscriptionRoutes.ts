@@ -33,6 +33,6 @@ router.post('/', asyncHandler(subscriptionController.createSubscription.bind(sub
 
 router.get('/getAll', asyncHandler(subscriptionController.getAllSubscriptions.bind(subscriptionController)));
 
-router.get('/:advocateId', asyncHandler(subscriptionController.getSubscription.bind(subscriptionController)));
+router.get('/', asyncHandler(subscriptionController.getSubscription.bind(subscriptionController)));
 
 export default router;

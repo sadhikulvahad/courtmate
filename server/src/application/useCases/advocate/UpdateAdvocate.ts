@@ -1,23 +1,25 @@
 import { inject, injectable } from "inversify";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { UpdateAdvocateProfileDTO } from "../../types/UpdateAdvocateProfileDTO ";
 import { TYPES } from "../../../types";
 import { S3Service } from "../../../infrastructure/web/s3Credential";
+import { IUpdateAdvocate } from "../../../application/interface/advocate/UpdateAdvocateRepo";
+import { GetAdvocateDetailsDTO } from "../../../application/dto";
 
 
 @injectable()
-export class UpdateAdvocate {
+export class UpdateAdvocate implements IUpdateAdvocate {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.S3Service) private s3Service : S3Service
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.S3Service) private _s3Service: S3Service
     ) { }
 
-    async execute(data: UpdateAdvocateProfileDTO) {
+    async execute(data: UpdateAdvocateProfileDTO) : Promise<GetAdvocateDetailsDTO> {
         if (!data.id) {
             return { success: false, error: "Id is missing" };
         }
 
-        const user = await this.userRepository.findById(data.id);
+        const user = await this._userRepository.findById(data.id);
         if (!user) {
             return { success: false, error: "No user found with this ID" };
         }
@@ -64,14 +66,14 @@ export class UpdateAdvocate {
             updatePayload.isAdminVerified = "Accepted";
         }
 
-        const updatedUser = await this.userRepository.update(data.id, updatePayload);
+        const updatedUser = await this._userRepository.update(data.id, updatePayload);
 
         if (updatedUser?.profilePhoto) {
-                const signedUrl = await this.s3Service.generateSignedUrl(updatedUser.profilePhoto);
-                const bciSignedurl = await this.s3Service.generateSignedUrl(updatedUser.bciCertificate);
-                updatedUser.updateProfilePhoto(signedUrl)
-                updatedUser.updateBciCirtificate(bciSignedurl);
-            }
+            const signedUrl = await this._s3Service.generateSignedUrl(updatedUser.profilePhoto);
+            const bciSignedurl = await this._s3Service.generateSignedUrl(updatedUser.bciCertificate);
+            updatedUser.updateProfilePhoto(signedUrl)
+            updatedUser.updateBciCirtificate(bciSignedurl);
+        }
 
         return {
             success: true,

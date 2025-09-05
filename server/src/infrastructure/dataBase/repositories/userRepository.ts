@@ -2,7 +2,7 @@
 import userModel from "../models/UserModel";
 import { ReviewModel } from "../models/ReviewModel";
 import { User } from "../../../domain/entities/User";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { UserProps } from "../../../domain/types/EntityProps";
 import { AuthMethod } from "../../../domain/types/AuthMethod";
 import { AdvocateFilterOptions } from "../../../application/types/UpdateAdvocateProfileDTO ";
@@ -13,7 +13,7 @@ interface ExperienceRange {
     $lte?: number;
 }
 
-export class UserRepositoryImplement implements UserRepository {
+export class UserRepositoryImplement implements IUserRepository {
 
     async findByBCINumber(BCINumber: string): Promise<User | null> {
         const BarCouncilNumber = await userModel.findOne({ barCouncilRegisterNumber: BCINumber })
@@ -21,7 +21,7 @@ export class UserRepositoryImplement implements UserRepository {
     }
 
     async findUsers(): Promise<User[]> {
-        const users = await userModel.find({ role: 'user' })
+        const users = await userModel.find({ role: 'user' }).lean()
         return users
             .filter((user: UserProps) => user.name && user.email && user.role)
             .map((user: UserProps) => this.toDomainEntity(user));
@@ -86,17 +86,9 @@ export class UserRepositoryImplement implements UserRepository {
             page = 1,
             limit = 10,
             searchTerm,
-            categories,
-            location,
-            minExperience,
-            maxExperience,
-            languages,
-            minRating,
-            availability,
-            specializations,
-            certifications,
             sortBy = 'rating',
             sortOrder = 'desc',
+            filters: dynamicFilters = {},
         } = filters;
 
         const query: FilterQuery<User> = {
@@ -105,8 +97,7 @@ export class UserRepositoryImplement implements UserRepository {
             isBlocked: false
         };
 
-        // Search term filter
-        if (filters.searchTerm) {
+        if (searchTerm) {
             query.$or = [
                 { name: { $regex: filters.searchTerm, $options: 'i' } },
                 { category: { $regex: filters.searchTerm, $options: 'i' } },
@@ -114,66 +105,26 @@ export class UserRepositoryImplement implements UserRepository {
             ];
         }
 
-        // Category filter
-        if (categories?.length) {
-            (query as any).category = { $in: categories };
+        for (const [key, value] of Object.entries(dynamicFilters)) {
+            if (key === "location" && typeof value === "string") {
+                query["address.city"] = { $regex: value, $options: "i" };
+            } else if (Array.isArray(value)) {
+                query[key] = { $in: value };
+            } else if (typeof value === "number") {
+                query[key] = value;
+            } else if (typeof value === "string") {
+                query[key] = { $regex: value.toLowerCase(), $options: "i" };
+            } else if (key === "language" && typeof value === "string") {
+                query["language"] = { $elemMatch: { $regex: value, $options: "i" } };
+            }
         }
 
-        // Location filter
-        if (location) {
-            query.$or = [
-                { 'address.city': { $regex: location, $options: 'i' } },
-                { 'address.state': { $regex: location, $options: 'i' } },
-                { 'address.street': { $regex: location, $options: 'i' } },
-                { 'address.pincode': { $regex: location, $options: 'i' } }
-            ];
-        }
-
-        // Experience range filter
-        if (filters.minExperience || filters.maxExperience) {
-            const experienceFilter: ExperienceRange = {};
-            if (filters.minExperience) experienceFilter.$gte = filters.minExperience;
-            if (filters.maxExperience) experienceFilter.$lte = filters.maxExperience;
-
-            // Type assertion to handle read-only property
-            (query as { experience?: ExperienceRange }).experience = experienceFilter;
-        }
-
-        // Languages filter
-        if (filters.languages?.length) {
-            const languageFilter = { $in: filters.languages };
-            (query as { languages?: typeof languageFilter }).languages = languageFilter;
-        }
-
-        // Rating filter
-        if (minRating) {
-            query.rating = { $gte: minRating };
-        }
-
-        // Availability filter
-        if (availability?.length) {
-            query.availability = { $in: availability };
-        }
-
-        // Specializations filter
-        if (specializations?.length) {
-            query.specializations = { $in: specializations };
-        }
-
-        // Certifications filter
-        if (certifications?.length) {
-            query.certifications = { $in: certifications };
-        }
-
-        // Sorting
         const sortOptions: any = {
             isSponsored: -1,
             [sortBy]: sortOrder === 'asc' ? 1 : -1
         };
 
-        // Pagination
         const skip = (page - 1) * limit;
-
         const [advocates, totalCount] = await Promise.all([
             userModel.find(query)
                 .sort(sortOptions)
@@ -216,6 +167,9 @@ export class UserRepositoryImplement implements UserRepository {
 
     async save(user: User): Promise<User> {
         const userData = this.toMongooseModel(user)
+        if (!userData.phone) {
+            delete userData.phone;
+        }
         const savedUser = await userModel.create(userData)
         return this.toDomainEntity(savedUser)
     }

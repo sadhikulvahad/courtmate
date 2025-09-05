@@ -1,32 +1,36 @@
 import { inject, injectable } from "inversify";
-import { EmailService } from "../../../domain/interfaces/EmailService";
-import { UserRepository } from "../../../domain/interfaces/UserRepository";
+import { IEmailService } from "../../../domain/interfaces/EmailService";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { JwtTokenService } from "../../../infrastructure/services/jwt";
 import { TYPES } from "../../../types";
+import { IForgotPasswordSendMail } from "../../../application/interface/auth/ForgotPasswordSendMailRepo";
+import { ReturnDTO } from "../../../application/dto";
 
 
 @injectable()
-export class forgotPasswordSendMail{
+export class forgotPasswordSendMail implements IForgotPasswordSendMail {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository : UserRepository,
-        @inject(TYPES.EmailService) private emailService: EmailService,
-        @inject(TYPES.JwtTokenService) private tokenService : JwtTokenService
-         
-    ){}
-    async execute (email : string){
-        const existingUser = await this.userRepository.findByEmail(email)
-        if(!existingUser || !existingUser.isActive || !existingUser.isVerified){
-            return {success : false, error: 'Invalid Email, May be you dont have an account'}
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+        @inject(TYPES.IEmailService) private _emailService: IEmailService,
+        @inject(TYPES.JwtTokenService) private _tokenService: JwtTokenService
+    ) { }
+    async execute(email: string): Promise<ReturnDTO> {
+        const existingUser = await this._userRepository.findByEmail(email)
+        if (!existingUser || !existingUser.isActive || !existingUser.isVerified) {
+            return { success: false, error: 'Invalid Email, May be you dont have an account' }
         }
-        if(existingUser.authMethod === 'google'){
-            return {success: false, error: 'You logged with Google'}
+        if (existingUser.authMethod === 'google') {
+            return { success: false, error: 'You logged with Google' }
         }
-        if(existingUser.isBlocked){
-            return {success: false, error : 'Your account has been blocked'}
+        if (existingUser.isBlocked) {
+            return { success: false, error: 'Your account has been blocked' }
         }
 
-        const token = this.tokenService.generateEmailVerificationToken(email)
-        await this.emailService.sendPasswordResetEmail(email,token)
-        return {success: true, message: "Verification Mail send successfully"}
+        const token = this._tokenService.generateEmailVerificationToken(email)
+        await this._emailService.sendPasswordResetEmail(email, token)
+        return {
+            success: true,
+            message: "Verification Mail send successfully"
+        }
     }
 }

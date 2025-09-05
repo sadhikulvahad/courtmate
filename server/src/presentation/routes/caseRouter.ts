@@ -34,13 +34,20 @@ router.use(authMiddleware.authorizeRoles('advocate'))
 
 router.post('/', asyncHandler(caseController.createCase.bind(caseController)))
 
-router.get('/:userId', asyncHandler(caseController.getAllCase.bind(caseController)))
+router.get('/', asyncHandler(caseController.getAllCase.bind(caseController)))
 
-router.put('/:caseId', asyncHandler(caseController.UpdateCase.bind(caseController)))
+router.put('/', asyncHandler(caseController.UpdateCase.bind(caseController)))
 
-router.delete('/:caseId', asyncHandler(caseController.Deletecase.bind(caseController)))
+router.delete('/', asyncHandler(caseController.Deletecase.bind(caseController)))
 
-router.put('/updateHearing/:caseId', asyncHandler(caseController.updateHearingDate.bind(caseController)))
+router.put('/updateHearing', asyncHandler(caseController.updateHearingDate.bind(caseController)))
 
+router.post('/addHearing', asyncHandler(caseController.addHearingData.bind(caseController)))
+
+router.put('/updateHearingData', asyncHandler(caseController.updateHearingData.bind(caseController)))
+
+router.delete('/deleteHearing', asyncHandler(caseController.deleteHearingData.bind(caseController)))
+
+router.get('/getHearing', asyncHandler(caseController.getHearingData.bind(caseController)))
 
 export default router

@@ -1,16 +1,16 @@
 import { Request, Response } from "express";
-import { CreateCheckoutSessionUseCase } from "../../application/useCases/CreateCheckoutSessionUseCase";
 import Stripe from "stripe";
-import { BookSlot } from "../../application/useCases/Booking/BookSlot";
 import { NotificationService } from "../../infrastructure/services/notificationService";
-import { PaymentUsecase } from "../../application/useCases/PaymentUsecase";
 import { PaymentProps } from "../../domain/types/EntityProps";
 import { Types } from "mongoose";
-import { CreateSubscriptionUseCase } from "../../application/useCases/subscription/CreateSubscriptionUsecase";
 import { HttpStatus } from "../../domain/share/enums";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { Logger } from "winston";
+import { ICreateCheckoutSessionUsecase } from "../../application/interface/CreateCheckoutSessionUsecaseRepo";
+import { IBookSlot } from "../../application/interface/booking/BookSlotRepo";
+import { IPaymentUsecase } from "../../application/interface/PaymentUsecaseRepo";
+import { ICreateSubscriptionUsecase } from "../../application/interface/subscription/CreateSubscriptionUsecaseRepo";
 
 
 
@@ -19,17 +19,17 @@ type BillingCycle = "monthly" | "yearly";
 @injectable()
 export class paymentController {
     constructor(
-        @inject(TYPES.CreateCheckoutSessionUseCase) private createCheckoutSessionUseCase: CreateCheckoutSessionUseCase,
-        @inject(TYPES.BookSlot) private bookSlot: BookSlot,
-        @inject(TYPES.PaymentUseCase) private paymentUsecase: PaymentUsecase,
-        @inject(TYPES.CreateSubscriptionUseCase) private createSubscriptionUseCase: CreateSubscriptionUseCase,
-        @inject(TYPES.NotificationService) private notificationService: NotificationService,
-        @inject(TYPES.Logger) private logger: Logger
+        @inject(TYPES.ICreateCheckoutSessionUseCase) private _createCheckoutSessionUseCase: ICreateCheckoutSessionUsecase,
+        @inject(TYPES.IBookSlot) private _bookSlot: IBookSlot,
+        @inject(TYPES.IPaymentUseCase) private _paymentUsecase: IPaymentUsecase,
+        @inject(TYPES.ICreateSubscriptionUseCase) private _createSubscriptionUseCase: ICreateSubscriptionUsecase,
+        @inject(TYPES.NotificationService) private _notificationService: NotificationService,
+        @inject(TYPES.Logger) private _logger: Logger
     ) { }
 
     async createCheckoutSessionController(req: Request, res: Response) {
         try {
-            const { advocateId, selectedSlotId } = req.body
+            const { advocateId, selectedSlotId, paymentMethod, bookingType, caseId } = req.body
 
             if (!advocateId) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: 'advocateId required' });
@@ -39,11 +39,27 @@ export class paymentController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: 'selectedSlotId required' });
             }
 
+            if (!paymentMethod) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Payment Method is not defined' });
+            }
+
+            if (!bookingType) {
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Booking Type is not defined' });
+            }
+
             const user = req.user as { id: string; role: string; name: string; email: string } | undefined;
-            const url = await this.createCheckoutSessionUseCase.execute(user, advocateId, selectedSlotId);
+            const url = await this._createCheckoutSessionUseCase.execute(
+                user,
+                advocateId,
+                selectedSlotId,
+                paymentMethod,
+                bookingType,
+                caseId
+            );
+
             res.status(HttpStatus.OK).json({ url });
         } catch (err) {
-            this.logger.error({ err })
+            this._logger.error({ err })
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Failed to create Stripe session' });
         }
     }
@@ -112,7 +128,7 @@ export class paymentController {
 
             res.status(HttpStatus.OK).json({ url: session.url });
         } catch (err) {
-            this.logger.error("Error creating subscription checkout session:", { err })
+            this._logger.error("Error creating subscription checkout session:", { err })
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to create Stripe session" });
         }
     }
@@ -125,7 +141,7 @@ export class paymentController {
         try {
             event = Stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
         } catch (err: any) {
-            this.logger.error("Webhook signature verification failed:", { err: err.message })
+            this._logger.error("Webhook signature verification failed:", { err: err.message })
             return res.status(HttpStatus.BAD_REQUEST).send(`Webhook Error: ${err.message}`);
         }
 
@@ -135,7 +151,7 @@ export class paymentController {
             try {
                 if (session.mode === "subscription") {
                     if (!session.metadata || !session.metadata.advocateId || !session.metadata.plan || !session.metadata.billingCycle || !session.metadata.userId) {
-                        this.logger.error("Missing metadata in session:", { sessioId: session.id })
+                        this._logger.error("Missing metadata in session:", { sessioId: session.id })
                         return res.status(HttpStatus.BAD_REQUEST).json({ error: "Invalid session metadata" });
                     }
 
@@ -152,9 +168,9 @@ export class paymentController {
                         nextBillingDate,
                     };
 
-                    const subscription = await this.createSubscriptionUseCase.execute(subscriptionData);
+                    const subscription = await this._createSubscriptionUseCase.execute(subscriptionData);
 
-                    await this.notificationService.sendNotification({
+                    await this._notificationService.sendNotification({
                         senderId: new Types.ObjectId(session.metadata.advocateId),
                         recieverId: new Types.ObjectId(session.metadata.userId),
                         message: `Your ${subscriptionData.plan} subscription has been activated!`,
@@ -173,22 +189,22 @@ export class paymentController {
                         status: session.payment_status,
                     };
 
-                    await this.paymentUsecase.execute(paymentData);
+                    await this._paymentUsecase.execute(paymentData);
                 } else {
-
+                    
                     if (!session.metadata || !session.metadata.advocate_id || !session.metadata.slotId || !session.metadata.user_id) {
-                        this.logger.error("Missing metadata in session:", { err: session.id })
+                        this._logger.error("Missing metadata in session:", { err: session.id })
                         return res.status(HttpStatus.BAD_REQUEST).json({ error: "Invalid session metadata" });
                     }
                     // Existing logic for advocate booking
-                    const booking = await this.bookSlot.execute(
+                    const booking = await this._bookSlot.execute(
                         session.metadata.advocate_id!,
                         session.metadata.slotId!,
                         session.metadata.user_id!,
                         session.metadata.user_name!,
                         "Booked via user interface",
                         user,
-                        this.notificationService
+                        session.metadata.caseId
                     );
 
                     const bookingData: PaymentProps = {
@@ -201,10 +217,10 @@ export class paymentController {
                         status: session.payment_status,
                     };
 
-                    await this.paymentUsecase.execute(bookingData);
+                    await this._paymentUsecase.execute(bookingData);
                 }
             } catch (error) {
-                this.logger.error("Error processing webhook:", { error })
+                this._logger.error("Error processing webhook:", { error })
                 return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: "Failed to process webhook" });
             }
         }

@@ -1,9 +1,9 @@
 import { inject, injectable } from "inversify";
-import { RedisService } from "../../domain/interfaces/RedisService";
+import { IRedisService } from "../../domain/interfaces/RedisService";
 import { redisClient } from "../../infrastructure/cache/redis";
 
 @injectable()
-export class RedisServiceImplement implements RedisService {
+export class RedisServiceImplement implements IRedisService {
     async blacklistToken(token: string, expiryInSeconds: number): Promise<void> {
         await redisClient.set(`blacklist:${token}`, "1", { EX: expiryInSeconds });
     }

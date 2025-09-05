@@ -33,6 +33,6 @@ router.post('/', asyncHandler(conversationController.createConversation.bind(con
 
 router.get('/', asyncHandler(conversationController.getConversation.bind(conversationController)));
 
-router.get('/messages/:id', asyncHandler(conversationController.getMessages.bind(conversationController)));
+router.get('/messages', asyncHandler(conversationController.getMessages.bind(conversationController)));
 
 export default router;
