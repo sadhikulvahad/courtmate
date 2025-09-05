@@ -32,7 +32,7 @@ export default function UserProfile() {
     const fetchUserData = async () => {
       try {
         // Fetch user profile
-        const userResponse = await findUser(authUser?.id as string, token);
+        const userResponse = await findUser(authUser?.id as string);
         if (userResponse.status === 200) {
           setUser(userResponse.data.user);
           setEditedUser(userResponse.data.user);
@@ -43,7 +43,7 @@ export default function UserProfile() {
         }
 
         // Fetch saved advocates
-        const advocatesResponse = await GetSavedAdvocates(token);
+        const advocatesResponse = await GetSavedAdvocates();
         const saved = advocatesResponse?.data?.advocates || [];
         setSavedAdvocates(saved);
       } catch (error) {
@@ -94,7 +94,7 @@ export default function UserProfile() {
         }
       });
 
-      const response = await updateUser(formData, token);
+      const response = await updateUser(formData);
       if (response?.status === 200) {
         setUser(response.data.userData);
         setIsEditing(false);
@@ -113,7 +113,7 @@ export default function UserProfile() {
   const toggleSaved = useCallback(
     async (advocateId: string) => {
       try {
-        const response = await toggleSaveAdvocate(advocateId, token);
+        const response = await toggleSaveAdvocate(advocateId);
         if (response?.data?.success) {
           const isCurrentlySaved = savedAdvocates.some(
             (adv) => adv.id === advocateId
@@ -316,7 +316,6 @@ export default function UserProfile() {
           <ResetPasswordModal
             isOpen={isPasswordModalOpen}
             onClose={handleClosePasswordModal}
-            token={token}
             user={authUser}
           />
         )}

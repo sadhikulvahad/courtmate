@@ -1,5 +1,7 @@
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
+import { API_ENDPOINTS } from "./Routes/endpoint";
+import { HearingDetailsProps } from "@/types/Types";
 
 
 export const createCase = async (newCase: {
@@ -10,13 +12,9 @@ export const createCase = async (newCase: {
     nextHearingDate: string,
     description: string,
     hearingHistory: string[]
-}, token: string | null) => {
+}) => {
     try {
-        const response = await axiosInstance.post('/case', newCase, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
+        const response = await axiosInstance.post(API_ENDPOINTS.CASE.CASE_POST, newCase)
         return response
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -33,12 +31,10 @@ export const createCase = async (newCase: {
     }
 }
 
-export const getAllCase = async (token: string | null, userId: string | undefined) => {
+export const getAllCase = async (userId: string | undefined) => {
     try {
-        const response = await axiosInstance.get(`/case/${userId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+        const response = await axiosInstance.get(API_ENDPOINTS.CASE.CASE_GET, {
+            params: { userId }
         })
         return response
     } catch (error) {
@@ -65,12 +61,10 @@ export const updateCase = async (newCase: {
     nextHearingDate: string,
     description: string,
     hearingHistory: string[]
-}, token: string | null) => {
+}) => {
     try {
-        const response = await axiosInstance.put(`/case/${newCase._id}`, newCase, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+        const response = await axiosInstance.put(API_ENDPOINTS.CASE.CASE_PUT, newCase, {
+            params: { newCaseID: newCase._id }
         })
         return response
     } catch (error) {
@@ -89,12 +83,10 @@ export const updateCase = async (newCase: {
 }
 
 
-export const deleteCase = async (caseId: string, token: string | null) => {
+export const deleteCase = async (caseId: string) => {
     try {
-        const response = await axiosInstance.delete(`/case/${caseId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+        const response = await axiosInstance.delete(API_ENDPOINTS.CASE.CASE_DELETE, {
+            params: { caseId }
         })
         return response
     } catch (error) {
@@ -112,12 +104,10 @@ export const deleteCase = async (caseId: string, token: string | null) => {
     }
 }
 
-export const updateHearing = async (caseId: string , hearingEntry: string, token: string | null) => {
+export const updateHearing = async (caseId: string, hearingEntry: string) => {
     try {
-        const response = await axiosInstance.put(`/case/updateHearing/${caseId}`, { hearingEntry }, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+        const response = await axiosInstance.put(API_ENDPOINTS.CASE.CASE_UPDATE_HEARING, { hearingEntry }, {
+            params: { caseId }
         })
         return response
     } catch (error) {
@@ -134,3 +124,88 @@ export const updateHearing = async (caseId: string , hearingEntry: string, token
         }
     }
 };
+
+
+export const addHearing = async (hearingData: HearingDetailsProps) => {
+    try {
+        const response = await axiosInstance.post(API_ENDPOINTS.CASE.CASE_ADD_HEARING_DATA, hearingData)
+        return response
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Axios error", {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
+    }
+}
+
+
+export const updateHearingData = async (hearingId: string, hearingData: HearingDetailsProps) => {
+    try {
+        const response = await axiosInstance.put(API_ENDPOINTS.CASE.CASE_UPDATE_HEARING_DATA, hearingData, {
+            params: { hearingId }
+        })
+        return response
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Axios error", {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
+    }
+}
+
+export const getHearingData = async (caseId: string) => {
+    try {
+        const response = await axiosInstance.get(API_ENDPOINTS.CASE.CASE_GET_HEARING_DATA, {
+            params: { caseId }
+        })
+        return response
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Axios error", {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
+    }
+}
+
+
+export const deleteHearingData = async (hearingId: string) => {
+    try {
+        const response = await axiosInstance.delete(API_ENDPOINTS.CASE.CASE_DELETE_HEARING_DATA, {
+            params: { hearingId }
+        })
+        return response
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Axios error", {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+            return error.response ?? null;
+        } else {
+            console.error("Unknown error", error);
+            return null;
+        }
+    }
+}

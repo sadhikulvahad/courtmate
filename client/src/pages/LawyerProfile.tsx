@@ -9,7 +9,7 @@ import { MoreVertical } from "lucide-react";
 export default function LawyerProfile() {
   const [advocate, setAdvocate] = useState<AdvocateProps | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<AdvocateProps>>({});
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
@@ -22,7 +22,7 @@ export default function LawyerProfile() {
   const fetchUser = async () => {
     setIsLoading(true);
     try {
-      const response = await findUser(user?.id as string, token);
+      const response = await findUser(user?.id as string);
       if (response.status === 200) {
         const userData = response.data.user;
 
@@ -84,7 +84,7 @@ export default function LawyerProfile() {
 
   useEffect(() => {
     fetchUser();
-  }, [user?.id, token]);
+  }, [user?.id]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -260,7 +260,7 @@ export default function LawyerProfile() {
         submitData.append("profilePhoto", profilePhotoFile);
       }
 
-      const response = await updateUser(submitData, token);
+      const response = await updateUser(submitData);
 
       if (response?.status === 200) {
         // Process user data to ensure correct formats

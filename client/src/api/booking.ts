@@ -1,22 +1,14 @@
 import { RecurringRule } from '@/types/Types';
 import axiosInstance from './axiosInstance';
 import axios from 'axios';
+import { API_ENDPOINTS } from './Routes/endpoint';
 
 
-
-export const findUser = async (id: string, token: string | null) => {
-  const response = await axiosInstance.get(`/users/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
-};
-
-export const getRecurringRules = async (advocateId: string, token: string | null) => {
+export const getRecurringRules = async (advocateId: string) => {
 
   try {
-    const response = await axiosInstance.get(`/recurring`, {
-      params: { advocateId },
-      headers: { Authorization: `Bearer ${token}` },
+    const response = await axiosInstance.get(API_ENDPOINTS.BOOKING.RECURRING_GET, {
+      params: { advocateId }
     });
     return response;
   } catch (error) {
@@ -35,11 +27,10 @@ export const getRecurringRules = async (advocateId: string, token: string | null
 
 }
 
-export const addRecurringRule = async (advocateId: string, rule: Omit<RecurringRule, 'id'>, token: string | null) => {
+export const addRecurringRule = async (advocateId: string, rule: Omit<RecurringRule, 'id'>) => {
   const response = await axiosInstance.post(
-    `/recurring`,
+    API_ENDPOINTS.BOOKING.RECURRING_POST,
     { advocateId, ...rule },
-    { headers: { Authorization: `Bearer ${token}` } }
   );
   return response;
 };
@@ -47,21 +38,18 @@ export const addRecurringRule = async (advocateId: string, rule: Omit<RecurringR
 export const getSlots = async (
   advocateId: string,
   month: string,
-  token: string | null
 ) => {
-  const response = await axiosInstance.get(`/slot`, {
-    params: { advocateId, month },
-    headers: { Authorization: `Bearer ${token}` },
+  const response = await axiosInstance.get(API_ENDPOINTS.BOOKING.SLOT_GET, {
+    params: { advocateId, month }
   });
   return response;
 };
 
-export const addCustomSlot = async (advocateId: string, slot: { date: string; time: string }, token: string | null) => {
+export const addCustomSlot = async (advocateId: string, slot: { date: string; time: string }) => {
   try {
     const response = await axiosInstance.post(
-      `/slot`,
+      API_ENDPOINTS.BOOKING.SLOT_POST,
       { advocateId, ...slot },
-      { headers: { Authorization: `Bearer ${token}` } }
     );
     return response;
   } catch (error) {
@@ -85,34 +73,37 @@ export const bookSlot = async (
   slotId: string,
   userId: string,
   notes: string,
-  token: string | null
 ) => {
   const response = await axiosInstance.post(
-    `/booking`,
+    API_ENDPOINTS.BOOKING.BOOKING_POST,
     { advocateId, slotId, userId, notes },
-    { headers: { Authorization: `Bearer ${token}` } }
   );
   return response;
 };
 
-export const getBookings = async (userId: string, token: string | null) => {
-  const response = await axiosInstance.get(`/booking`, {
+export const getBookings = async (userId: string) => {
+  const response = await axiosInstance.get(API_ENDPOINTS.BOOKING.BOOKING_GET, {
     params: { userId },
-    headers: { Authorization: `Bearer ${token}` }
   }
   );
   return response;
 };
 
-export const postPoneBooking = async (date: string, time: string, reason: string, bookId: string, token: string | null) => {
+export const getAdvocateBookings = async (userId: string) => {
+  const response = await axiosInstance.get(API_ENDPOINTS.BOOKING.ADVOCATE_BOOKING_GET, {
+    params: { userId },
+  }
+  );
+  return response;
+};
+
+export const postPoneBooking = async (date: string, time: string, reason: string, bookId: string) => {
   try {
-    const response = await axiosInstance.put(`/booking/postpone`, {
+    const response = await axiosInstance.put(API_ENDPOINTS.BOOKING.BOOKING_POSTPONE, {
       bookId,
       date,
       time,
       reason
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
     })
     return response
   } catch (error) {
@@ -130,12 +121,19 @@ export const postPoneBooking = async (date: string, time: string, reason: string
   }
 }
 
-export const createPayment = async (advocateId: string | undefined, selectedSlotId: string | undefined, token : string | null) => {
+export const createPayment = async (
+  advocateId: string | undefined,
+  selectedSlotId: string | undefined,
+  paymentMethod: "wallet" | "stripe" | "",
+  bookingType: "followup" | "new" | "",
+  caseId: string) => {
   try {
-    const response = await axiosInstance.post('/payment/create-checkout-session', { advocateId, selectedSlotId }, {
-      headers : {
-        Authorization : `Bearer ${token}`
-      }
+    const response = await axiosInstance.post(API_ENDPOINTS.BOOKING.PAYMENT_CHECKOUT, {
+      advocateId,
+      selectedSlotId,
+      paymentMethod,
+      bookingType,
+      caseId
     })
     return response
   } catch (error) {
@@ -153,10 +151,10 @@ export const createPayment = async (advocateId: string | undefined, selectedSlot
   }
 }
 
-export const verifyRoomBooking = async (roomId: string, token: string | null) => {
+export const verifyRoomBooking = async (roomId: string) => {
   try {
-    const response = await axiosInstance.get(`/booking/verify/${roomId}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const response = await axiosInstance.get(API_ENDPOINTS.BOOKING.BOOKING_VERIFY, {
+      params: { roomId }
     });
     return response;
   } catch (error) {
@@ -175,15 +173,12 @@ export const verifyRoomBooking = async (roomId: string, token: string | null) =>
 };
 
 
-export const getBook = async (advocateId: string | null, userId: string | null, token: string | null) => {
+export const getBook = async (advocateId: string | null, userId: string | null) => {
   try {
-    const response = await axiosInstance.get('/booking/getBook', {
+    const response = await axiosInstance.get(API_ENDPOINTS.BOOKING.BOOKING_GETBOOK, {
       params: {
         advocateId,
         userId,
-      },
-      headers: {
-        Authorization: `Bearer ${token}`
       }
     });
     return response;
@@ -203,15 +198,15 @@ export const getBook = async (advocateId: string | null, userId: string | null, 
 };
 
 
-export const postponeSlot = async (date: string, time: string, reason: string | undefined, slotId: string, token: string | null) => {
+export const postponeSlot = async (date: string, time: string, reason: string | undefined, slotId: string) => {
   try {
-    const response = await axiosInstance.put(`/slot/${slotId}`, {
-      date,
-      time,
-      reason
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    const response = await axiosInstance.put(
+      API_ENDPOINTS.BOOKING.SLOT_PUT,
+      { date, time, reason },
+      {
+        params: { slotId }
+      }
+    );
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -228,12 +223,29 @@ export const postponeSlot = async (date: string, time: string, reason: string | 
   }
 }
 
-export const GetHostory = async (token: string | null) => {
+export const GetHostory = async () => {
   try {
-    const response = await axiosInstance.get('/booking/callHistory', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+    const response = await axiosInstance.get(API_ENDPOINTS.BOOKING.HISTORY)
+    return response
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Axios error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+      throw error;
+    } else {
+      console.error("Unknown error:", error);
+      throw error;
+    }
+  }
+}
+
+export const cancelBooking = async (bookingId: string) => {
+  try {
+    const response = await axiosInstance.put(API_ENDPOINTS.BOOKING.BOOKING_CANCEL, {}, {
+      params: { bookingId }
     })
     return response
   } catch (error) {

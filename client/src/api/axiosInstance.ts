@@ -7,17 +7,30 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const state = store.getState();
+    const token = state.auth.token;
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 let isRefreshing = false;
 let failedQueue: Array<(token: string) => void> = [];
 
 axiosInstance.interceptors.response.use(
   (response) => {
-    const fresh = response.headers['x-access-token'];
+    const fresh = response.headers["x-access-token"];
     if (fresh) {
       store.dispatch(setToken(fresh));
-      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${fresh}`;
     }
-    return response;
+    return response
   },
 
   async (error) => {

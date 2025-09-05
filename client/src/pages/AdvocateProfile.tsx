@@ -86,7 +86,7 @@ const AdvocateProfile = () => {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [savedAdvocates, setSavedAdvocates] = useState<string[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const { token, user } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const isSaved = id ? savedAdvocates.includes(id) : false;
 
@@ -96,7 +96,7 @@ const AdvocateProfile = () => {
 
       setIsLoading(true);
       try {
-        const response = await findUser(id, token);
+        const response = await findUser(id);
         setAdvocate(response.data.user);
         // setSimilarAdvocates(mockSimilar);
       } catch (error) {
@@ -107,14 +107,14 @@ const AdvocateProfile = () => {
     };
 
     fetchAdvocate();
-  }, [id, token]);
+  }, [id]);
 
   useEffect(() => {
     const fetchReviews = async (advocateId: string | undefined) => {
       if (!advocateId) return;
 
       try {
-        const response = await findReviews(advocateId, token);
+        const response = await findReviews(advocateId);
         if (response?.status === 200) {
           setReviews(response.data.reviews);
         }
@@ -139,7 +139,7 @@ const AdvocateProfile = () => {
     }
 
     try {
-      const conversation = await CreateConversation(id, "advocate", token);
+      const conversation = await CreateConversation(id, "advocate");
       navigate(
         `/chat?conversationId=${conversation?.data._id}&advocateId=${conversation?.data.participants[1].userId}`
       );
@@ -184,7 +184,7 @@ const AdvocateProfile = () => {
     async (advocateId: string) => {
       try {
         // Call API
-        const response = await toggleSaveAdvocate(advocateId, token);
+        const response = await toggleSaveAdvocate(advocateId);
 
         if (response?.data?.success) {
           setSavedAdvocates((prev) => {
@@ -216,7 +216,7 @@ const AdvocateProfile = () => {
   useEffect(() => {
     const getSavedAdvocates = async () => {
       try {
-        const response = await GetSavedAdvocates(token);
+        const response = await GetSavedAdvocates();
         const saved = response?.data?.advocates || [];
         const savedIds = saved.map((adv: Ad) => adv._id || adv.id);
 

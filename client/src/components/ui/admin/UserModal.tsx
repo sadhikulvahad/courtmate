@@ -11,7 +11,7 @@ interface UserModalProps {
   user: UserData;
   isOpen: boolean;
   onClose: () => void;
-  token: string | null;
+  token?: string | null;
 }
 
 const UserModal: React.FC<UserModalProps> = ({
@@ -33,7 +33,7 @@ const UserModal: React.FC<UserModalProps> = ({
 
     setIsLoading(true);
     try {
-      const response = await BlockUser(id, token);
+      const response = await BlockUser(id);
       if (response?.data.success) {
         setLocalUser((prev) => ({
           ...prev,
@@ -115,29 +115,31 @@ const UserModal: React.FC<UserModalProps> = ({
                 </div>
               </div>
             </div>
-            <div className="flex justify-end bg-gray-50">
-              <div className="flex justify-end gap-3 p-6 bg-gray-50 rounded-b-lg">
-                <Button
-                  label={localUser.isBlocked ? "Unblock" : "Block"}
-                  className={`px-4 py-2 ${
-                    localUser.isBlocked
-                      ? "bg-green-600 hover:bg-green-700"
-                      : "bg-red-600 hover:bg-red-700"
-                  } text-white rounded`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmationModal(true);
-                  }}
-                  disabled={isLoading}
-                />
-                <Button
-                  onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                  label="Close"
-                  variant="secondary"
-                />
+            {user.role === 'admin' && (
+              <div className="flex justify-end bg-gray-50">
+                <div className="flex justify-end gap-3 p-6 bg-gray-50 rounded-b-lg">
+                  <Button
+                    label={localUser.isBlocked ? "Unblock" : "Block"}
+                    className={`px-4 py-2 ${
+                      localUser.isBlocked
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-red-600 hover:bg-red-700"
+                    } text-white rounded`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmationModal(true);
+                    }}
+                    disabled={isLoading}
+                  />
+                  <Button
+                    onClick={onClose}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    label="Close"
+                    variant="secondary"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </Dialog.Panel>
         </div>
       </Dialog>

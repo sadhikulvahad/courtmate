@@ -23,16 +23,6 @@ const Header: React.FC<HeaderProps> = ({
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-32">
-          {/* <div className="relative w-full md:w-auto md:min-w-[300px]">
-            <input
-              type="text"
-              placeholder="Search for Your Advocate"
-              value={searchTerm}
-              onChange={(e) => onSearch(e.target.value)}
-              className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          </div> */}
 
           <SearchBar searchTerm={searchTerm} setSearchTerm={onSearch} />
           

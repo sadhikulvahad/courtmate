@@ -27,12 +27,12 @@ const AdminDashboard = () => {
 
   const revenue = (adminDashboard?.totalBooking || 0) * 100;
 
-  const { token, user } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await getAdminDashboardData(token, user?.id);
+        const response = await getAdminDashboardData(user?.id);
         if (response?.status === 201) {
           setAdminDashboard(response.data.dashboardData);
         }

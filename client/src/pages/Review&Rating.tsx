@@ -11,7 +11,7 @@ const AdvocateReviewsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [ratingFilter, setRatingFilter] = useState("all");
 
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   // Calculate overall statistics for summary section
   const totalReviews = reviews.length;
@@ -30,7 +30,7 @@ const AdvocateReviewsPage = () => {
 
   useEffect(() => {
     const fetchReviews = async () => {
-      const response = await findReviews(user?.id, token);
+      const response = await findReviews(user?.id,);
       setReviews(response?.data.reviews);
     };
     fetchReviews();

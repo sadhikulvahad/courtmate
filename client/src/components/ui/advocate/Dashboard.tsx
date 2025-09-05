@@ -52,7 +52,7 @@ const Dashboard = () => {
 
     const getDetails = async () => {
       try {
-        const response = await completeProfile(user?.id, token);
+        const response = await completeProfile(user?.id);
         if (response?.status === 200) {
           if (!response?.data?.user?.barCouncilRegisterNumber) {
             setIsModal(true);
@@ -67,7 +67,7 @@ const Dashboard = () => {
       }
     };
     getDetails();
-  }, [isAuthenticated, navigate, token, user]);
+  }, [isAuthenticated, navigate, user]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -166,7 +166,7 @@ const Dashboard = () => {
     form.append("onlineConsultation", String(formData.onlineConsultation));
 
     try {
-      const response = await profileUpdate(form, token);
+      const response = await profileUpdate(form);
       if (response?.status === 200) {
         setIsModal(false);
         setSubmitModal(true);

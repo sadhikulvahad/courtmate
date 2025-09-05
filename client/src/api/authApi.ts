@@ -1,15 +1,12 @@
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
+import { API_ENDPOINTS } from "./Routes/endpoint";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const signupUser = async (userData: object) => {
   try {
-    const response = await axios.post(`${API_URL}/auth/signup`, userData, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axios.post(API_ENDPOINTS.AUTH.SIGNUPUSER, userData);
     return response
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -25,11 +22,8 @@ export const signupUser = async (userData: object) => {
 
 export const loginUser = async (credentials: { email: string; password: string }) => {
   try {
-    const response = await axios.post(`${API_URL}/auth/login`, credentials, {
+    const response = await axios.post(API_ENDPOINTS.AUTH.LOGINUSER, credentials, {
       withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
     return response
   } catch (error: unknown) {
@@ -43,8 +37,9 @@ export const loginUser = async (credentials: { email: string; password: string }
 
 export const verifyEmail = async (token: string) => {
   try {
-    const response = await axios.post(`${API_URL}/auth/verify-email?token=${token}`);
-    return response;
+    const response = await axios.post(API_ENDPOINTS.AUTH.VERIFYEMAIL, null, {
+      params: { token }
+    }); return response;
   } catch (error) {
     console.error("Error verifying email:", error);
     throw error;
@@ -57,7 +52,7 @@ export const initiateGoogleAuth = () => {
 
 export const sendForgotPasswordMail = async (email: string) => {
   try {
-    const response = await axios.post(`${API_URL}/auth/forgotPassword-Mail`, { email })
+    const response = await axios.post(API_ENDPOINTS.AUTH.SENDFORGOTPASSWORDMAIL, { email })
     return response
   } catch (error) {
     console.error('Error from sendForforgotPasswordMail API', error)
@@ -67,7 +62,7 @@ export const sendForgotPasswordMail = async (email: string) => {
 
 export const forgetResetPassword = async (password: string, email: string) => {
   try {
-    const response = await axios.put(`${API_URL}/auth/forgot-ResetPassword`, { password, email })
+    const response = await axios.put(API_ENDPOINTS.AUTH.FORGOTRESETPASSWORD, { password, email })
     return response
   } catch (error) {
     console.error("Error from forgetResetPassword api", error)
@@ -77,11 +72,7 @@ export const forgetResetPassword = async (password: string, email: string) => {
 
 export const logoutApi = async (token: string | null) => {
   try {
-    const response = await axiosInstance.post('auth/logout', { token }, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+    const response = await axiosInstance.post(API_ENDPOINTS.AUTH.LOGOUTAPI, { token })
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {

@@ -1,12 +1,11 @@
 import axios, { AxiosResponse } from "axios"
 import axiosInstance from "../axiosInstance";
+import { API_ENDPOINTS } from "../Routes/endpoint";
 
-export const completeProfile = async (id: string | undefined, token: string | null) => {
+export const completeProfile = async (id: string | undefined) => {
     try {
-        const response = await axiosInstance.get(`/advProfile/details`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }, params: {
+        const response = await axiosInstance.get(API_ENDPOINTS.ADVOCATE.COMPLETE_PROFILE_DETAILS, {
+            params: {
                 id
             }
         })
@@ -22,15 +21,9 @@ export const completeProfile = async (id: string | undefined, token: string | nu
     }
 }
 
-export const profileUpdate = async (form: FormData, token: string): Promise<AxiosResponse | null> => {
+export const profileUpdate = async (form: FormData): Promise<AxiosResponse | null> => {
     try {
-        const response = await axiosInstance.put(`/advProfile/updateAdvProfile`, form,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
-        )
+        const response = await axiosInstance.put(API_ENDPOINTS.ADVOCATE.UPDATE_PROFILE, form)
         return response
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -43,12 +36,10 @@ export const profileUpdate = async (form: FormData, token: string): Promise<Axio
     }
 }
 
-export const findReviews = async (advocateId: string | undefined, token: string | null) => {
+export const findReviews = async (advocateId: string | undefined) => {
     try {
-        const response = await axiosInstance.get('/review', {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }, params: { advocateId }
+        const response = await axiosInstance.get(API_ENDPOINTS.REVIEW.REVIEW_GET, {
+            params: { advocateId }
         })
         return response
     } catch (error) {
@@ -72,20 +63,15 @@ export const createReview = async ({
     userId: string | undefined
     review: string;
     rating: number;
-}, token: string | null) => {
+}) => {
     try {
-        const response = await axiosInstance.post("/review", {
+        const response = await axiosInstance.post(API_ENDPOINTS.REVIEW.REVIEW_POST, {
             advocateId,
             userId,
             review: review,
             rating: rating,
 
-        },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+        });
         return response
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -107,16 +93,12 @@ export const updateReview = async ({
     reviewId: string | number
     review: string
     rating: number
-}, token: string | null) => {
+}) => {
     try {
-        const response = await axiosInstance.put("/review", {
+        const response = await axiosInstance.put(API_ENDPOINTS.REVIEW.REVIEW_PUT, {
             reviewId,
             review: review,
             rating: rating,
-        }, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
         });
         return response
     } catch (error) {
@@ -130,12 +112,10 @@ export const updateReview = async ({
     }
 }
 
-export const deleteReview = async (reviewId: string | undefined, token: string | null) => {
+export const deleteReview = async (reviewId: string | undefined) => {
     try {
-        const response = await axiosInstance.delete(`/review/${reviewId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+        const response = await axiosInstance.delete(API_ENDPOINTS.REVIEW.REVIEW_DELETE, {
+            params: { reviewId }
         });
         return response;
     } catch (error) {

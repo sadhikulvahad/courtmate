@@ -11,6 +11,7 @@ import type {
   NotificationTabs,
   NotificationType,
 } from "@/types/Types";
+import { useDebounce } from "@/utils/debouncing";
 import {
   faTriangleExclamation,
   faBell,
@@ -107,26 +108,27 @@ const NotificationItem = ({
 
 const Notification = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
   const [activeTab, setActiveTab] = useState<NotificationTabs>("all");
   const [activeSubTab, setActiveSubTab] = useState<NotificationType>("All");
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   useEffect(() => {
     const fetchNotification = async () => {
-      const response = await getAllNotification(token, user?.id);
+      const response = await getAllNotification(user?.id);
       if (response?.data.success) {
         setNotifications(response.data.notifications);
       }
     };
     fetchNotification();
-  }, [token, user?.id]);
+  }, [user?.id]);
 
   const filteredNotifications = notifications.filter(
     (notification: Notification) => {
       const matchesSearch = notification.message
         ?.toLowerCase()
-        ?.includes(searchTerm?.toLowerCase());
+        ?.includes(debouncedSearchTerm?.toLowerCase());
 
       // Filter by main tab
       const matchesMainTab =
@@ -149,7 +151,7 @@ const Notification = () => {
     if (notification[0].read) {
       return;
     } else {
-      const response = await markAsReadNotificaiton(token, id);
+      const response = await markAsReadNotificaiton(id);
       if (response?.data.success) {
         setNotifications(
           notifications.map((notification: Notification) =>
@@ -172,7 +174,7 @@ const Notification = () => {
     if (!notification.length) {
       return;
     } else {
-      const response = await markAllAsReadNotification(token, user?.id);
+      const response = await markAllAsReadNotification(user?.id);
       if (response?.data.success) {
         setNotifications(
           notifications.map((notification: Notification) => ({

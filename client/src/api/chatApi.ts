@@ -1,16 +1,13 @@
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
+import { API_ENDPOINTS } from "./Routes/endpoint";
 
 
-export const CreateConversation = async (participantId: string | undefined, role: string, token: string | null) => {
+export const CreateConversation = async (participantId: string | undefined, role: string) => {
     try {
-        const response = await axiosInstance.post('/conversation', {
+        const response = await axiosInstance.post(API_ENDPOINTS.CONVERSATION.CONVERSATION_POST, {
             participantId,
             role
-        }, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
         })
 
         return response
@@ -29,13 +26,9 @@ export const CreateConversation = async (participantId: string | undefined, role
     }
 }
 
-export const GetConversation = async (token: string | null) => {
+export const GetConversation = async () => {
     try {
-        const response = await axiosInstance.get('/conversation', {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
+        const response = await axiosInstance.get(API_ENDPOINTS.CONVERSATION.CONVERSATION_GET)
         return response
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -52,11 +45,11 @@ export const GetConversation = async (token: string | null) => {
     }
 }
 
-export const GetMessages = async (id: string, token: string | null) => {
+export const GetMessages = async (id: string) => {
     try {
-        const response = await axiosInstance.get(`/conversation/messages/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
+        const response = await axiosInstance.get(API_ENDPOINTS.CONVERSATION.CONVERSATION_GET_MESSAGE, {
+            params: {
+                id
             }
         })
         return response

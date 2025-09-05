@@ -91,7 +91,7 @@ const AdvocateSettings = () => {
       }
 
       try {
-        const response = await GetHostory(token);
+        const response = await GetHostory();
         if (response?.status === 200) {
           setCallHistory(response.data.data);
         } else {
@@ -118,7 +118,7 @@ const AdvocateSettings = () => {
 
       try {
         // Load current subscription
-        const subscription = await getSubscription(userId, token);
+        const subscription = await getSubscription(userId);
         if (subscription?.status === 200) {
           setCurrentSubscription(subscription.data);
         } else if (subscription?.status === 404) {
@@ -135,7 +135,7 @@ const AdvocateSettings = () => {
 
       try {
         // Load available plans
-        const plans = await getAllSubscription(token);
+        const plans = await getAllSubscription();
         if (plans?.status === 200) {
           setAvailablePlans(plans.data);
         } else {
@@ -180,7 +180,7 @@ const AdvocateSettings = () => {
         ).toISOString(),
       };
 
-      const result = await createSubscription(subscriptionData, token);
+      const result = await createSubscription(subscriptionData);
       const { url } = result.data;
 
       if (url) {
@@ -203,7 +203,7 @@ const AdvocateSettings = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = callHistory.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(callHistory.length / itemsPerPage);
-
+  console.log(currentItems);
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -507,7 +507,9 @@ const AdvocateSettings = () => {
                               })}
                             </td>
                             <td className="px-6 py-4">
-                              {booking.advocate.name} ({booking.advocate.email})
+                              {booking.advocate
+                                ? `${booking.advocate.name} - ${booking.advocate.email}`
+                                : ""}
                             </td>
                             <td className="px-6 py-4">
                               <span

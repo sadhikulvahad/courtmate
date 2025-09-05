@@ -84,7 +84,7 @@ const Chat = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { user, token, isAuthenticated } = useSelector(
+  const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.auth
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -121,7 +121,7 @@ const Chat = () => {
   const fetchConversations = useCallback(async () => {
     try {
       setIsLoading(true);
-      const convResponse = await GetConversation(token);
+      const convResponse = await GetConversation();
       setConversations(convResponse?.data || []);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -166,9 +166,9 @@ const Chat = () => {
     const fetchMessages = async () => {
       try {
         setIsLoading(true);
-        const response = await GetMessages(selectedChat, token);
+        const response = await GetMessages(selectedChat);
         setMessages(response?.data || []);
-        const getBooking = await getBook(advocateId, userId, token);
+        const getBooking = await getBook(advocateId, userId);
         setBooking(getBooking.data.booking);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -377,12 +377,7 @@ const Chat = () => {
         formData.append("file", selectedFile);
         const uploadResponse = await axiosInstance.post(
           `/chat/upload`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          formData
         );
 
         fileMeta = {
@@ -436,7 +431,6 @@ const Chat = () => {
     conversations,
     isTyping,
     selectedFile,
-    token,
   ]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

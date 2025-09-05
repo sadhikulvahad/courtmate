@@ -1,12 +1,13 @@
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
+import { API_ENDPOINTS } from "./Routes/endpoint";
 
 
-export const getAdminDashboardData = async (token: string | null, adminId: string | undefined) => {
+export const getAdminDashboardData = async (adminId: string | undefined) => {
     try {
-        const response = await axiosInstance.get(`/adminDashboard/${adminId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
+        const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.DASHBOARD, {
+            params : {
+                adminId
             }
         })
         return response

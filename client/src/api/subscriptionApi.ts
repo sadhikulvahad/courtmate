@@ -1,12 +1,13 @@
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
+import { API_ENDPOINTS } from "./Routes/endpoint";
 
 
-export const getSubscription = async (advocateId: string | undefined, token: string | null) => {
+export const getSubscription = async (advocateId: string | undefined) => {
     try {
-        const response = await axiosInstance.get(`/subscribe/${advocateId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
+        const response = await axiosInstance.get(API_ENDPOINTS.SUBSCRIPTION.SUBSCRIPTION_GET, {
+            params: {
+                advocateId
             }
         })
         return response
@@ -25,13 +26,9 @@ export const getSubscription = async (advocateId: string | undefined, token: str
     }
 }
 
-export const getAllSubscription = async (token: string | null) => {
+export const getAllSubscription = async () => {
     try {
-        const response = await axiosInstance.get(`/subscribe/getAll`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
+        const response = await axiosInstance.get(API_ENDPOINTS.SUBSCRIPTION.SUBSCRIPTION_GET_ALL)
         return response
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -54,14 +51,9 @@ export const createSubscription = async (subscriptionData: {
     price: number;
     billingCycle: string;
     nextBillingDate: string;
-}, token: string | null) => {
+}) => {
     try {
-        if (!token) throw new Error("Missing token");
-        const response = await axiosInstance.post(`/payment/create-subscription-checkout`, subscriptionData, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await axiosInstance.post(API_ENDPOINTS.SUBSCRIPTION.SUBSCRIPTION_POST, subscriptionData);
         return response;
     } catch (error) {
         if (axios.isAxiosError(error)) {

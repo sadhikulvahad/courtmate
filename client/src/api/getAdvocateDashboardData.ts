@@ -1,13 +1,12 @@
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
+import { API_ENDPOINTS } from "./Routes/endpoint";
 
 
-export const getAdvocateDashboardData = async (token: string | null, advocateId: string | undefined) => {
+export const getAdvocateDashboardData = async (advocateId: string | undefined) => {
     try {
-        const response = await axiosInstance.get(`/advocateDashboard/${advocateId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+        const response = await axiosInstance.get(API_ENDPOINTS.ADVOCATE.DASHBOARD, {
+            params : {advocateId}
         })
         return response
     } catch (error) {

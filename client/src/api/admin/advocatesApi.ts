@@ -3,6 +3,7 @@
 
 import axios from "axios"
 import axiosInstance from "../axiosInstance";
+import { API_ENDPOINTS } from "../Routes/endpoint";
 
 export const getAllAdminAdvocates = async ({
     page,
@@ -14,7 +15,7 @@ export const getAllAdminAdvocates = async ({
     limit: number;
     searchTerm?: string;
     activeTab?: string;
-}, token: string | null) => {
+}) => {
     try {
         const params = {
             page,
@@ -23,11 +24,8 @@ export const getAllAdminAdvocates = async ({
             ...(activeTab ? { activeTab } : {}),
         };
 
-        const response = await axiosInstance.get("/admin/advocate/getAdvocates", {
+        const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.GET_ADMIN_ADVOCATES, {
             params,
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
         });
         return response;
     } catch (error) {
@@ -47,13 +45,9 @@ export const getAllAdminAdvocates = async ({
 
 
 
-export const SendVerificaton = async (status: string, token: string | null, id: string) => {
+export const SendVerificaton = async (status: string, id: string) => {
     try {
-        const response = await axiosInstance.put('/admin/advocate/statusUpdate', { status: status, id }, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
+        const response = await axiosInstance.put(API_ENDPOINTS.ADMIN.SEND_VERIFICATION, { status: status, id })
         return response
     } catch (error) {
         if (axios.isAxiosError(error)) {

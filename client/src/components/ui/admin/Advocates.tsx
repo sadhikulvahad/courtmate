@@ -5,12 +5,12 @@ import { toast } from "sonner";
 import { AdvocateProps } from "@/types/Types";
 import SearchBar from "@/components/SearchBar";
 import { getAllAdminAdvocates } from "@/api/admin/advocatesApi";
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
+import { useDebounce } from "@/utils/debouncing";
 
 const Advocates: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("all");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [advocates, setAdvocates] = useState<AdvocateProps[]>([]);
   const [selectedAdvocate, setSelectedAdvocate] =
     useState<AdvocateProps | null>(null);
@@ -21,8 +21,6 @@ const Advocates: React.FC = () => {
     itemsPerPage: 10,
   });
 
-  const { token } = useSelector((state: RootState) => state.auth);
-
   useEffect(() => {
     const fetchAdvocates = async (page: number = 1) => {
       try {
@@ -30,10 +28,9 @@ const Advocates: React.FC = () => {
           {
             page: page,
             limit: 10,
-            searchTerm: searchTerm,
+            searchTerm: debouncedSearchTerm,
             activeTab: selectedTab,
           },
-          token
         );
 
         if (response?.status === 200) {
@@ -53,7 +50,7 @@ const Advocates: React.FC = () => {
       }
     };
     fetchAdvocates(pagination.currentPage);
-  }, [searchTerm, selectedTab, pagination.currentPage]);
+  }, [debouncedSearchTerm, selectedTab, pagination.currentPage]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {

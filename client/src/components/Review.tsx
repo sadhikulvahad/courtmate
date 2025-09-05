@@ -8,8 +8,6 @@ import {
 } from "@/api/advocate/profileAPI";
 import { toast } from "sonner";
 import ConfirmationModal from "./ConfirmationModal";
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
 
 interface MyComponentProps {
   advocateId: string | undefined;
@@ -429,7 +427,6 @@ const RatingAndReview = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const { token } = useSelector((state: RootState) => state.auth);
 
   // Calculate rating statistics
   const totalReviews = reviews.length;
@@ -460,7 +457,6 @@ const RatingAndReview = ({
             review: reviewData.review,
             rating: reviewData.rating,
           },
-          token
         );
 
         if (response?.status === 200) {
@@ -489,7 +485,6 @@ const RatingAndReview = ({
             review: reviewData.review,
             rating: reviewData.rating,
           },
-          token
         );
 
         if (response?.status === 201) {
@@ -507,7 +502,7 @@ const RatingAndReview = ({
 
   const handleDeleteReview = async (reviewId: string) => {
     try {
-      const response = await deleteReview(reviewId, token);
+      const response = await deleteReview(reviewId);
 
       if (response?.status === 200) {
         toast.success("Review deleted successfully");

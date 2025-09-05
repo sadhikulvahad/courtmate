@@ -25,7 +25,7 @@ const VideoCallWrapper = () => {
 
     const verifyBooking = async () => {
       try {
-        const response = await verifyRoomBooking(roomId!, token);
+        const response = await verifyRoomBooking(roomId!);
         setIsAuthorized(response?.data?.isAuthorized || false);
 
         if (!response?.data?.isAuthorized) {

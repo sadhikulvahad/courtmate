@@ -104,7 +104,7 @@ const MyActivityPage = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {call.advocate.name}
+                            {call.advocate?.name}
                           </h3>
                         </div>
 

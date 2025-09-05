@@ -1,12 +1,10 @@
 import axios from "axios";
 import axiosInstance from "../axiosInstance";
+import { API_ENDPOINTS } from "../Routes/endpoint";
  
-export const getAllUsers = async (token: string | null) => {
+export const getAllUsers = async () => {
     try {
-        const response = await axiosInstance.get(`/admin/user/getUsers`,{
-            headers:{
-                Authorization :`Bearer ${token}`
-            },
+        const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.USER_API,{
             withCredentials : true
         })
         return response

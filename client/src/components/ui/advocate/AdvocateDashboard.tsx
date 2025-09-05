@@ -29,12 +29,12 @@ import {
 
 const AdvocateDashboard: React.FC = () => {
   const [dashBoardData, setDashboardData] = useState<DashboardData>();
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await getAdvocateDashboardData(token, user?.id);
+        const response = await getAdvocateDashboardData(user?.id);
         if (response?.status === 201) {
           setDashboardData(response.data.dashboardData);
         }
@@ -344,17 +344,15 @@ const AdvocateDashboard: React.FC = () => {
                             case_.priority
                           )}`}
                           style={{ backgroundColor: "currentColor" }}
-                        > </div>
+                        >
+                          {" "}
+                        </div>
                         <div>
                           <h3 className="font-medium text-gray-900">
                             {case_.title}
                           </h3>
-                          <p>
-                            {case_.caseType} case
-                          </p>
-                          <p>
-                            {case_.description}
-                          </p>
+                          <p>{case_.caseType} case</p>
+                          <p>{case_.description}</p>
                         </div>
                       </div>
                       <div className="text-right">

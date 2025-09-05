@@ -1,25 +1,19 @@
 import axios from "axios";
 import axiosInstance from "../axiosInstance"
+import { API_ENDPOINTS } from "../Routes/endpoint";
 
 
-export const findUser = async (id: string | null, token: string | null) => {
-  const response = await axiosInstance.get(`/advProfile/getUser/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+export const findUser = async (id: string | null) => {
+  const response = await axiosInstance.get(API_ENDPOINTS.USER.FIND_USER, {
+    params: { id }
   });
   return response;
 };
 
-export const updateUser = async (userData: FormData, token: string | null) => {
+export const updateUser = async (userData: FormData) => {
   try {
 
-    const response = await axiosInstance.put(`/advProfile/updateAdvocate`, userData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`
-      }
-    })
+    const response = await axiosInstance.put(API_ENDPOINTS.USER.UPDATE_USER, userData)
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -34,26 +28,18 @@ export const updateUser = async (userData: FormData, token: string | null) => {
 
 
 
-export const BlockUser = async (id: string, token: string | null) => {
+export const BlockUser = async (id: string) => {
   try {
-    const response = await axiosInstance.put('/user/toggleUser', { id: id }, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+    const response = await axiosInstance.put(API_ENDPOINTS.USER.TOGGLE_USER, { id: id })
     return response
   } catch (error) {
     console.error(error)
   }
 }
 
-export const ResetPassword = async (id: string, token: string | null, oldPassword: string, newPassword: string) => {
+export const ResetPassword = async (id: string, oldPassword: string, newPassword: string) => {
   try {
-    const response = await axiosInstance.put('user/resetPassword', { id: id, oldPassword: oldPassword, newPassword: newPassword }, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+    const response = await axiosInstance.put(API_ENDPOINTS.USER.RESET_PASSWORD, { id: id, oldPassword: oldPassword, newPassword: newPassword })
     return response
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -66,12 +52,10 @@ export const ResetPassword = async (id: string, token: string | null, oldPasswor
   }
 }
 
-export const toggleSaveAdvocate = async (advocateId: string, token: string | null) => {
+export const toggleSaveAdvocate = async (advocateId: string) => {
   try {
-    const response = await axiosInstance.put(`/user/toggleSave/${advocateId}`, {}, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+    const response = await axiosInstance.put(API_ENDPOINTS.USER.TOGGLE_SAVE_ADVOCATE, {}, {
+      params : {advocateId}
     })
     return response
   } catch (error) {
@@ -85,13 +69,9 @@ export const toggleSaveAdvocate = async (advocateId: string, token: string | nul
   }
 }
 
-export const GetSavedAdvocates = async (token: string | null) => {
+export const GetSavedAdvocates = async () => {
   try {
-    const response = await axiosInstance.get('/user/savedAdvocates', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+    const response = await axiosInstance.get(API_ENDPOINTS.USER.GET_SAVED_ADVOCATES)
     return response
   } catch (error) {
     if (axios.isAxiosError(error)) {

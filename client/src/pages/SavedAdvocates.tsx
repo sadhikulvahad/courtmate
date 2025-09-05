@@ -5,14 +5,11 @@ import { useEffect, useState, useCallback } from "react";
 import { GetSavedAdvocates, toggleSaveAdvocate } from "@/api/user/userApi";
 import { toast } from "sonner";
 import { Advocate } from "@/types/Types";
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
 
 const SavedAdvocates = () => {
   const navigate = useNavigate();
   const [advocates, setSavedAdvocates] = useState<Advocate[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const { token } = useSelector((state: RootState) => state.auth);
   const pageSize = 6; // Number of advocates per page
 
   // Calculate total pages and paginated data
@@ -25,7 +22,7 @@ const SavedAdvocates = () => {
   useEffect(() => {
     const getSavedAdvocates = async () => {
       try {
-        const response = await GetSavedAdvocates(token);
+        const response = await GetSavedAdvocates();
         const saved = response?.data?.advocates || [];
         setSavedAdvocates(saved);
       } catch (error) {
@@ -40,7 +37,7 @@ const SavedAdvocates = () => {
   const toggleSaved = useCallback(
     async (advocateId: string) => {
       try {
-        const response = await toggleSaveAdvocate(advocateId, token);
+        const response = await toggleSaveAdvocate(advocateId);
         if (response?.data?.success) {
           const isCurrentlySaved = advocates.some(
             (adv) => adv.id === advocateId

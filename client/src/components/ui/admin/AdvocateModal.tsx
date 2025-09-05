@@ -52,7 +52,7 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
     id: string
   ) => {
     setIsLoading(true);
-    const response = await SendVerificaton(status, token, id);
+    const response = await SendVerificaton(status, id);
     if (response?.status === 200) {
       setLocalAdvocate((prev) =>
         prev ? { ...prev, isAdminVerified: status } : prev
@@ -74,7 +74,7 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
     setIsLoading(true); // Show loading indicator
 
     try {
-      const response = await BlockUser(id, token);
+      const response = await BlockUser(id);
 
       if (response?.data.success) {
         // Update the local state

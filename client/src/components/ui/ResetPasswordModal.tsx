@@ -7,14 +7,12 @@ import { AdvocateProps } from "@/types/Types";
 interface ResetPasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  token: string | null;
   user: Partial<AdvocateProps> | null;
 }
 
 const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
   isOpen,
   onClose,
-  token,
   user,
 }) => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -49,7 +47,6 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
     try {
       const response = await ResetPassword(
         user.id,
-        token,
         currentPassword,
         newPassword
       );
