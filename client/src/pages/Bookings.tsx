@@ -19,11 +19,18 @@ import { toast } from "sonner";
 import axios from "axios";
 import { RootState } from "@/redux/store";
 import { Booking, CalendarDate, Slot } from "@/types/Types";
-import { getBookings, postPoneBooking, getSlots } from "@/api/booking";
+import {
+  getBookings,
+  postPoneBooking,
+  getSlots,
+  getAdvocateBookings,
+  cancelBooking,
+} from "@/api/booking";
 import PostponeDialog from "@/components/Calendar/PostponeDialog";
 import UserBookingView from "@/components/Calendar/UserBookingView";
 import Loader from "@/components/ui/Loading";
 import NavBar from "@/components/ui/NavBar";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 const predefinedSlots = [
   { id: 1, time: "09:00", label: "9:00 AM" },
@@ -65,6 +72,8 @@ const Bookings = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [availableSlots, setAvailableSlots] = useState<Slot[]>([]);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [cancelConfirmationModal, setCancelConfirmationModal] = useState(false);
+  const [cancelBookId, setCancelBookId] = useState("");
   const navigate = useNavigate();
   const { user, token } = useSelector((state: RootState) => state.auth);
   const isAdvocate = user?.role === "advocate";
@@ -158,7 +167,12 @@ const Bookings = () => {
       setIsLoading(true);
       try {
         if (user?.id) {
-          const bookings = await getBookings(user.id, token);
+          let bookings;
+          if (user.role === "advocate") {
+            bookings = await getAdvocateBookings(user.id);
+          } else {
+            bookings = await getBookings(user.id);
+          }
           setBookings(bookings.data.bookings);
         }
       } catch (error) {
@@ -170,13 +184,12 @@ const Bookings = () => {
     };
 
     fetchBookings();
-  }, [user?.id, token]);
-
+  }, [user, token]);
   useEffect(() => {
     const fetchSlotsForBooking = async () => {
       if (!showPostponeDialog || !selectedBooking) return;
       try {
-        const advocateId = selectedBooking?.advocate.id; // Assuming Booking type has advocateId
+        const advocateId = selectedBooking?.advocateId;
         if (!advocateId) {
           toast.error("No advocate associated with this booking");
           return;
@@ -185,8 +198,7 @@ const Bookings = () => {
         const monthStart = startOfMonth(currentMonth);
         const slots = await getSlots(
           advocateId,
-          format(monthStart, "yyyy-MM-dd"),
-          token
+          format(monthStart, "yyyy-MM-dd")
         );
 
         const combinedSlots = [...slots.data]
@@ -233,7 +245,7 @@ const Bookings = () => {
     }
     setCurrentMonth(newMonth);
     try {
-      const advocateId = selectedBooking?.advocate.id;
+      const advocateId = selectedBooking?.advocateId;
       if (!advocateId) {
         toast.error("No advocate associated with this booking");
         return;
@@ -241,8 +253,7 @@ const Bookings = () => {
       const monthStart = startOfMonth(newMonth);
       const slots = await getSlots(
         advocateId,
-        format(monthStart, "yyyy-MM-dd"),
-        token
+        format(monthStart, "yyyy-MM-dd")
       );
       const combinedSlots = [...slots.data]
         .filter((slot) => {
@@ -284,6 +295,37 @@ const Bookings = () => {
     setShowPostponeDialog(true);
   };
 
+  const onCancel = (bookingId: string) => {
+    setCancelBookId(bookingId);
+    setCancelConfirmationModal(true);
+  };
+
+  const handleCancelBooking = async () => {
+    try {
+      await cancelBooking(cancelBookId);
+      setBookings((prevBookings) =>
+        prevBookings
+          .map((booking) =>
+            booking.id === cancelBookId
+              ? { ...booking, status: "cancelled" as Booking["status"] }
+              : booking
+          )
+          .filter((booking) => booking.status !== "cancelled")
+      );
+      toast.success("Booking cancelled successfully!");
+    } catch (error) {
+      console.error("Error in handleCancelBooking:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(
+          error.response.data.error ||
+            "Failed to cancel booking. Please try again."
+        );
+      } else {
+        toast.error("Failed to cancel booking. Please try again.");
+      }
+    }
+  };
+
   const handlePostponeConfirm = async (
     date: string,
     time: string,
@@ -313,8 +355,7 @@ const Bookings = () => {
         date,
         time,
         reason!,
-        selectedBooking.id,
-        token
+        selectedBooking.id
       );
 
       if (response.status === 200) {
@@ -351,7 +392,7 @@ const Bookings = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <NavBar />
+        {user?.role === "user" && <NavBar />}
         <Loader />
       </div>
     );
@@ -359,7 +400,7 @@ const Bookings = () => {
 
   return (
     <div>
-      <NavBar />
+      {user?.role === "user" && <NavBar />}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-6">
           <button
@@ -373,6 +414,7 @@ const Bookings = () => {
         <UserBookingView
           bookings={bookings}
           onPostpone={handlePostpone}
+          onCancel={onCancel}
           isAdvocate={isAdvocate}
         />
       </div>
@@ -390,6 +432,18 @@ const Bookings = () => {
             onMonthChange={handleMonthChange}
           />
         </ErrorBoundary>
+      )}
+      {cancelConfirmationModal && (
+        <ConfirmationModal
+          title="Delete Review"
+          description="Are you sure you want to delete your review?"
+          isOpen={cancelConfirmationModal}
+          onConfirm={() => {
+            handleCancelBooking()
+            setCancelConfirmationModal(false)
+          }}
+          onCancel={() => setCancelConfirmationModal(false)}
+        />
       )}
     </div>
   );

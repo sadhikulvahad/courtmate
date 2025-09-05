@@ -6,8 +6,8 @@ import { Booking } from "@/types/Types";
 interface UserBookingViewProps {
   bookings: Booking[];
   onPostpone: (booking: Booking) => void;
-  // onCancel: (bookingId: string) => void;
   isAdvocate: boolean | null;
+  onCancel: (bookingId: string) => void 
 }
 
 const ITEMS_PER_PAGE = 9;
@@ -15,7 +15,7 @@ const ITEMS_PER_PAGE = 9;
 export default function UserBookingView({
   bookings,
   onPostpone,
-  // onCancel,
+  onCancel,
   isAdvocate,
 }: UserBookingViewProps) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -113,7 +113,7 @@ export default function UserBookingView({
                   key={booking.id}
                   booking={booking}
                   onPostpone={onPostpone}
-                  // onCancel={onCancel}
+                  onCancel={onCancel}
                   isAdvocate={isAdvocate}
                 />
               ))}

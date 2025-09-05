@@ -34,6 +34,7 @@ import NavBar from "@/components/ui/NavBar";
 import {
   addCustomSlot,
   addRecurringRule,
+  cancelBooking,
   createPayment,
   getBookings,
   getRecurringRules,
@@ -44,6 +45,7 @@ import {
 import { toast } from "sonner";
 import axios from "axios";
 import BookingSlotDialog from "@/components/Calendar/BookingSlotDialog";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 const predefinedSlots = [
   { id: 1, time: "09:00", label: "9:00 AM" },
@@ -60,7 +62,7 @@ const predefinedSlots = [
 const AdvocateProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const [currentView, setCurrentView] = useState<"calendar" | "bookings">(
     "calendar"
@@ -79,6 +81,13 @@ const AdvocateProfilePage = () => {
   const [calendarDates, setCalendarDates] = useState<CalendarDate[]>([]);
   const [recurringRules, setRecurringRules] = useState<RecurringRule[]>([]);
   const [bookingSlotDialog, setBookingSlotDialog] = useState(false);
+  const [cancelConfirmationModal, setCancelConfirmationModal] = useState(false);
+  const [cancelBookId, setCancelBookId] = useState("");
+  const [bookingType, setBookingType] = useState<"followup" | "new" | "">("");
+  const [paymentMethod, setPaymentMethod] = useState<"wallet" | "stripe" | "">(
+    ""
+  );
+  const [caseId, setCaseId] = useState<string>("");
 
   const isAdvocate = user && (!id || user.id === id);
 
@@ -208,17 +217,16 @@ const AdvocateProfilePage = () => {
 
       try {
         setLoading(true); // Changed from false to true
-        const data = await findUser(advocateId, token);
+        const data = await findUser(advocateId);
         setAdvocate(data.data.user);
 
-        const rules = await getRecurringRules(advocateId, token);
+        const rules = await getRecurringRules(advocateId);
         setRecurringRules(rules?.data.rules);
 
         const monthStart = startOfMonth(currentMonth);
         const slots = await getSlots(
           advocateId,
-          format(monthStart, "yyyy-MM-dd"),
-          token
+          format(monthStart, "yyyy-MM-dd")
         );
 
         // Set available slots first
@@ -229,13 +237,13 @@ const AdvocateProfilePage = () => {
 
         let bookings;
         if (userRole === "user") {
-          bookings = await getBookings(userId!, token);
+          bookings = await getBookings(userId!);
           setUserBookings(bookings?.data.bookings);
         } else if (isAdvocate) {
           const formattedMonth = `${currentMonth.getFullYear()}-${String(
             currentMonth.getMonth() + 1
           ).padStart(2, "0")}`;
-          bookings = await getSlots(user.id, formattedMonth, token);
+          bookings = await getSlots(user.id, formattedMonth);
           setUserBookings(bookings?.data);
         }
       } catch (error) {
@@ -256,7 +264,7 @@ const AdvocateProfilePage = () => {
     }
     setCurrentMonth(newMonth);
     try {
-      const advocateId = selectedBooking?.advocate.id;
+      const advocateId = selectedBooking?.advocate?.id;
       if (!advocateId) {
         toast.error("No advocate associated with this booking");
         return;
@@ -264,10 +272,9 @@ const AdvocateProfilePage = () => {
       const monthStart = startOfMonth(newMonth);
       const slots = await getSlots(
         advocateId,
-        format(monthStart, "yyyy-MM-dd"),
-        token
+        format(monthStart, "yyyy-MM-dd")
       );
-      const rules = await getRecurringRules(advocateId, token);
+      const rules = await getRecurringRules(advocateId);
       const recurringSlots = generateSlotsFromRules(
         rules?.data.rules || [],
         monthStart,
@@ -326,8 +333,7 @@ const AdvocateProfilePage = () => {
     try {
       const slots = await getSlots(
         advocateId,
-        format(startOfMonth(prevMonth), "yyyy-MM-dd"),
-        token
+        format(startOfMonth(prevMonth), "yyyy-MM-dd")
       );
       setAvailableSlots(slots.data);
       generateCalendarDates(prevMonth, slots.data);
@@ -347,8 +353,7 @@ const AdvocateProfilePage = () => {
     try {
       const slots = await getSlots(
         advocateId,
-        format(startOfMonth(nextMonth), "yyyy-MM-dd"),
-        token
+        format(startOfMonth(nextMonth), "yyyy-MM-dd")
       );
       setAvailableSlots(slots.data);
       generateCalendarDates(nextMonth, slots.data);
@@ -395,14 +400,23 @@ const AdvocateProfilePage = () => {
       const response = await createPayment(
         advocate?.id,
         selectedSlot?.id,
-        token
+        paymentMethod,
+        bookingType,
+        caseId
       );
 
-      const data = response.data.url;
-      if (data.url) {
-        window.location.href = data.url;
+      console.log(response);
+
+      if (response.data.url.success) {
+        const data = response.data.url.url;
+        console.log(data)
+        if (data) {
+          window.location.href = data;
+        } else {
+          throw new Error("Stripe session URL not found");
+        }
       } else {
-        throw new Error("Stripe session URL not found");
+        toast.error(response.data.url.error);
       }
     } catch (err) {
       console.error("Payment error:", err);
@@ -426,8 +440,9 @@ const AdvocateProfilePage = () => {
         date: format(slotDate, "yyyy-MM-dd"),
         time: timeSlot,
       };
-      console.log(slot);
-      const newSlot = await addCustomSlot(advocate!.id, slot, token);
+
+      const newSlot = await addCustomSlot(advocate!.id, slot);
+
       if (newSlot.status === 201) {
         const updatedSlots = [...availableSlots, newSlot.data];
         setAvailableSlots(updatedSlots);
@@ -474,7 +489,7 @@ const AdvocateProfilePage = () => {
     }
 
     try {
-      const newRule = await addRecurringRule(advocate!.id, rule, token);
+      const newRule = await addRecurringRule(advocate!.id, rule);
 
       if (newRule.status === 201) {
         toast.success("Created successfully");
@@ -504,6 +519,37 @@ const AdvocateProfilePage = () => {
     setShowPostponeDialog(true);
   };
 
+  const onCancel = (bookingId: string) => {
+    setCancelBookId(bookingId);
+    setCancelConfirmationModal(true);
+  };
+
+  const handleCancelBooking = async () => {
+    try {
+      await cancelBooking(cancelBookId);
+      setUserBookings((prevBookings) =>
+        prevBookings
+          .map((booking) =>
+            booking.id === cancelBookId
+              ? { ...booking, status: "cancelled" as Booking["status"] }
+              : booking
+          )
+          .filter((booking) => booking.status !== "cancelled")
+      );
+      toast.success("Booking cancelled successfully!");
+    } catch (error) {
+      console.error("Error in handleCancelBooking:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(
+          error.response.data.error ||
+            "Failed to cancel booking. Please try again."
+        );
+      } else {
+        toast.error("Failed to cancel booking. Please try again.");
+      }
+    }
+  };
+
   const handlePostponeConfirm = async (
     date: string,
     time: string,
@@ -531,20 +577,13 @@ const AdvocateProfilePage = () => {
     try {
       let response;
       if (isAdvocate) {
-        response = await postponeSlot(
-          date,
-          time,
-          reason,
-          selectedBooking.id,
-          token
-        );
+        response = await postponeSlot(date, time, reason, selectedBooking.id);
       } else {
         response = await postPoneBooking(
           date,
           time,
           reason!,
-          selectedBooking.id,
-          token
+          selectedBooking.id
         );
       }
 
@@ -616,6 +655,20 @@ const AdvocateProfilePage = () => {
           isAdvocate={isAdvocate}
           onViewChange={setCurrentView}
         />
+
+        {cancelConfirmationModal && (
+          <ConfirmationModal
+            title="Delete Review"
+            description="Are you sure you want to delete your review?"
+            isOpen={cancelConfirmationModal}
+            onConfirm={() => {
+              handleCancelBooking();
+              setCancelConfirmationModal(false);
+            }}
+            onCancel={() => setCancelConfirmationModal(false)}
+          />
+        )}
+
         {currentView === "calendar" && (
           <UserBookingsView
             currentMonth={currentMonth}
@@ -639,7 +692,7 @@ const AdvocateProfilePage = () => {
           <UserBookingView
             bookings={userBookings}
             onPostpone={handlePostpone}
-            // onCancel={handleCancelBooking}
+            onCancel={onCancel}
             isAdvocate={isAdvocate}
           />
         )}
@@ -663,6 +716,12 @@ const AdvocateProfilePage = () => {
           onClose={() => setBookingSlotDialog(false)}
           onProceedToPayment={handleProceedToPayment}
           advocate={advocate}
+          setPaymentMethod={setPaymentMethod}
+          bookingType={bookingType}
+          paymentMethod={paymentMethod}
+          setBookingType={setBookingType}
+          caseId={caseId}
+          setCaseId={setCaseId}
         />
       )}
     </div>

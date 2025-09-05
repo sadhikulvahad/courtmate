@@ -22,6 +22,10 @@ const bookingSchema = new Schema<BookingProps>(
         postponeReason: { type: String },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
+        caseId: {
+            type: String,
+            required: false
+        }
     },
     { timestamps: true }
 );

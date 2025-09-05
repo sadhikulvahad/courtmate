@@ -77,9 +77,10 @@ export interface UserData {
   id: string;
   name: string;
   email: string;
-  phone: string | null;
-  status: string;
-  isBlocked: boolean
+  phone?: string;
+  status?: string;
+  isBlocked?: boolean
+  role?: string
 }
 
 export type NotificationTabs = 'all' | 'pending' | 'seen'
@@ -123,19 +124,25 @@ export interface AdvocateProps {
 }
 
 
+export type FilterValue = string | number | (string | number)[];
+
 export interface FilterOptions {
-  categories: string[];
-  location: string;
-  experience: {
-    min: number | null;
-    max: number | null;
-  };
-  languages: string[];
-  availability: string[];
-  minRating: number;
-  specializations: string[];
-  certifications: string[];
+  [key: string]: FilterValue;
 }
+
+export interface GetAllUserAdvocatesParams {
+  page?: number;
+  limit?: number;
+  searchTerm?: string;
+  activeTab?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+
+  filters?: {
+    [key: string]: FilterValue;
+  };
+}
+
 
 
 export interface Availability {
@@ -249,7 +256,8 @@ export interface Slot {
 
 export interface Booking {
   id: string;
-  advocate: { name: string; email: string, id: string, phone: string };
+  advocate?: { name: string; email: string, id: string, phone: string };
+  user?: { name: string; email: string; id: string; phone: string };
   date: Date;
   time: Date;
   status: "confirmed" | "pending" | "cancelled" | "postponed";
@@ -257,6 +265,7 @@ export interface Booking {
   roomId?: string;
   postponeReason?: string;
   isAvailable?: boolean
+  advocateId: string
 }
 
 
@@ -312,6 +321,7 @@ export interface Review {
 export interface CaseProps {
   _id?: string;
   title: string;
+  caseId : string
   advocateId?: string
   clientName: string;
   caseType: string;
@@ -381,3 +391,86 @@ export type ModalImage = {
   url: string;
   name?: string;
 };
+
+
+export interface CreateCaseModalProps {
+  setShowCreateForm: React.Dispatch<React.SetStateAction<boolean>>;
+  newCase: CaseProps,
+  setNewCase: React.Dispatch<React.SetStateAction<CaseProps>>;
+  caseTypes: string[]
+  priorities: string[]
+  handleCreateCase: () => Promise<void>
+  loading: boolean
+  selectedCase: CaseProps | null
+  setSelectedCase: React.Dispatch<React.SetStateAction<CaseProps | null>>
+  handleUpdateCase : () => Promise<void>
+}
+
+export interface CaseTypeProps {
+  _id: string
+  type: string
+  options: string[]
+  name: string
+}
+
+export interface CaseDetailsModalProps {
+  isOpen: boolean;
+  case_: CaseProps | null;
+  onClose: () => void;
+  onEdit: (caseData: CaseProps) => void;
+  onDelete: (caseId: string) => void;
+  onAddHearing: () => void | Promise<void>;
+  loading: boolean;
+  newHearingEntry: string;
+  setNewHearingEntry: React.Dispatch<React.SetStateAction<string>>;
+  hearingDetails?: HearingDetailsProps[];
+  onAddHearingDetail?: () => void;
+  onEditHearingDetail: (hearing: HearingDetailsProps) => void;
+  onDeleteHearingDetail: (hearingId: string) => void;
+}
+
+export interface HearingDetailsProps {
+  _id?: string;
+  caseId: string;
+  advocateId: string;
+  clientId?: string;
+  date: Date | string;
+  time?: string;
+  courtName?: string;
+  courtRoom?: string;
+  judgeName?: string;
+  status: "Scheduled" | "Adjourned" | "Completed" | "Pending";
+  nextHearingDate?: Date | string;
+  hearingOutcome?: string;
+  isClosed: boolean;
+  advocateNotes?: string;
+  clientInstructions?: string;
+  documentsSubmitted: string[];
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface Refund {
+  id: string;
+  advocateName: string;
+  bookingId: string;
+  bookingDate: string;
+  bookingTime: string;
+  refundDate: string;
+  reason: string;
+  refundAmount: number;
+}
+
+export interface WalletData {
+  balance: number;
+  currency: string;
+  refunds: Refund[];
+}
+
+export interface Transaction {
+  id: string;
+  type: "credit" | "debit";
+  amount: number;
+  date: string;
+  description?: string;
+}

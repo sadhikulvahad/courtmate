@@ -71,6 +71,7 @@ export interface BookingProps {
   updatedAt?: Date;
   notes?: string;
   postponeReason?: string;
+  caseId?: Types.ObjectId | string;
 }
 
 export interface SlotProps {
@@ -82,6 +83,7 @@ export interface SlotProps {
   status: BookingStatus
   postponeReason?: string
 }
+
 export type Frequency = 'weekly' | 'monthly';
 
 export interface RecurringRuleProps {
@@ -147,6 +149,7 @@ export interface ReviewProps {
 
 export interface CaseProps {
   _id?: string
+  caseId: string
   advocateId: Types.ObjectId
   title: string
   clientName: string
@@ -165,4 +168,57 @@ export interface SubscriptionProps {
   nextBillingDate: Date;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface FilterProps {
+  _id: string
+  name: string
+  type: string
+  options?: string[]
+}
+
+export interface TransactionProps {
+  _id?: Types.ObjectId;
+  walletId: Types.ObjectId;
+  amount: number;
+  type: "credit" | "debit";
+  date?: Date;
+  description?: string;
+  advocateId?: Types.ObjectId;
+  bookingId?: Types.ObjectId;
+}
+
+export interface WalletProps {
+  _id?: Types.ObjectId;
+  userId: Types.ObjectId;
+  balance: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface HearingDetailsProps {
+  _id?: string;
+  caseId: Types.ObjectId | string;
+  advocateId: Types.ObjectId | string;
+  clientId?: Types.ObjectId | string;
+
+
+  date: Date | string;
+  time?: string;
+  courtName?: string;
+  courtRoom?: string;
+  judgeName?: string;
+
+  status: "Scheduled" | "Adjourned" | "Completed" | "Pending";
+  nextHearingDate?: Date | string;
+  hearingOutcome?: string;
+  isClosed: boolean;
+
+  advocateNotes?: string;
+  clientInstructions?: string;
+  documentsSubmitted: string[];
+  isDeleted?: boolean;
+
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }

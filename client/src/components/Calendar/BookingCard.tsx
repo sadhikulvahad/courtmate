@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { Clock, Calendar, Mail, AlertCircle, Check, X } from "lucide-react";
 import { Booking } from "@/types/Types";
@@ -7,22 +7,31 @@ import { useNavigate } from "react-router-dom";
 import { CreateConversation } from "@/api/chatApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import UserModal from "../ui/admin/UserModal";
 
 interface BookingCardProps {
   booking: Booking;
   onPostpone: (booking: Booking) => void;
-  // onCancel: (bookingId: string) => void;
+  onCancel: (bookingId: string) => void | Promise<void>;
   isAdvocate: boolean | null;
+}
+
+interface BookingUser {
+  id: string;
+  email: string;
+  name: string;
+  phone?: string;
 }
 
 const BookingCard: React.FC<BookingCardProps> = ({
   booking,
   onPostpone,
-  // onCancel,
-  // isAdvocate,
+  isAdvocate,
+  onCancel,
 }) => {
+  const [bookedUser, setBookedUser] = useState<BookingUser | null>(null);
   const navigate = useNavigate();
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "confirmed":
@@ -53,6 +62,10 @@ const BookingCard: React.FC<BookingCardProps> = ({
     }
   };
 
+  const showDetails = (booking: Booking) => {
+    setBookedUser(booking?.user || null);
+  };
+
   const startChat = async () => {
     if (!user) {
       toast.error("Please log in to start a chat");
@@ -60,16 +73,15 @@ const BookingCard: React.FC<BookingCardProps> = ({
       return;
     }
 
-    if (!booking.advocate.id) {
+    if (!booking?.advocateId) {
       toast.error("Invalid advocate ID");
       return;
     }
 
     try {
       const conversation = await CreateConversation(
-        booking.advocate.id,
-        "advocate",
-        token
+        booking.advocateId,
+        "advocate"
       );
       navigate(
         `/chat?conversationId=${conversation?.data._id}&advocateId=${conversation?.data.participants[1].userId}`
@@ -82,6 +94,13 @@ const BookingCard: React.FC<BookingCardProps> = ({
 
   return (
     <>
+      {bookedUser && (
+        <UserModal
+          user={bookedUser}
+          isOpen={!!bookedUser}
+          onClose={() => setBookedUser(null)}
+        />
+      )}
       <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden transition-all hover:shadow-md">
         <div className="p-4">
           <div className="flex justify-between items-start">
@@ -153,17 +172,26 @@ const BookingCard: React.FC<BookingCardProps> = ({
           )}
 
           {/* Actions */}
-          {(booking.status === "confirmed" ||
-            booking.status === "pending" ||
-            (!booking.advocate?.name && new Date(booking.date) > new Date())) &&
+          {booking.status !== "cancelled" &&
+            (booking.status === "confirmed" ||
+              booking.status === "pending" ||
+              (!booking.advocate?.name &&
+                new Date(booking.date) > new Date())) &&
             booking.status !== "postponed" && (
               <div className="mt-4 flex justify-end space-x-2">
-                {booking.advocate?.name && (
+                {!isAdvocate ? (
                   <button
                     onClick={startChat}
                     className="px-3 py-1 bg-green-400 text-black text-sm rounded hover:bg-green-100 transition-colors"
                   >
-                    Chat with {booking.advocate.name}
+                    Chat with {booking.advocate?.name}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => showDetails(booking)}
+                    className="px-3 py-1 bg-green-400 text-black text-sm rounded hover:bg-green-100 transition-colors"
+                  >
+                    Show Details
                   </button>
                 )}
                 <button
@@ -172,14 +200,12 @@ const BookingCard: React.FC<BookingCardProps> = ({
                 >
                   Postpone
                 </button>
-                {/* {isAdvocate ? (
-                  <button
-                    onClick={() => onCancel(booking.id)}
-                    className="px-3 py-1 bg-red-50 text-red-600 text-sm rounded hover:bg-red-100 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                ) : null} */}
+                <button
+                  onClick={() => onCancel(booking.id)}
+                  className="px-3 py-1 bg-red-50 text-red-600 text-sm rounded hover:bg-red-100 transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             )}
         </div>
