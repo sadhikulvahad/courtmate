@@ -5,8 +5,8 @@ import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { TYPES } from "../../../types";
 import { Logger } from "winston";
 import { S3Service } from "../../../infrastructure/web/s3Credential";
-import { IGetAllUsers } from "../../../application/interface/admin/GetAllUsersRepo";
-import { GetAllUsersDTO, UserDTO } from "../../../application/dto";
+import { IGetAllUsers } from "../../interface/admin/GetAllUsersRepo";
+import { GetAllUsersDTO, UserDTO } from "../../dto";
 import { User } from "../../../domain/entities/User";
 
 

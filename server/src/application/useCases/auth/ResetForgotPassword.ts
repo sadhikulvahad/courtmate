@@ -2,8 +2,8 @@ import { inject, injectable } from "inversify";
 import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { HashPassword } from "../../../infrastructure/services/passwordHash";
 import { TYPES } from "../../../types";
-import { IResetForgotPassword } from "../../../application/interface/auth/ResetForgotPasswordRepo";
-import { ReturnDTO } from "../../../application/dto";
+import { IResetForgotPassword } from "../../interface/auth/ResetForgotPasswordRepo";
+import { ReturnDTO } from "../../dto";
 
 
 @injectable()

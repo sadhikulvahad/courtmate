@@ -5,8 +5,8 @@ import { NotificationService } from "../../../infrastructure/services/notificati
 import { IEmailService } from "../../../domain/interfaces/EmailService";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
-import { IUpdateAdvocateStatus } from "../../../application/interface/admin/UpdateAdvocateStatusRepo";
-import { UpdateAdvocateStatussDTO } from "../../../application/dto";
+import { IUpdateAdvocateStatus } from "../../interface/admin/UpdateAdvocateStatusRepo";
+import { UpdateAdvocateStatussDTO } from "../../dto";
 
 
 @injectable()

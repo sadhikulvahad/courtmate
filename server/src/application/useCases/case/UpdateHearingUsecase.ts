@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { ICaseRepository } from "../../../domain/interfaces/CaseRepository";
 import { CaseProps } from "../../../domain/types/EntityProps";
 import { TYPES } from "../../../types";
-import { IUpdateHearingUsecase } from "../../../application/interface/case/UpdateHearingUsecaseRepo";
+import { IUpdateHearingUsecase } from "../../interface/case/UpdateHearingUsecaseRepo";
 
 
 @injectable()

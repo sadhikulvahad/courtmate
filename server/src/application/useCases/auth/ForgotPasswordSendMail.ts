@@ -3,8 +3,8 @@ import { IEmailService } from "../../../domain/interfaces/EmailService";
 import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { JwtTokenService } from "../../../infrastructure/services/jwt";
 import { TYPES } from "../../../types";
-import { IForgotPasswordSendMail } from "../../../application/interface/auth/ForgotPasswordSendMailRepo";
-import { ReturnDTO } from "../../../application/dto";
+import { IForgotPasswordSendMail } from "../../interface/auth/ForgotPasswordSendMailRepo";
+import { ReturnDTO } from "../../dto";
 
 
 @injectable()

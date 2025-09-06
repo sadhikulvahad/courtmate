@@ -1,5 +1,5 @@
 import { RecurringRuleProps } from "domain/types/EntityProps";
-import { RecurringRule } from "../entities/recurringRule";
+import { RecurringRule } from "../entities/RecurringRule";
 
 
 export interface IRecurringRuleRepository {

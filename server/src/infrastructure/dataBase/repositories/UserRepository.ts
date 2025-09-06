@@ -8,10 +8,6 @@ import { AuthMethod } from "../../../domain/types/AuthMethod";
 import { AdvocateFilterOptions } from "../../../application/types/UpdateAdvocateProfileDTO ";
 import { FilterQuery } from 'mongoose';
 
-interface ExperienceRange {
-    $gte?: number;
-    $lte?: number;
-}
 
 export class UserRepositoryImplement implements IUserRepository {
 

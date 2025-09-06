@@ -6,8 +6,8 @@ import { IEmailService } from "../../../domain/interfaces/EmailService";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
 import { Logger } from "winston";
-import { ISignupUser } from "../../../application/interface/auth/SignupUserRepo";
-import { SignupResponse } from "../../../application/dto";
+import { ISignupUser } from "../../interface/auth/SignupUserRepo";
+import { SignupResponse } from "../../dto";
 
 
 @injectable()

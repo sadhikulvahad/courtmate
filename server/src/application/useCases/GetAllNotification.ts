@@ -3,8 +3,8 @@ import { INotificationRepository } from "../../domain/interfaces/NotificationRep
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { Logger } from "winston";
-import { IGetAllNotification } from "../../application/interface/GetAllNotificationRepo";
-import { GetNotificationsDTO } from "../../application/dto";
+import { IGetAllNotification } from "../interface/GetAllNotificationRepo";
+import { GetNotificationsDTO } from "../dto";
 
 
 @injectable()

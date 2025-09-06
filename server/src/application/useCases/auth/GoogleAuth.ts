@@ -4,7 +4,7 @@ import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { User } from "../../../domain/entities/User";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
-import { IGoogleAuth } from "../../../application/interface/auth/GoogleAuthRepo";
+import { IGoogleAuth } from "../../interface/auth/GoogleAuthRepo";
 
 
 @injectable()

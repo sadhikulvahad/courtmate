@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { RecurringRule } from '../../../domain/entities/recurringRule';
+import { RecurringRule } from '../../../domain/entities/RecurringRule';
 import { IRecurringRuleRepository } from '../../../domain/interfaces/RecurringRuleRepository';
 import { RecurringRuleModel } from '../models/RecurringRuleModel';
 import { RecurringRuleProps } from 'domain/types/EntityProps';

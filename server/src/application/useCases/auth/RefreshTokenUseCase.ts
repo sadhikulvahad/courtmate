@@ -3,8 +3,8 @@ import { inject, injectable } from "inversify";
 import { ITokenService } from "../../../domain/interfaces/TokenRepository";
 import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { TYPES } from "../../../types";
-import { IRefreshTokenUsecase } from "../../../application/interface/auth/RefreshtokenUsecaseRepo";
-import { ReturnDTO } from "../../../application/dto";
+import { IRefreshTokenUsecase } from "../../interface/auth/RefreshtokenUsecaseRepo";
+import { ReturnDTO } from "../../dto";
 
 
 @injectable()

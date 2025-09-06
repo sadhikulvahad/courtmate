@@ -6,7 +6,7 @@ import { IMessageRepository } from '../../domain/interfaces/MessageRepository';
 import { IConversationRepository } from '../../domain/interfaces/ConversationRepository';
 import { IEmailService } from '../../domain/interfaces/EmailService';
 import { ITokenService } from '../../domain/interfaces/TokenRepository';
-import { UserRepositoryImplement } from '../dataBase/repositories/UserRepository';
+import { UserRepositoryImplement } from '../../infrastructure/dataBase/repositories/UserRepository';
 import { NotificationRepositoryImplements } from '../dataBase/repositories/NotificationRepository';
 import { MessageRepositoryImplements } from '../dataBase/repositories/MessageRepository';
 import { ConversationRepositoryImplements } from '../dataBase/repositories/ConversationRepository';
@@ -34,7 +34,7 @@ import { VerifyForgotPasswordMail } from '../../application/useCases/auth/Verify
 import { ResetForgotPassword } from '../../application/useCases/auth/ResetForgotPassword';
 import { RefreshTokenUseCase } from '../../application/useCases/auth/RefreshTokenUseCase';
 import { GetAdvocateDetails } from '../../application/useCases/advocate/GetDatails';
-import { UpdateAdvocateProfile } from '../../application/useCases/advocate/updateAdvocateProfile';
+import { UpdateAdvocateProfile } from '../../application/useCases/advocate/UpdateAdvocateProfile';
 import { UpdateAdvocate } from '../../application/useCases/advocate/UpdateAdvocate';
 import { FindUser } from '../../application/useCases/advocate/FindUser';
 import { HashPassword } from '../services/passwordHash';
@@ -81,7 +81,7 @@ import { ResetPassword } from '../../application/useCases/user/ResetPasswordUseC
 import { ToggleSavedAdvocate } from '../../application/useCases/user/ToggleSavedAdvovate';
 import { ToggleUser } from '../../application/useCases/user/ToggleUserUsecase';
 import { CreateCheckoutSessionUseCase } from '../../application/useCases/CreateCheckoutSessionUseCase';
-import { getAllNotification } from '../../application/useCases/getAllNotification';
+import { getAllNotification } from '../../application/useCases/GetAllNotification';
 import { MarkAllAsRead } from '../../application/useCases/MarkAllAsRead';
 import { MarkAsRead } from '../../application/useCases/MarkasRead';
 import { PaymentUsecase } from '../../application/useCases/PaymentUsecase';

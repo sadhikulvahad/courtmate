@@ -6,8 +6,8 @@ import { NotificationService } from "../../../infrastructure/services/notificati
 import { UpdateAdvocateProfileDTO } from "../../types/UpdateAdvocateProfileDTO ";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
-import { IUpdateAdvocateProfile } from "../../../application/interface/advocate/UpdateAdvocateProfileRepo";
-import { ReturnDTO } from "../../../application/dto";
+import { IUpdateAdvocateProfile } from "../../interface/advocate/UpdateAdvocateProfileRepo";
+import { ReturnDTO } from "../../dto";
 
 
 @injectable()

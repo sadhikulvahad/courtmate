@@ -3,8 +3,8 @@ import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { JwtTokenService } from "../../../infrastructure/services/jwt";
 import { jwtDecode, JwtPayload } from "jwt-decode";
 import { TYPES } from "../../../types";
-import { IVerifyForgotPasswordMail } from "../../../application/interface/auth/VerifyForgotPasswordMailRepo";
-import { ReturnDTO } from "../../../application/dto";
+import { IVerifyForgotPasswordMail } from "../../interface/auth/VerifyForgotPasswordMailRepo";
+import { ReturnDTO } from "../../dto";
 
 interface JwtPayloadWithEmail extends JwtPayload {
     email: string;

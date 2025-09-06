@@ -5,8 +5,8 @@ import { TYPES } from "../../../types";
 import { Logger } from "winston";
 import { User } from "../../../domain/entities/User";
 import { S3Service } from "../../../infrastructure/web/s3Credential";
-import { IGetAllAdvocates } from "../../../application/interface/admin/GetAllAdvocatesRepo";
-import { AllAdminAdvocatesDTO } from "../../../application/dto";
+import { IGetAllAdvocates } from "../../interface/admin/GetAllAdvocatesRepo";
+import { AllAdminAdvocatesDTO } from "../../dto";
 
 
 @injectable()

@@ -4,8 +4,8 @@ import { JwtTokenService } from "../../../infrastructure/services/jwt";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
 import { Logger } from "winston";
-import { IVerifyEmail } from "../../../application/interface/auth/VerifyEmailRepo";
-import { ReturnDTO } from "../../../application/dto";
+import { IVerifyEmail } from "../../interface/auth/VerifyEmailRepo";
+import { ReturnDTO } from "../../dto";
 
 interface JwtPayloadWithEmail extends JwtPayload {
     email: string;

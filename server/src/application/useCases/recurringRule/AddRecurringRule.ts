@@ -2,7 +2,7 @@
 import { eachDayOfInterval, isSameDay, isValid, isBefore, startOfDay, format } from 'date-fns';
 import { IRecurringRuleRepository } from '../../../domain/interfaces/RecurringRuleRepository';
 import { ISlotRepository } from '../../../domain/interfaces/SlotRepository';
-import { RecurringRule } from '../../../domain/entities/recurringRule';
+import { RecurringRule } from '../../../domain/entities/RecurringRule';
 import { Slot } from '../../../domain/entities/Slot';
 import { RecurringRuleProps } from '../../../domain/types/EntityProps';
 import { inject, injectable } from 'inversify';

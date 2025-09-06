@@ -4,8 +4,8 @@ import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 import { HashPassword } from "../../../infrastructure/services/passwordHash";
 import { TYPES } from "../../../types";
 import { Logger } from "winston";
-import { ILoginUser } from "../../../application/interface/auth/LoginUsersRepo";
-import { LoginUserDTO } from "../../../application/dto";
+import { ILoginUser } from "../../interface/auth/LoginUsersRepo";
+import { LoginUserDTO } from "../../dto";
 
 
 @injectable()
