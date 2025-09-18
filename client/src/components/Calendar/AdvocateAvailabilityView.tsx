@@ -42,7 +42,7 @@ const AdvocateAvailabilityView = ({
       toast.error("Please select a date and time.");
       return;
     }
-    const slotDate = new Date(`${newSlotDate}T${newSlotTime}`);
+    const slotDate = new Date(`${newSlotDate}T${newSlotTime}:00Z`);
     if (slotDate < new Date()) {
       toast.error("Cannot add slots in the past.");
       return;
@@ -78,7 +78,7 @@ const AdvocateAvailabilityView = ({
       endDate: newRule.endDate,
       frequency: newRule.frequency,
       daysOfWeek: newRule.daysOfWeek,
-      timeSlot: newRule.timeSlot,
+      timeSlot: `${newRule.timeSlot}:00Z`,
       exceptions: [],
     };
     onAddRecurringRule(rule);

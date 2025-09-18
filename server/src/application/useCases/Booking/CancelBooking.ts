@@ -6,7 +6,6 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
 import { IWalletRepository } from "../../../domain/interfaces/WalletRepository";
 
-
 @injectable()
 export class CancelBooking implements ICancelBookingRepo {
     constructor(
@@ -15,26 +14,21 @@ export class CancelBooking implements ICancelBookingRepo {
         @inject(TYPES.IWalletRepository) private _walletRepo: IWalletRepository
     ) { }
 
-    async execute(bookingId: string): Promise<ReturnDTO> {
-        const booking = await this._bookingRepo.findByBookId(bookingId);
-        console.log(booking)
-        // const slot = await this._slotRepo.findById(bookingId);
+    async execute(id: string): Promise<ReturnDTO> {
+        if (id.startsWith("booking-")) {
+            return this.cancelBooking(id);
+        } else {
+            return this.cancelSlot(id);
+        }
+    }
 
-        // console.log(slot)
+    private async cancelBooking(bookingId: string): Promise<ReturnDTO> {
+        const booking = await this._bookingRepo.findByBookId(bookingId);
 
         if (!booking) {
-            return { success: false, error: "There is no booking/slot with this Id" };
+            return { success: false, error: "There is no booking with this Id" };
         }
-        // console.log(1)
-        // if (slot) {
-        //     if (slot.status === "cancelled") {
-        //         return { success: false, error: "This slot is already cancelled" };
-        //     }
-        //     await this._slotRepo.update(slot.id, { status: "cancelled", isAvailable: false });
-        //     return { success: true, message: "Slot cancelled successfully" };
-        // }
 
-        // 🚨 Booking cancellation flow
         if (booking?.status === "cancelled") {
             return { success: false, error: "This booking is already cancelled" };
         }
@@ -70,15 +64,41 @@ export class CancelBooking implements ICancelBookingRepo {
         }
 
         // refund flow
-        const existingWallet = await this._walletRepo.getWalletById(booking?.userId!)
-        let wallet
+        const existingWallet = await this._walletRepo.getWalletById(booking?.userId!);
+        let wallet;
         if (existingWallet) {
-            wallet = existingWallet.wallet
+            wallet = existingWallet.wallet;
         } else {
-            wallet = await this._walletRepo.createWallet(booking?.userId!)
+            wallet = await this._walletRepo.createWallet(booking?.userId!);
         }
-        await this._walletRepo.creditAmount(wallet?._id!, 100)
+        await this._walletRepo.creditAmount(wallet?._id!, 100);
 
         return { success: true, message: "Booking cancelled and refund processed" };
+    }
+
+    private async cancelSlot(slotId: string): Promise<ReturnDTO> {
+        const slot = await this._slotRepo.findById(slotId);
+
+        if (!slot) {
+            return { success: false, error: "There is no slot with this Id" };
+        }
+
+        if (slot?.status === "cancelled") {
+            return { success: false, error: "This booking is already cancelled" };
+        }
+
+        if (slot?.status === "postponed") {
+            return { success: false, error: "You cannot cancel a postponed booking" };
+        }
+
+        if (slot.isAvailable === false) {
+            return { success: false, error: "This slot is already Disabled" };
+        }
+
+        console.log(slot)
+
+        await this._slotRepo.update(slotId, { isAvailable: false, status: 'cancelled' });
+
+        return { success: true, message: "Slot cancelled and made available" };
     }
 }

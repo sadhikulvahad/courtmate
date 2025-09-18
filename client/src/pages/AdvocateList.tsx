@@ -100,7 +100,7 @@ const AdvocateList = () => {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  console.log(currentFilters);
+
   const navigate = useNavigate();
 
   // Memoize the API parameters to prevent unnecessary re-renders
@@ -132,7 +132,7 @@ const AdvocateList = () => {
     currentPage
   ]);
 
-  console.log(apiParams, 'fdhaksdhflakjsdfhlaksf')
+
   // Single API call function with proper error handling
   const fetchAdvocates = useCallback(async () => {
     setIsLoading(true);
@@ -157,7 +157,7 @@ const AdvocateList = () => {
       try {
         const response = await GetSavedAdvocates();
         const saved = response?.data?.advocates || [];
-        console.log(saved);
+
         const savedIds = saved.map((adv: Ad) => adv._id || adv.id);
 
         setSavedAdvocates(savedIds);
@@ -295,7 +295,7 @@ const AdvocateList = () => {
 
   const startChat = async (id: string) => {
     if (!user) {
-      console.log("kajh");
+
       toast.error("Please log in to start a chat");
       navigate("/signup");
       return;

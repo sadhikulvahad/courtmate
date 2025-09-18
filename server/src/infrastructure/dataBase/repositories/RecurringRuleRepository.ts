@@ -8,7 +8,14 @@ import { RecurringRuleProps } from 'domain/types/EntityProps';
 export class RecurringRuleRepositoryImplement implements IRecurringRuleRepository {
 
   async findByAdvocateId(advocateId: string): Promise<RecurringRuleProps[]> {
-    const rules = await RecurringRuleModel.find({ advocateId: new Types.ObjectId(advocateId) }).lean().exec();
+    const now = new Date().toISOString();
+    const rules = await RecurringRuleModel.find({
+      advocateId: new Types.ObjectId(advocateId),
+      endDate: { $gte: now }
+    }).
+      sort({ startDate: -1 }).
+      lean().
+      exec();
     return rules as RecurringRuleProps[];
   }
 

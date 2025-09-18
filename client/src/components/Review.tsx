@@ -8,6 +8,8 @@ import {
 } from "@/api/advocate/profileAPI";
 import { toast } from "sonner";
 import ConfirmationModal from "./ConfirmationModal";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface MyComponentProps {
   advocateId: string | undefined;
@@ -320,6 +322,7 @@ const ReviewItem = ({
   const handleConfirmDelete = async () => {
     try {
       await onDelete(review._id);
+      setShowDeleteModal(false)
     } catch (error) {
       console.error("Error deleting review:", error);
       toast.error("Failed to delete review");
@@ -428,6 +431,8 @@ const RatingAndReview = ({
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  const { user } = useSelector((state: RootState) => state.auth);
+
   // Calculate rating statistics
   const totalReviews = reviews.length;
   const overallRating =
@@ -451,13 +456,11 @@ const RatingAndReview = ({
       if (isEditing && editingReview) {
         // Update existing review
 
-        const response = await updateReview(
-          {
-            reviewId: editingReview._id,
-            review: reviewData.review,
-            rating: reviewData.rating,
-          },
-        );
+        const response = await updateReview({
+          reviewId: editingReview._id,
+          review: reviewData.review,
+          rating: reviewData.rating,
+        });
 
         if (response?.status === 200) {
           toast.success("Review updated successfully");
@@ -478,18 +481,28 @@ const RatingAndReview = ({
         }
       } else {
         // Create new review
-        const response = await createReview(
-          {
-            advocateId,
-            userId,
-            review: reviewData.review,
-            rating: reviewData.rating,
-          },
-        );
+        const response = await createReview({
+          advocateId,
+          userId,
+          review: reviewData.review,
+          rating: reviewData.rating,
+        });
 
         if (response?.status === 201) {
           toast.success("Review added successfully");
-          setReviews((prev) => [response.data.review, ...prev]);
+          const newReview = {
+            ...response.data.review,
+            userId:
+              typeof response.data.review.userId === "string"
+                ? {
+                    _id: response.data.review.userId,
+                    name: user?.name || "",
+                    email: user?.email || "",
+                  }
+                : response.data.review.userId,
+          };
+
+          setReviews((prev) => [newReview, ...prev]);
         } else {
           toast.error(response?.data?.error || "Failed to add review");
         }
@@ -529,6 +542,14 @@ const RatingAndReview = ({
   };
 
   const handleOpenNewReview = () => {
+    const alReadyReviewed = reviews.filter(
+      (review) => review.userId._id === user?.id
+    );
+
+    if (alReadyReviewed.length > 0) {
+      toast.error("You Can Only Review Once");
+      return;
+    }
     setEditingReview(null);
     setIsEditing(false);
     setIsModalOpen(true);

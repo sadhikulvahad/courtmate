@@ -27,7 +27,7 @@ export class BookingRepositoryImplements implements IBookingRepository {
   }
 
   async create(booking: Booking): Promise<Booking> {
-    console.log(booking)
+
     const bookingProps = booking.toJSON();
 
     const dbBookingProps = {

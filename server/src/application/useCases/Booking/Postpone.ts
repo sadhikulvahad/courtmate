@@ -29,15 +29,16 @@ export class Postpone implements IPostpone {
         const futureDate = endOfDay(addDays(today, 30));
 
         const slots = await this._slotRepository.findByAdvocateId(booking.advocateId.toString(), today, futureDate)
-        const selectedDateTime = new Date(`${date}T${time}`);
 
         const existingSlot = slots.find(slot => {
             return isEqual(Number(booking.slotId), Number(slot.id))
         })
 
+        console.log(slots)
+        
         const matchedSlot = slots.find(slot => {
-            const slotTime = new Date(slot.time);
-            return isEqual(slotTime, selectedDateTime);
+            const slotTime = new Date(slot.time)
+            return isEqual(slotTime, new Date(time));
         })
 
         if (!matchedSlot) {

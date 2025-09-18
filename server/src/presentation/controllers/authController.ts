@@ -82,7 +82,6 @@ export class AuthController {
   async handleGoogleCallback(req: Request, res: Response) {
     try {
       const user = req?.user as unknown as User;
-      console.log('user', user)
 
       if (!user) {
         return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'User is missing' })
@@ -140,13 +139,13 @@ export class AuthController {
 
   async verifyEmailController(req: Request, res: Response) {
     try {
-      const { token } = req.params;
+      const { token } = req.query;
 
-      if (!token || typeof token !== 'string') {
+      if (!token || typeof token.toString() !== 'string') {
         return res.status(HttpStatus.UNAUTHORIZED).json({ error: 'Invalid token, please check your email' });
       }
 
-      const result = await this._verifyEmail.execute(token);
+      const result = await this._verifyEmail.execute(token.toString());
       if (!result.success) {
         return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Email' });
       }

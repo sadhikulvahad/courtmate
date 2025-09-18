@@ -10,11 +10,6 @@ import { IWalletRepository } from 'domain/interfaces/WalletRepository';
 import { IBookSlot } from 'application/interface/booking/BookSlotRepo';
 import { ReturnDTO } from 'application/dto';
 
-type StripeConfig = {
-    secret: string;
-    apiVersion: string;
-};
-
 @injectable()
 export class PaymentService {
     private stripe: Stripe;
@@ -88,7 +83,7 @@ export class PaymentService {
 
             this.logger.info(`Wallet payment successful for user ${user.id}, amount ${100}`);
 
-            const booking = await this._bookSlotRepo.execute(
+            await this._bookSlotRepo.execute(
                 advocate?.id!,
                 selectedSlotId!,
                 user.id!,
@@ -97,7 +92,7 @@ export class PaymentService {
                 user,
                 caseId
             );
-            console.log(booking)
+
             return { url: `${process.env.REDIRECT_URL}/success/success`, id: "wallet_txn_" + Date.now(), success: true };
 
         } catch (error: unknown) {

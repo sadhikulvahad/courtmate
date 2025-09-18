@@ -33,8 +33,8 @@ router.post('/signup', asyncHandler(authController.handleSignup.bind(authControl
 router.post('/login', asyncHandler(authController.handleLogin.bind(authController)));
 router.post('/verify-email', asyncHandler(authController.verifyEmailController.bind(authController)));
 router.post('/forgot-password', asyncHandler(authController.handleForgotPasswordMailService.bind(authController)));
-router.get('/verify-forgot-password', asyncHandler(authController.verifyForgotPasswordMail.bind(authController)));
-router.post('/reset-password', asyncHandler(authController.forgotResetPassword.bind(authController)));
+router.get('/verify-forgotPassword', asyncHandler(authController.verifyForgotPasswordMail.bind(authController)));
+router.put('/forgot-resetPassword', asyncHandler(authController.forgotResetPassword.bind(authController)));
 
 // Google OAuth routes
 router.get(

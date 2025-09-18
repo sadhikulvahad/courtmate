@@ -176,7 +176,7 @@ const PostponeDialog: React.FC<PostponeDialogProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("any");
+
     if (!selectedDate || !selectedTime) {
       setError("Please select both date and time");
       return;

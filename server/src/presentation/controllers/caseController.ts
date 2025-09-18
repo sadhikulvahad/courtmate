@@ -76,8 +76,7 @@ export class CaseController {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Case Id required' });
             }
 
-            const caseData = req.body as Partial<CaseProps>;
-
+            const caseData = req.body 
             if (!caseData) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: 'All fields are required' });
             }
@@ -91,7 +90,7 @@ export class CaseController {
     async Deletecase(req: Request, res: Response) {
         try {
             const { caseId } = req.query;
-            console.log(caseId)
+
             if (!caseId) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Case Id required' });
             }

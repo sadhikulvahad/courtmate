@@ -12,6 +12,7 @@ export class UpdateCaseUseCase implements IUpdateCaseUsecase {
     ) { }
 
     async execute(id: string, caseData: Partial<CaseProps>): Promise<CaseProps> {
+
         const updatedCase = await this._caseRepository.update(id, caseData);
         if (!updatedCase) {
             throw new Error("Case not found");

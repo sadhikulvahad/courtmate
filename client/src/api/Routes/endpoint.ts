@@ -7,8 +7,8 @@ export const API_ENDPOINTS = {
         SIGNUPUSER: `${API_URL}/auth/signup`,
         LOGINUSER: `${API_URL}/auth/login`,
         VERIFYEMAIL: `${API_URL}/auth/verify-email`,
-        SENDFORGOTPASSWORDMAIL: `${API_URL}/auth/forgotPassword-Mail`,
-        FORGOTRESETPASSWORD: `${API_URL}/auth/forgot-ResetPassword`,
+        SENDFORGOTPASSWORDMAIL: `${API_URL}/auth/forgot-password`,
+        FORGOTRESETPASSWORD: `${API_URL}/auth/forgot-resetPassword`,
         LOGOUTAPI: 'auth/logout'
     },
     BOOKING: {

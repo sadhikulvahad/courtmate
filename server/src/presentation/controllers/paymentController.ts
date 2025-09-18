@@ -11,6 +11,8 @@ import { ICreateCheckoutSessionUsecase } from "../../application/interface/Creat
 import { IBookSlot } from "../../application/interface/booking/BookSlotRepo";
 import { IPaymentUsecase } from "../../application/interface/PaymentUsecaseRepo";
 import { ICreateSubscriptionUsecase } from "../../application/interface/subscription/CreateSubscriptionUsecaseRepo";
+import { ISlotRepository } from "../../domain/interfaces/SlotRepository";
+import { IWalletRepository } from "../../domain/interfaces/WalletRepository";
 
 
 
@@ -24,6 +26,8 @@ export class paymentController {
         @inject(TYPES.IPaymentUseCase) private _paymentUsecase: IPaymentUsecase,
         @inject(TYPES.ICreateSubscriptionUseCase) private _createSubscriptionUseCase: ICreateSubscriptionUsecase,
         @inject(TYPES.NotificationService) private _notificationService: NotificationService,
+        @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository,
+        @inject(TYPES.IWalletRepository) private _walletRepository: IWalletRepository,
         @inject(TYPES.Logger) private _logger: Logger
     ) { }
 
@@ -191,11 +195,30 @@ export class paymentController {
 
                     await this._paymentUsecase.execute(paymentData);
                 } else {
-                    
+
                     if (!session.metadata || !session.metadata.advocate_id || !session.metadata.slotId || !session.metadata.user_id) {
                         this._logger.error("Missing metadata in session:", { err: session.id })
                         return res.status(HttpStatus.BAD_REQUEST).json({ error: "Invalid session metadata" });
                     }
+
+
+                    const slot = await this._slotRepository.findById(session.metadata.slotId!)
+
+                    if (slot?.status === 'confirmed' || slot?.isAvailable === false) {
+
+                        const existingWallet = await this._walletRepository.getWalletById(session.metadata.user_id!)
+
+                        let wallet;
+                        if (existingWallet) {
+                            wallet = existingWallet.wallet;
+                        } else {
+                            wallet = await this._walletRepository.createWallet(session.metadata.slotId!);
+                        }
+                        await this._walletRepository.creditAmount(wallet?._id!, 100);
+
+                        return res.status(HttpStatus.CONFLICT).json({ error: "Slot already booked. Amount will be credited to your wallet." });
+                    }
+
                     // Existing logic for advocate booking
                     const booking = await this._bookSlot.execute(
                         session.metadata.advocate_id!,

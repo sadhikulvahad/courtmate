@@ -16,12 +16,22 @@ export class forgotPasswordSendMail implements IForgotPasswordSendMail {
     ) { }
     async execute(email: string): Promise<ReturnDTO> {
         const existingUser = await this._userRepository.findByEmail(email)
-        if (!existingUser || !existingUser.isActive || !existingUser.isVerified) {
+        if (!existingUser) {
             return { success: false, error: 'Invalid Email, May be you dont have an account' }
         }
+
+        if (!existingUser.isActive) {
+            return { success: false, error: 'Your account is inactive' }
+        }
+
+        if (!existingUser.isVerified) {
+            return { success: false, error: 'Your account is not verified, Please Signup again' }
+        }
+
         if (existingUser.authMethod === 'google') {
             return { success: false, error: 'You logged with Google' }
         }
+
         if (existingUser.isBlocked) {
             return { success: false, error: 'Your account has been blocked' }
         }

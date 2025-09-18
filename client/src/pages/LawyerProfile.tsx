@@ -5,6 +5,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { MoreVertical } from "lucide-react";
+import "react-phone-number-input/style.css";
+import PhoneInput from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
+import { generateSignedUrl } from "@/utils/getSignUrl";
 
 export default function LawyerProfile() {
   const [advocate, setAdvocate] = useState<AdvocateProps | null>(null);
@@ -25,7 +29,7 @@ export default function LawyerProfile() {
       const response = await findUser(user?.id as string);
       if (response.status === 200) {
         const userData = response.data.user;
-
+        console.log(userData);
         // Fix languages if needed
         let languages = userData.languages;
         if (typeof languages === "string") {
@@ -60,6 +64,15 @@ export default function LawyerProfile() {
 
         const address = userData.address || defaultAddress;
 
+        let photoUrl = "";
+        if (userData.profilePhoto) {
+          try {
+            photoUrl = await generateSignedUrl(userData.profilePhoto);
+          } catch (err) {
+            console.error("Error generating signed URL", err);
+          }
+        }
+
         const finalUser = {
           ...userData,
           languages,
@@ -67,6 +80,7 @@ export default function LawyerProfile() {
             ...defaultAddress,
             ...address,
           },
+          imageUrl: photoUrl,
         };
 
         setAdvocate(finalUser);
@@ -236,7 +250,9 @@ export default function LawyerProfile() {
           pincode: formData.address?.pincode || "",
         },
       };
-
+      if (!isValidPhoneNumber(dataToSubmit.phone!)) {
+        return toast.error("Please enter a valid mobile number");
+      }
       // Append all form fields
       Object.entries(dataToSubmit).forEach(([key, value]) => {
         if (key === "languages") {
@@ -325,7 +341,8 @@ export default function LawyerProfile() {
             <img
               src={
                 advocate?.profilePhoto
-                  ? `${advocate.profilePhoto}`
+                  ? // ? `${advocate.profilePhoto}`
+                    `${advocate.imageUrl}`
                   : // ? `${import.meta.env.VITE_API_URL}/uploads/${
                     //     advocate.profilePhoto
                     //   }`
@@ -496,7 +513,8 @@ export default function LawyerProfile() {
                     src={
                       profilePhotoPreview ||
                       (advocate?.profilePhoto
-                        ? `${advocate.profilePhoto}`
+                        ? // ? `${advocate.profilePhoto}`
+                          `${advocate.imageUrl}`
                         : // ? `${import.meta.env.VITE_API_URL}/uploads/${
                           //     advocate.profilePhoto
                           //   }`
@@ -557,11 +575,15 @@ export default function LawyerProfile() {
                   <label className="block text-sm font-medium text-gray-700">
                     Phone
                   </label>
-                  <input
-                    type="text"
+                  <PhoneInput
                     name="phone"
                     value={formData.phone || ""}
-                    onChange={handleChange}
+                    onChange={(value) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        phone: value,
+                      }));
+                    }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
                   />
                 </div>

@@ -81,7 +81,7 @@ export class BookingController {
 
   async postPoneBookedSlot(req: Request, res: Response) {
     const { date, time, reason, bookId } = req.body;
-
+    console.log(req.body)
     if (!date || !time || !reason || !bookId) {
       return res
         .status(HttpStatus.BAD_REQUEST)

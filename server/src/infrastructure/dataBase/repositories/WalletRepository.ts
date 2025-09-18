@@ -29,11 +29,11 @@ export class WalletRepository implements IWalletRepository {
 
     async creditAmount(walletId: string | Types.ObjectId, amount: number | string): Promise<void> {
         const numericAmount = Number(amount);
-        console.log(walletId, numericAmount)
+
         if (isNaN(numericAmount)) throw new Error("Invalid amount");
 
         const wallet = await WalletModel.findById(walletId);
-        console.log(wallet)
+
         if (!wallet) throw new Error("Wallet not found");
 
         wallet.balance += numericAmount;

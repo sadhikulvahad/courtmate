@@ -18,8 +18,6 @@ export class GetWallet implements IGetWallet {
 
         const wallet = await this._walletRepo.getWalletById(userId)
 
-        console.log(wallet)
-
         return wallet
     }
 }

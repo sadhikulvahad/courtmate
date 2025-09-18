@@ -1,10 +1,11 @@
 import React from "react";
 import { serviceData } from "./datas/serviceData";
 import NavBar from "../NavBar";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Services: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate()
   return (
     <>
       {location.pathname === "/services" && <NavBar />}
@@ -36,7 +37,8 @@ const Services: React.FC = () => {
                 </div>
               </div>
               <div className="mt-4 text-right">
-                <button className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-md">
+                <button className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+                onClick={() => navigate('/advocates')}>
                   Book Now
                 </button>
               </div>
@@ -54,7 +56,7 @@ const Services: React.FC = () => {
             support.
           </p>
           <a
-            href="/contact"
+            href="/contactUs"
             className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
           >
             Contact Us

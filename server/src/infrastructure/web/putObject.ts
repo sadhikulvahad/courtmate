@@ -24,7 +24,7 @@ exports.putObject = async (file: Buffer | Uint8Array | Blob | string, fileName: 
      }
 
      let url = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${params.Key}`;
-     console.log("File uploaded successfully to S3:", url);
+
      return {url, key : params.Key};
    } catch (error) {
     console.error("Error uploading file to S3:", error);

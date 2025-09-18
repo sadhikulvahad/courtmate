@@ -27,7 +27,7 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 router.use(authMiddleware.auth.bind(authMiddleware))
-router.use(authMiddleware.authorizeRoles('advocate'))
+router.use(authMiddleware.authorizeRoles('advocate','user'))
 
 router.post('/', asyncHandler(recurringRuleController.addRecurringRule.bind(recurringRuleController)));
 

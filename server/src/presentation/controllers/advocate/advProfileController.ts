@@ -29,7 +29,6 @@ export class advProfileController {
       }
 
       const result = await this._findUser.execute(id.toString());
-      console.log(result)
 
       return res.status(HttpStatus.OK).json({ success: true, message: result.message, user: result?.user });
     } catch (error: any) {

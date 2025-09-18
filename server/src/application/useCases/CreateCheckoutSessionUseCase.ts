@@ -69,7 +69,6 @@ export class CreateCheckoutSessionUseCase implements ICreateCheckoutSessionUseca
             caseId
         );
 
-        console.log(sessionUrl)
         return sessionUrl
     }
 }

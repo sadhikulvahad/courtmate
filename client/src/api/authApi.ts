@@ -53,20 +53,26 @@ export const initiateGoogleAuth = () => {
 export const sendForgotPasswordMail = async (email: string) => {
   try {
     const response = await axios.post(API_ENDPOINTS.AUTH.SENDFORGOTPASSWORDMAIL, { email })
-    return response
+    return response.data
   } catch (error) {
-    console.error('Error from sendForforgotPasswordMail API', error)
-    throw error
+    if (axios.isAxiosError(error)) {
+      return error.response || { error: "Network Error" };
+    }
+    console.error("Unexpected error:", error);
+    throw { error: "An unexpected error occurred" };
   }
 }
 
 export const forgetResetPassword = async (password: string, email: string) => {
   try {
     const response = await axios.put(API_ENDPOINTS.AUTH.FORGOTRESETPASSWORD, { password, email })
-    return response
+    return response.data
   } catch (error) {
-    console.error("Error from forgetResetPassword api", error)
-    throw error
+    if (axios.isAxiosError(error)) {
+      return error.response || { error: "Network Error" };
+    }
+    console.error("Unexpected error:", error);
+    throw { error: "An unexpected error occurred" };
   }
 }
 

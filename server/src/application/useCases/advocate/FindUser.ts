@@ -20,12 +20,12 @@ export class FindUser implements IFindUser {
 
         const user = await this._userRepository.findById(id)
 
-        if (user?.profilePhoto) {
-            const signedUrl = await this._s3Service.generateSignedUrl(user.profilePhoto);
-            const bciSignedurl = await this._s3Service.generateSignedUrl(user.bciCertificate);
-            user.updateProfilePhoto(signedUrl)
-            user.updateBciCirtificate(bciSignedurl);
-        }
+        // if (user?.profilePhoto) {
+        //     const signedUrl = await this._s3Service.generateSignedUrl(user.profilePhoto);
+        //     const bciSignedurl = await this._s3Service.generateSignedUrl(user.bciCertificate);
+        //     user.updateProfilePhoto(signedUrl)
+        //     user.updateBciCirtificate(bciSignedurl);
+        // }
 
         if (!user) {
             return { success: false, error: "User not found" }

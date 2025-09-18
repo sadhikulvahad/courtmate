@@ -130,8 +130,8 @@ const CaseTracker = () => {
   // Apply search & filter
   const filteredCases = cases.filter((c) => {
     const matchesSearch =
-      c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+      c?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c?.clientName?.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesSearch;
   });
@@ -223,15 +223,16 @@ const CaseTracker = () => {
   const handleUpdateCase = async () => {
     if (!selectedCase || !selectedCase._id) return;
     if (
-      !newCase.title.trim() ||
-      !newCase.clientName.trim() ||
-      !newCase.caseType.trim() ||
-      !newCase.nextHearingDate.trim() ||
-      !newCase.description.trim()
+      !selectedCase.title.trim() ||
+      !selectedCase.clientName.trim() ||
+      !selectedCase.caseType.trim() ||
+      !selectedCase.nextHearingDate.trim() ||
+      !selectedCase.description.trim()
     ) {
       toast.error("Please fill in all required fields");
       return;
     }
+
     setLoading(true);
     try {
       const response = await updateCase(selectedCase);
@@ -280,14 +281,10 @@ const CaseTracker = () => {
 
   const handleSaveHearingDetail = async (hearingData: HearingDetailsProps) => {
     try {
-      console.log(hearingData);
       if (editingHearing) {
         // Update existing hearing
-        const response = await updateHearingData(
-          editingHearing._id!,
-          hearingData
-        );
-        console.log(response);
+        await updateHearingData(editingHearing._id!, hearingData);
+
         setHearingDetails((prev) =>
           prev.map((h) =>
             h._id === editingHearing._id
@@ -299,8 +296,8 @@ const CaseTracker = () => {
       } else {
         // Create new hearing
         const response = await addHearing(hearingData);
-
-        if (response?.data.status) {
+        console.log(response)
+        if (response?.data.success) {
           const newHearing = { ...hearingData, _id: Date.now().toString() }; // Temporary ID
           setHearingDetails((prev) => [...prev, newHearing]);
           toast.success("Hearing added successfully");

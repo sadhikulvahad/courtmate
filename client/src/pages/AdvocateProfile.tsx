@@ -30,6 +30,7 @@ import { CreateConversation } from "@/api/chatApi";
 import RatingAndReview from "@/components/Review";
 import { findReviews } from "@/api/advocate/profileAPI";
 import LocationMap from "@/components/ui/LocationMap";
+import { generateSignedUrl } from "@/utils/getSignUrl";
 
 // Reuse the RatingStars component from your list page
 const RatingStars = ({ rating }: RatingStarsProps) => {
@@ -97,7 +98,24 @@ const AdvocateProfile = () => {
       setIsLoading(true);
       try {
         const response = await findUser(id);
-        setAdvocate(response.data.user);
+
+        const userData = response.data.user;
+
+        let photoUrl = "";
+        if (userData.profilePhoto) {
+          try {
+            photoUrl = await generateSignedUrl(userData.profilePhoto);
+          } catch (err) {
+            console.error("Error generating signed URL", err);
+          }
+        }
+
+        const finalUser = {
+          ...userData,
+          imageUrl: photoUrl,
+        };
+
+        setAdvocate(finalUser);
         // setSimilarAdvocates(mockSimilar);
       } catch (error) {
         console.error("Error fetching advocate:", error);
@@ -282,7 +300,7 @@ const AdvocateProfile = () => {
                       // src={`${import.meta.env.VITE_API_URL}/uploads/${
                       //   advocate?.profilePhoto
                       // }`}
-                      src={`${advocate?.profilePhoto}`}
+                      src={`${advocate?.imageUrl}`}
                       alt={advocate?.name}
                       className="w-full h-full object-cover"
                     />

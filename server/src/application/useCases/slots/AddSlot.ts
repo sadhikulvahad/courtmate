@@ -15,6 +15,7 @@ export class AddSlot implements IAddSlot {
   ) { }
 
   async execute(props: SlotProps): Promise<Slot> {
+
     if (!props.advocateId || !props.date || !props.time || props.isAvailable === undefined) {
       throw new Error('Required fields are missing');
     }
@@ -25,7 +26,7 @@ export class AddSlot implements IAddSlot {
       throw new Error('Cannot create slot in the past');
     }
     const advocateIdStr = typeof props.advocateId === 'string' ? props.advocateId : props.advocateId.toString();
-    console.log(props.time)
+
     const startTime = props.time;
     const endTime = addHours(startTime, 1);
     const existingSlots = await this._slotRepository.getAvailableSlots(

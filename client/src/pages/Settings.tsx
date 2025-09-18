@@ -203,7 +203,7 @@ const AdvocateSettings = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = callHistory.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(callHistory.length / itemsPerPage);
-  console.log(currentItems);
+
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);

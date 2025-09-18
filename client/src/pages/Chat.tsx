@@ -259,7 +259,6 @@ const Chat = () => {
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPreviewUrl(url);
-      console.log("Preview URL created:", url);
 
       return () => {
         URL.revokeObjectURL(url);
@@ -277,7 +276,7 @@ const Chat = () => {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log("File selected:", file);
+
     if (!file) return;
 
     setSelectedFile(file);
@@ -436,9 +435,21 @@ const Chat = () => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      if (!error) {
+        handleSendMessage();
+      } else if (user?.role === "advocate") {
+        handleSendMessage();
+      }
     } else {
       handleTyping();
+    }
+  };
+
+  const handleVideoCall = () => {
+    if (booking) {
+      navigate(`/video/${booking?.roomId}`);
+    } else if (error) {
+      toast.error(`You don't have booking at this time`);
     }
   };
 
@@ -627,7 +638,7 @@ const Chat = () => {
                     <div className="flex space-x-2">
                       <button
                         className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
-                        onClick={() => navigate(`/video/${booking?.roomId}`)}
+                        onClick={handleVideoCall}
                       >
                         <Video size={18} />
                       </button>
@@ -663,7 +674,11 @@ const Chat = () => {
                                 : "bg-white text-gray-800 shadow-sm"
                             }`}
                           >
-                            <p className="text-sm">{message.content}</p>
+                            <p className="text-base">{message.content}</p>
+                            <span className="text-xs text-gray-500">
+                              {formatTime(message.timeStamp)}
+                            </span>
+
                             {message.attachments &&
                             message.attachments.length > 0 ? (
                               <div className="mt-2">

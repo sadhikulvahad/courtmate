@@ -63,13 +63,9 @@ export class BookSlot implements IBookSlot {
       caseId: caseId
     };
 
-    console.log(bookingProps)
-
     const booking = Booking.fromDB(bookingProps);
     const savedBooking = await this._bookingRepository.create(booking);
-
-    console.log('askhdfaosgfb', savedBooking)
-
+    
     const date = new Date(slot.date);
     const time = new Date(slot.time);
 

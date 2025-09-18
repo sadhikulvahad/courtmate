@@ -149,7 +149,7 @@ export interface ReviewProps {
 
 export interface CaseProps {
   _id?: string
-  caseId: string
+  caseId?: string
   advocateId: Types.ObjectId
   title: string
   clientName: string

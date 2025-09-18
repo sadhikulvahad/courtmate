@@ -56,7 +56,7 @@ export class SlotController {
     try {
       const { id } = req.query;
       const { date, time, reason } = req.body;
-
+      console.log(req.body)
       if (!id) {
         return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Id required' });
       }

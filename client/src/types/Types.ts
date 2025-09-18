@@ -32,6 +32,7 @@ export interface Advocate {
   verifiedAt: Date
   isActive: boolean,
   isSponsored: boolean
+  imageUrl : string
 }
 
 
@@ -121,6 +122,7 @@ export interface AdvocateProps {
   authMethod: string
   certification: string
   avgRating?: number
+  imageUrl ?: string
 }
 
 

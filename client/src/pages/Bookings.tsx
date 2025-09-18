@@ -302,17 +302,20 @@ const Bookings = () => {
 
   const handleCancelBooking = async () => {
     try {
-      await cancelBooking(cancelBookId);
-      setBookings((prevBookings) =>
-        prevBookings
-          .map((booking) =>
+      const response = await cancelBooking(cancelBookId);
+
+      if (response.data.success) {
+        setBookings((prevBookings) =>
+          prevBookings.map((booking) =>
             booking.id === cancelBookId
               ? { ...booking, status: "cancelled" as Booking["status"] }
               : booking
           )
-          .filter((booking) => booking.status !== "cancelled")
-      );
-      toast.success("Booking cancelled successfully!");
+        );
+        toast.success(
+          response.data.message || "Booking cancelled successfully!"
+        );
+      }
     } catch (error) {
       console.error("Error in handleCancelBooking:", error);
       if (axios.isAxiosError(error) && error.response) {
@@ -333,10 +336,15 @@ const Bookings = () => {
   ) => {
     if (!selectedBooking) return;
 
-    const parsedDate = parse(date, "yyyy-MM-dd", new Date());
+    const parsedDate = parse(
+      `${date}T${time}:00`,
+      "yyyy-MM-dd'T'HH:mm:ss",
+      new Date()
+    );
+
     const parsedTime = parse(
-      `${date}T${time}`,
-      "yyyy-MM-dd'T'HH:mm",
+      `${date}T${time}:00`,
+      "yyyy-MM-dd'T'HH:mm:ss",
       new Date()
     );
 
@@ -350,10 +358,13 @@ const Bookings = () => {
       return;
     }
 
+    const postponedDate = parsedDate.toISOString();
+    const postponedTime = parsedTime.toISOString();
+
     try {
       const response = await postPoneBooking(
-        date,
-        time,
+        postponedDate,
+        postponedTime,
         reason!,
         selectedBooking.id
       );
@@ -439,8 +450,8 @@ const Bookings = () => {
           description="Are you sure you want to delete your review?"
           isOpen={cancelConfirmationModal}
           onConfirm={() => {
-            handleCancelBooking()
-            setCancelConfirmationModal(false)
+            handleCancelBooking();
+            setCancelConfirmationModal(false);
           }}
           onCancel={() => setCancelConfirmationModal(false)}
         />

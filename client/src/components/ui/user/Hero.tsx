@@ -41,11 +41,16 @@ const Hero: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-4">
-          <button className="bg-white px-6 py-2 rounded rounded-md hover:bg-gray-500 text-black font-poppins transition-all duration-300"
-          onClick={() => navigate('/advocates')}>
+          <button
+            className="bg-white px-6 py-2 rounded rounded-md hover:bg-gray-500 text-black font-poppins transition-all duration-300"
+            onClick={() => navigate("/advocates")}
+          >
             EXPLORE
           </button>
-          <button className="text-white hover:bg-gray-900 bg-black px-6 py-2 rounded rounded-md font-poppinstransition-all duration-300">
+          <button
+            className="text-white hover:bg-gray-900 bg-black px-6 py-2 rounded rounded-md font-poppinstransition-all duration-300"
+            onClick={() => navigate("/bookings")}
+          >
             BOOKINGS
           </button>
         </div>

@@ -30,8 +30,6 @@ export class SignupUser implements ISignupUser {
         const existingUser = await this._userRepository.findByEmail(userInput.email)
         const existingNumber = await this._userRepository.findByNumber(userInput.phone)
 
-        console.log(existingUser)
-
         if (existingUser && existingNumber) {
             if (!existingUser?.isActive && !existingNumber?.isActive) {
                 const token = await this._jwtService.generateEmailVerificationToken(userInput.email)

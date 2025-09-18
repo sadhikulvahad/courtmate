@@ -42,7 +42,7 @@ const WalletComponent = () => {
     const fetchWalletData = async () => {
       try {
         const response = await GetWallet(user!.id);
-        console.log(response);
+
         setWalletData(response.data.wallet.wallet);
         setTransactions(response.data.wallet.transactions);
       } catch (error) {

@@ -16,7 +16,7 @@ export class FilterRespository implements IFilterRepository {
         })
     }
     async addCategory(id: string, category: string): Promise<void> {
-        console.log(id, category)
+
         await FilterModel.findByIdAndUpdate(id,
             {
                 $push: { options: category }

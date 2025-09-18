@@ -28,8 +28,8 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 
-router.use(authMiddleware.auth.bind(authMiddleware))
-router.use(authMiddleware.authorizeRoles('admin', 'user', 'advocate'))
+// router.use(authMiddleware.auth.bind(authMiddleware))
+// router.use(authMiddleware.authorizeRoles('admin', 'user', 'advocate'))
 
 
 router.get('/', asyncHandler(filterController.getAllFilters.bind(filterController)))

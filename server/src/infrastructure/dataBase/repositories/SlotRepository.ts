@@ -17,7 +17,7 @@ export class MongooseSlotRepository implements ISlotRepository {
 
   async create(slot: Slot): Promise<Slot> {
     try {
-      console.log(slot)
+
       const newSlot = new SlotModel(slot.toJSON());
       const saved = await newSlot.save();
       return Slot.fromDB(saved);

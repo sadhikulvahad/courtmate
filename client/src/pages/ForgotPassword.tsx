@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import logo from '../assets/COURTMATE_Black.png';
+import logo from "../assets/COURTMATE_Black.png";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import { forgetResetPassword, sendForgotPasswordMail } from "@/api/authApi";
@@ -23,10 +23,11 @@ const ForgotPassword = () => {
   const handleForgotButton = async () => {
     setIsSending(true);
     const response = await sendForgotPasswordMail(email);
+
     try {
-      if (response.status === 200) {
+      if (response.success) {
         toast.success(
-          response.data.message || "Verification Mail Sent successfully"
+          response.message || "Verification Mail Sent successfully"
         );
       } else {
         toast.error(
@@ -34,7 +35,7 @@ const ForgotPassword = () => {
         );
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
       toast.error("Something went wrong, Please check your connection.");
     } finally {
       setIsSending(false);
@@ -54,7 +55,7 @@ const ForgotPassword = () => {
           setEmail(decoded.email);
         }
       } catch (e) {
-        console.log(e)
+        console.log(e);
         toast.error("Invalid token");
       }
     }
@@ -70,9 +71,8 @@ const ForgotPassword = () => {
   }, []);
 
   const submitNewPassword = async () => {
-
-    if(!password || !cPassword){
-      return toast.error('All fields are required')
+    if (!password || !cPassword) {
+      return toast.error("All fields are required");
     }
     if (password.length < 8) {
       return toast.error("Password wants atleast 8 letters");
@@ -84,8 +84,9 @@ const ForgotPassword = () => {
     setIsSending(true); // 🔒 Disable button
     try {
       const response = await forgetResetPassword(password, email);
-      if (response.status === 200) {
-        toast.success(response.data.message || "Password updated successfully");
+
+      if (response.success) {
+        toast.success(response.message || "Password updated successfully");
         setPassword("");
         setCPassword("");
         setEmail("");
@@ -95,7 +96,7 @@ const ForgotPassword = () => {
         toast.error(response.data.error || "Error occurred");
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
       toast.error("Something went wrong, please try again");
     } finally {
       setIsSending(false); // 🔓 Re-enable button after request
@@ -103,8 +104,8 @@ const ForgotPassword = () => {
   };
 
   const backTosignup = () => {
-    navigate('/signup')
-  }
+    navigate("/signup");
+  };
 
   if (step === 1) {
     return (
@@ -138,8 +139,13 @@ const ForgotPassword = () => {
               label={isSending ? "Sending..." : "Send Mail"}
               className="w-48"
               disabled={isSending}
-              />
-              <p className="text-sm text-blue-500 cursor-pointer py-2" onClick={backTosignup}>&larr; Back to signup</p>  
+            />
+            <p
+              className="text-sm text-blue-500 cursor-pointer py-2"
+              onClick={backTosignup}
+            >
+              &larr; Back to signup
+            </p>
           </div>
         </div>
       </div>

@@ -11,6 +11,6 @@ const recurringRuleSchema = new Schema<RecurringRuleProps>({
   daysOfWeek: { type: [Number], required: true },
   timeSlot: { type: String, required: true },
   exceptions: { type: [Date], default: [] },
-});
+}, { timestamps: true });
 
 export const RecurringRuleModel = mongoose.model<RecurringRuleProps>('RecurringRule', recurringRuleSchema);

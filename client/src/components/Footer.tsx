@@ -6,7 +6,7 @@ import Apple from '../assets/apple white.jpeg'
 
 const Footer: React.FC = () => {
   return (
-    <footer className="py-12 text-white bg-gray-900 px-4 md:px-10 lg:px-28 mx-auto">
+    <footer className="py-12 text-white bg-darkbluegray px-4 md:px-10 lg:px-28 mx-auto">
       <div className="container">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:grid-cols-4">
           {/* Brand Section */}

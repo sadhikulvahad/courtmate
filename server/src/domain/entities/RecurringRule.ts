@@ -26,9 +26,9 @@ export class RecurringRule {
     if (props.daysOfWeek.some((day) => day < 0 || day > 6)) {
       throw new Error('Invalid days of week');
     }
-    if (!/^\d{2}:\d{2}$/.test(props.timeSlot)) {
-      throw new Error('Invalid timeSlot format (expected HH:mm)');
-    }
+    // if (!/^\d{2}:\d{2}$/.test(props.timeSlot)) {
+    //   throw new Error('Invalid timeSlot format (expected HH:mm)');
+    // }
     this.props = { ...props, exceptions: props.exceptions || [] };
   }
 

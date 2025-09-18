@@ -19,24 +19,26 @@ export class AddRecurringRule implements IAddRecurringRule {
   ) { }
 
   async execute(ruleData: Omit<RecurringRuleProps, '_id'>): Promise<RecurringRulePropsDTO> {
-    const rule = new RecurringRule(ruleData);
 
-
-    const slots: Slot[] = this.generateSlots(rule);
-    for (const slot of slots) {
-      const existingSlot = await this._slotRepository.findByAdvocateId(slot.advocateId, new Date(slot.date), new Date(slot.time))
-
-      if (existingSlot) {
-        continue
-      }
-
-      await this._slotRepository.create(slot);
-    }
 
     try {
+      const rule = new RecurringRule(ruleData);
+      console.log(rule)
+
+      const slots: Slot[] = await this.generateSlots(rule);
+
+      for (const slot of slots) {
+
+        const existingSlot = await this._slotRepository.findByAdvocateId(slot.advocateId, new Date(slot.date), new Date(slot.time))
+
+        if (existingSlot.length > 0) {
+          continue;
+        }
+
+        await this._slotRepository.create(slot);
+      }
 
       const savedRule = await this._recurringRuleRepository.create(rule);
-
       return {
         ...savedRule.toJSON(),
         generatedSlotCount: slots.length,
@@ -50,7 +52,7 @@ export class AddRecurringRule implements IAddRecurringRule {
 
 
 
-  private generateSlots(rule: RecurringRule): Slot[] {
+  private async generateSlots(rule: RecurringRule): Promise<Slot[]> {
     const startDate = new Date(rule.startDate);
     const endDate = new Date(rule.endDate);
     const today = startOfDay(new Date());
@@ -76,14 +78,14 @@ export class AddRecurringRule implements IAddRecurringRule {
         !isBefore(currentDay, today) &&
         !rule.exceptions?.some(ex => isSameDay(ex, currentDay))
       ) {
-        const [hours, minutes] = rule.timeSlot.split(':').map(Number);
+        const time = new Date(rule.timeSlot); // full UTC datetime
 
         const slotDate = new Date(Date.UTC(
           currentDay.getUTCFullYear(),
           currentDay.getUTCMonth(),
           currentDay.getUTCDate(),
-          hours,
-          minutes
+          time.getUTCHours(),
+          time.getUTCMinutes()
         ));
 
         const slot = Slot.fromDB({

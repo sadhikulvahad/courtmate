@@ -8,10 +8,9 @@ const generateCaseId = () => `case-${uuidv4().split("-")[0]}`;
 const CaseSchema = new Schema<CaseProps>({
     caseId: {
         type: String,
-        default: generateCaseId,
         unique: true,
         index: true,
-        requred: true
+        required: true
     },
     advocateId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -47,5 +46,12 @@ const CaseSchema = new Schema<CaseProps>({
         default: []
     }]
 }, { timestamps: true });
+
+CaseSchema.pre("validate", function (next) {
+    if (!this.caseId) {
+        this.caseId = `case-${uuidv4().split("-")[0]}`;
+    }
+    next();
+});
 
 export const CaseModel = mongoose.model<CaseProps>("Case", CaseSchema);

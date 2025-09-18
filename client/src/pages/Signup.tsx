@@ -16,6 +16,10 @@ import { RootState } from "@/redux/store";
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import Loader from "@/components/ui/Loading";
+import logo from "../assets/courtmateLogo.jpg";
+import "react-phone-number-input/style.css";
+import PhoneInput from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 interface MyTokenPayload {
   id: string;
@@ -98,7 +102,6 @@ export function Signup() {
     setIsSubmitting(true);
 
     const role = step === 2 ? "user" : step === 3 ? "advocate" : "";
-    console.log(role)
     // Create updated signup details with role
     const updatedSignupDetails = {
       ...signupDetails,
@@ -122,9 +125,9 @@ export function Signup() {
         setIsSubmitting(false);
         return toast.error("Passwords do not match");
       }
-      if (updatedSignupDetails.phone.length !== 10) {
+      if (!isValidPhoneNumber(updatedSignupDetails.phone || "")) {
         setIsSubmitting(false);
-        return toast.error("Mobile number must be 10 digits");
+        return toast.error("Please enter a valid mobile number");
       }
       if (updatedSignupDetails.password.length < 8) {
         setIsSubmitting(false);
@@ -227,29 +230,29 @@ export function Signup() {
       <div className="w-full min-h-screen relative overflow-hidden bg-gradient-to-r from-blue-50 to-gray-100">
         {/* Left Panel - Hidden on mobile */}
         <div
-          className={`absolute top-0 left-0 w-1/2 h-full bg-white transition-transform duration-500 ease-in-out hidden md:block ${
+          className={`absolute top-0 left-0 w-1/2 h-full bg-darkbluegray transition-transform duration-500 ease-in-out hidden md:block ${
             step === 2 || step === 3 ? "translate-x-full" : "translate-x-0"
           }`}
         >
           <div className="w-full h-full flex flex-col items-center justify-center">
             <div className="text-center">
               <img
-                src="src/assets/COURTMATE_Black.png"
+                src={logo}
                 alt="CourtMate Logo"
                 className="w-64 lg:w-80 mb-2"
                 onClick={navigateHome}
               />
-              <p className="text-md lg:text-xl font-semibold text-black mb-2 font-poppins">
+              <p className="text-md lg:text-xl font-semibold text-white mb-2 font-poppins">
                 Your Trusted Legal Platform
               </p>
             </div>
             <div className="mt-32 text-center">
-              <p className="text-md md:text-xl font-semibold text-black">
+              <p className="text-md md:text-xl font-semibold text-white">
                 ARE YOU AN ADVOCATE?
               </p>
               <div className="hover:underline flex justify-end">
                 <p
-                  className="text-md md:text-xl md:text-black cursor-pointer flex items-center justify-center"
+                  className="text-md md:text-xl md:text-white cursor-pointer flex items-center justify-center"
                   onClick={() => setStep(3)}
                 >
                   Register
@@ -271,7 +274,7 @@ export function Signup() {
             className="w-40 mb-2"
             onClick={navigateHome}
           />
-          <p className="text-sm font-semibold text-black font-poppins">
+          <p className="text-sm font-semibold text-white font-poppins">
             Your Trusted Legal Platform
           </p>
         </div>
@@ -319,11 +322,15 @@ export function Signup() {
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {step !== 1 && (
-                  <Input
-                    type="number"
+                  <PhoneInput
                     name="phone"
                     value={signupDetails.phone}
-                    onChange={handleSignupDetails}
+                    onChange={(value) =>
+                      setSignupDetails((prev) => ({
+                        ...prev,
+                        phone: value || "",
+                      }))
+                    }
                     placeholder="Number"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -371,8 +378,8 @@ export function Signup() {
                   disabled={isSubmitting}
                   className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${
                     isSubmitting
-                      ? "bg-gray-500 cursor-not-allowed"
-                      : "bg-gray-800 hover:bg-black"
+                      ? "bg-darkbluegray cursor-not-allowed"
+                      : "bg-darkbluegray hover:bg-black"
                   }`}
                 />
               </div>

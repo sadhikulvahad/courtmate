@@ -60,11 +60,12 @@ export const updateCase = async (newCase: {
     priority: string,
     nextHearingDate: string,
     description: string,
-    hearingHistory: string[]
+    hearingHistory: string[],
+    caseId: string
 }) => {
     try {
         const response = await axiosInstance.put(API_ENDPOINTS.CASE.CASE_PUT, newCase, {
-            params: { newCaseID: newCase._id }
+            params: { caseId: newCase._id }
         })
         return response
     } catch (error) {

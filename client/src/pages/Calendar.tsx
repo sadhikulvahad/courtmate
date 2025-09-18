@@ -46,6 +46,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import BookingSlotDialog from "@/components/Calendar/BookingSlotDialog";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import { generateSignedUrl } from "@/utils/getSignUrl";
 
 const predefinedSlots = [
   { id: 1, time: "09:00", label: "9:00 AM" },
@@ -119,14 +120,14 @@ const AdvocateProfilePage = () => {
     const days = eachDayOfInterval({ start: startDate, end: endDate });
 
     rules.forEach((rule) => {
-      if (
-        !validateDate(rule.startDate, true) ||
-        !validateDate(rule.endDate) ||
-        !validateTimeSlot(rule.timeSlot)
-      ) {
-        toast.warning(`Invalid rule: ${rule._id}`, rule);
-        return;
-      }
+      // if (
+      //   !validateDate(rule.startDate, true) ||
+      //   !validateDate(rule.endDate) ||
+      //   !validateTimeSlot(rule.timeSlot)
+      // ) {
+      //   toast.warning(`Invalid rule: ${rule._id}`, rule);
+      //   return;
+      // }
       days.forEach((day) => {
         if (rule.daysOfWeek.includes(day.getDay()) && validateDate(day)) {
           if (
@@ -218,7 +219,23 @@ const AdvocateProfilePage = () => {
       try {
         setLoading(true); // Changed from false to true
         const data = await findUser(advocateId);
-        setAdvocate(data.data.user);
+
+        const userData = data.data.user;
+
+        let photoUrl = "";
+        if (userData.profilePhoto) {
+          try {
+            photoUrl = await generateSignedUrl(userData.profilePhoto);
+          } catch (err) {
+            console.error("Error generating signed URL", err);
+          }
+        }
+
+        const finalUser = {
+          ...userData,
+          imageUrl: photoUrl,
+        };
+        setAdvocate(finalUser);
 
         const rules = await getRecurringRules(advocateId);
         setRecurringRules(rules?.data.rules);
@@ -405,11 +422,9 @@ const AdvocateProfilePage = () => {
         caseId
       );
 
-      console.log(response);
-
       if (response.data.url.success) {
         const data = response.data.url.url;
-        console.log(data)
+
         if (data) {
           window.location.href = data;
         } else {
@@ -488,6 +503,23 @@ const AdvocateProfilePage = () => {
       return;
     }
 
+    rule.endDate = new Date(rule.endDate).toISOString();
+
+    rule.startDate = new Date(rule.startDate).toISOString();
+    const today = new Date();
+    const [hours, minutes] = rule.timeSlot.split(":").map(Number);
+
+    const localDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      hours,
+      minutes,
+      0
+    );
+
+    rule.timeSlot = localDate.toISOString();
+
     try {
       const newRule = await addRecurringRule(advocate!.id, rule);
 
@@ -526,15 +558,14 @@ const AdvocateProfilePage = () => {
 
   const handleCancelBooking = async () => {
     try {
+      console.log(cancelBookId)
       await cancelBooking(cancelBookId);
       setUserBookings((prevBookings) =>
-        prevBookings
-          .map((booking) =>
-            booking.id === cancelBookId
-              ? { ...booking, status: "cancelled" as Booking["status"] }
-              : booking
-          )
-          .filter((booking) => booking.status !== "cancelled")
+        prevBookings.map((booking) =>
+          booking.id === cancelBookId
+            ? { ...booking, status: "cancelled" as Booking["status"] }
+            : booking
+        )
       );
       toast.success("Booking cancelled successfully!");
     } catch (error) {
@@ -557,10 +588,15 @@ const AdvocateProfilePage = () => {
   ) => {
     if (!selectedBooking) return;
 
-    const parsedDate = parse(date, "yyyy-MM-dd", new Date());
+    const parsedDate = parse(
+      `${date}T${time}:00`,
+      "yyyy-MM-dd'T'HH:mm:ss",
+      new Date()
+    );
+
     const parsedTime = parse(
-      `${date}T${time}`,
-      "yyyy-MM-dd'T'HH:mm",
+      `${date}T${time}:00`,
+      "yyyy-MM-dd'T'HH:mm:ss",
       new Date()
     );
 
@@ -574,14 +610,22 @@ const AdvocateProfilePage = () => {
       return;
     }
 
+    const postponedDate = parsedDate.toISOString()
+    const postponedTime = parsedTime.toISOString()
+
     try {
       let response;
       if (isAdvocate) {
-        response = await postponeSlot(date, time, reason, selectedBooking.id);
+        response = await postponeSlot(
+          postponedDate,
+          postponedTime,
+          reason,
+          selectedBooking.id
+        );
       } else {
         response = await postPoneBooking(
-          date,
-          time,
+          postponedDate,
+          postponedTime,
           reason!,
           selectedBooking.id
         );

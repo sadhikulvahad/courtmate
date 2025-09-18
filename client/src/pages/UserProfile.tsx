@@ -5,6 +5,9 @@ import { Advocate } from "@/types/Types";
 import { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import "react-phone-number-input/style.css";
+import PhoneInput from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 import {
   findUser,
@@ -13,6 +16,7 @@ import {
   toggleSaveAdvocate,
 } from "@/api/user/userApi";
 import ResetPasswordModal from "../components/ui/ResetPasswordModal";
+import { generateSignedUrl } from "@/utils/getSignUrl";
 
 export default function UserProfile() {
   const [user, setUser] = useState<Advocate>();
@@ -33,8 +37,23 @@ export default function UserProfile() {
       try {
         // Fetch user profile
         const userResponse = await findUser(authUser?.id as string);
+
+        const userData = userResponse.data.user;
         if (userResponse.status === 200) {
-          setUser(userResponse.data.user);
+          let photoUrl = "";
+          if (userData.profilePhoto) {
+            try {
+              photoUrl = await generateSignedUrl(userData.profilePhoto);
+            } catch (err) {
+              console.error("Error generating signed URL", err);
+            }
+          }
+
+          const finalUser = {
+            ...userData,
+            imageUrl: photoUrl,
+          };
+          setUser(finalUser);
           setEditedUser(userResponse.data.user);
         } else {
           toast.error(
@@ -83,6 +102,11 @@ export default function UserProfile() {
     setIsLoading(true);
 
     try {
+      if (!isValidPhoneNumber(editedUser.phone!)) {
+        toast.error("Please enter a valid mobile number");
+        return;
+      }
+
       const formData = new FormData();
       Object.entries(editedUser).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -164,7 +188,7 @@ export default function UserProfile() {
                   <div className="w-40 h-40 bg-gray-500 rounded-full flex items-center justify-center text-white text-6xl font-semibold">
                     {user?.profilePhoto ? (
                       <img
-                        src={`${user.profilePhoto}`}
+                        src={`${user.imageUrl}`}
                         // src={`${import.meta.env.VITE_API_URL}/Uploads/${
                         //   user.profilePhoto
                         // }`}
@@ -218,11 +242,16 @@ export default function UserProfile() {
                         <label className="block text-sm font-medium text-gray-700">
                           Phone
                         </label>
-                        <input
+                        <PhoneInput
                           type="tel"
                           name="phone"
                           value={editedUser.phone || ""}
-                          onChange={handleInputChange}
+                          onChange={(value) => {
+                            setEditedUser((prev) => ({
+                              ...prev,
+                              phone: value,
+                            }));
+                          }}
                           className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>

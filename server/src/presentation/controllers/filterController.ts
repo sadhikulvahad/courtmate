@@ -50,7 +50,7 @@ export class FilterController {
             if (!id || !category) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ message: "Filter ID and category are required" });
             }
-            console.log(category, id)
+
             await this._addCategory.execute(id, category);
             return res.status(HttpStatus.OK).json({ message: "Category added successfully" });
         } catch (error) {
@@ -61,7 +61,7 @@ export class FilterController {
     async deleteCategory(req: Request, res: Response) {
         try {
             const { filterId, category } = req.body
-            console.log(filterId, category)
+
             if (!filterId || !category) {
                 return res.status(HttpStatus.BAD_REQUEST).json({ message: "Filter ID and category are required" });
             }
