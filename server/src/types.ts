@@ -108,6 +108,7 @@ export const TYPES = {
     IDeleteCaseHearingRepo : Symbol.for('IDeleteCaseHearingRepo'),
     ICancelBookingRepo : Symbol.for('ICancelBookingRepo'),
     IGetWallet :Symbol.for('IGetWallet'),
+    IUpdateUnreadCount : Symbol.for('IUpdateUnreadCount'),
 
     // Controllers
     AdvocateController: Symbol.for('AdvocateController'),

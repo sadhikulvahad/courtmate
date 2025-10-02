@@ -119,6 +119,7 @@ export interface ConversationProps {
   participants: Participant[];
   startedAt: Date;
   lastMessage?: Types.ObjectId;
+  unreadCounts?: number
 }
 
 export interface MessageProps {

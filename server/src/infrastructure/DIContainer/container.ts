@@ -204,6 +204,8 @@ import { WalletRepository } from '../../infrastructure/dataBase/repositories/Wal
 import { WalletController } from '../../presentation/controllers/walletController';
 import { IGetWallet } from '../../application/interface/Wallet/GetWalletRepo';
 import { GetWallet } from '../../application/useCases/Wallet/GetWalletUsecase';
+import { IUpdateUnreadCountRepo } from '../../application/interface/messages/UpdateUnreadCountRepo';
+import { UpdateUnreadCount } from '../../application/useCases/messages/UpdateUnreadCount';
 
 type EmailConfig = {
     service: string;
@@ -346,6 +348,7 @@ container.bind<IUpdateCaseHearingDataRepo>(TYPES.IUpdateCaseHearingDataRepo).to(
 container.bind<IDeleteCaseHearingRepo>(TYPES.IDeleteCaseHearingRepo).to(DeleteCaseHearingUsecase).inSingletonScope()
 container.bind<ICancelBookingRepo>(TYPES.ICancelBookingRepo).to(CancelBooking).inSingletonScope()
 container.bind<IGetWallet>(TYPES.IGetWallet).to(GetWallet).inSingletonScope()
+container.bind<IUpdateUnreadCountRepo>(TYPES.IUpdateUnreadCount).to(UpdateUnreadCount).inSingletonScope()
 
 // Middleware
 container.bind<AuthMiddleware>(TYPES.AuthMiddleware).toDynamicValue(() => {

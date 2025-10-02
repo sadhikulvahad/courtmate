@@ -3,9 +3,10 @@ import { Server as SocketIOServer } from 'socket.io';
 import { TYPES } from '../../types';
 import { Logger } from 'winston';
 import { CreateMessageUseCase } from '../../application/useCases/messages/CreateMessage';
-import { MessageProps, NotificationProps } from '../../domain/types/EntityProps';
+import { MessageProps } from '../../domain/types/EntityProps';
 import userModel from '../../infrastructure/dataBase/models/UserModel';
 import { SocketServer } from './socketServer';
+import { IConversationRepository } from '../../domain/interfaces/ConversationRepository';
 
 @injectable()
 export class SocketIOService {
@@ -14,7 +15,8 @@ export class SocketIOService {
   constructor(
     @inject(TYPES.SocketIOServer) private socketServer: SocketServer,
     @inject(TYPES.Logger) private logger: Logger,
-    @inject(TYPES.ICreateMessage) private createMessage: CreateMessageUseCase
+    @inject(TYPES.ICreateMessage) private createMessage: CreateMessageUseCase,
+    @inject(TYPES.IConversationRepository) private updateConversation: IConversationRepository
   ) { }
 
   initialize() {
@@ -139,6 +141,14 @@ export class SocketIOService {
           this.logger.error('Message send error', { error });
           socket.emit('error', { message: 'Failed to send message' });
         }
+      });
+
+      socket.on('message-read', async (data) => {
+        const { conversationId, userId } = data;
+
+        this.updateConversation.updateUnreaadCount(conversationId)
+
+        io.to(`chat_${conversationId}`).emit('message-read', data);
       });
 
       socket.on('leave-chat', (conversationId: string) => {

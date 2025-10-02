@@ -122,6 +122,7 @@ const Chat = () => {
     try {
       setIsLoading(true);
       const convResponse = await GetConversation();
+      console.log(convResponse);
       setConversations(convResponse?.data || []);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -583,9 +584,9 @@ const Chat = () => {
                           <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                             <User className="w-6 h-6 text-gray-600" />
                           </div>
-                          {conversation.unreadCount && (
+                          {conversation.unreadCount! > 0 && (
                             <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                              {conversation.unreadCount > 9
+                              {conversation.unreadCount! > 9
                                 ? "9+"
                                 : conversation.unreadCount}
                             </div>

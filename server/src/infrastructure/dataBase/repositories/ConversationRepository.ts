@@ -27,6 +27,7 @@ export class ConversationRepositoryImplements implements IConversationRepository
                 participants: conversation.participants,
                 startedAt: conversation.startedAt,
                 lastMessage: conversation.lastMessage,
+                unreadCounts: conversation.unreadCounts
             });
             return newConversation.toObject() as ConversationProps;
         } catch (error) {
@@ -38,7 +39,7 @@ export class ConversationRepositoryImplements implements IConversationRepository
         try {
             await ConversationModel.findByIdAndUpdate(
                 conversationId,
-                { lastMessage: messageId },
+                { lastMessage: messageId, $inc: { unreadCounts: 1 } },
                 { new: true }
             );
         } catch (error) {
@@ -64,6 +65,18 @@ export class ConversationRepositoryImplements implements IConversationRepository
         });
 
         return conversation ? conversation.toObject() as ConversationProps : null;
+    }
+
+    async updateUnreaadCount(conversationId: string) {
+        try {
+            await ConversationModel.findByIdAndUpdate(
+                conversationId,
+                { $set: { unreadCounts: 0 } },
+                { new: true }
+            );
+        } catch (error) {
+            throw new Error(`Failed to update count message: ${(error as Error).message}`);
+        }
     }
 
 }

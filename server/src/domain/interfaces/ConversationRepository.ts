@@ -6,5 +6,5 @@ export interface IConversationRepository {
     createConversation(conversation: Omit<ConversationProps, "_id">): Promise<ConversationProps>;
     updateLastMessage(conversationId: Types.ObjectId, messageId: Types.ObjectId): Promise<void>;
     findConversationBetweenParticipants(userAId: Types.ObjectId, userBId: Types.ObjectId): Promise<ConversationProps | null>;
-
-}
+    updateUnreaadCount(conversationId: string) : Promise<void>
+}   
