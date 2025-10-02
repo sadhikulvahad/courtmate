@@ -1,4 +1,4 @@
-import { faMoon, faUser } from "@fortawesome/free-solid-svg-icons";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../assets/COURTMATE_Black.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState, useEffect, useRef } from "react";
@@ -88,18 +88,26 @@ const NavBar = () => {
         >
           About Us
         </div>
-        <div className="hidden lg:block hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
-        onClick={() => navigate('/contactUs')}>
+        <div
+          className="hidden lg:block hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
+          onClick={() => navigate("/contactUs")}
+        >
           Contact Us
         </div>
       </div>
 
       {/* Mobile view - Only Home and Advocates */}
       <div className="flex md:hidden py-4 items-center gap-6">
-        <div className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer">
+        <div
+          className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           Home
         </div>
-        <div className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer">
+        <div
+          className="hover:underline hover:decoration-1 hover:underline-offset-4 transition-all duration-300 cursor-pointer"
+          onClick={() => navigate("/advocates")}
+        >
           Advocates
         </div>
       </div>
@@ -107,9 +115,9 @@ const NavBar = () => {
       {/* Right side items (moon and profile) with responsive visibility */}
       <div className="py-4 flex gap-4 items-center">
         {/* Moon icon - only visible on md and above */}
-        <div className="hidden md:flex bg-transparent rounded-full border border-gray-600 items-center justify-center cursor-pointer">
+        {/* <div className="hidden md:flex bg-transparent rounded-full border border-gray-600 items-center justify-center cursor-pointer">
           <FontAwesomeIcon icon={faMoon} className="w-4 h-4 p-2" />
-        </div>
+        </div> */}
 
         <div
           className="bg-gray-600 rounded-full border border-gray-600 flex items-center justify-center w-8 h-8 text-white font-extrabold text-xl cursor-pointer"

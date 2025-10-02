@@ -91,20 +91,17 @@ export class BookingRepositoryImplements implements IBookingRepository {
 
   async getBook(advocateId: Types.ObjectId, userId: Types.ObjectId): Promise<Booking | null> {
     const now = new Date();
-    const startOfHour = new Date(now);
-    startOfHour.setMinutes(0, 0, 0);
 
-    const endOfHour = new Date(now);
-    endOfHour.setMinutes(59, 59, 999);
+    console.log(new Date(now.getTime() - 60 * 60 * 1000))
 
     const booking = await BookingModel.findOne({
       advocateId,
       userId,
       time: {
-        $gte: startOfHour,
-        $lte: endOfHour,
+        $lte: now, // booking started before or exactly now
+        $gt: new Date(now.getTime() - 60 * 60 * 1000) // booking not older than 1h
       },
-    }).lean()
+    }).lean();
 
     return booking ? Booking.fromDB(booking) : null;
   }

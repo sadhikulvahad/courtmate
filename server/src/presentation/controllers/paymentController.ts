@@ -204,7 +204,11 @@ export class paymentController {
 
                     const slot = await this._slotRepository.findById(session.metadata.slotId!)
 
-                    if (slot?.status === 'confirmed' || slot?.isAvailable === false) {
+                    console.log(slot)
+
+                    if (slot?.isAvailable === false) {
+
+                        console.log('hey')
 
                         const existingWallet = await this._walletRepository.getWalletById(session.metadata.user_id!)
 
@@ -219,7 +223,9 @@ export class paymentController {
                         return res.status(HttpStatus.CONFLICT).json({ error: "Slot already booked. Amount will be credited to your wallet." });
                     }
 
-                    // Existing logic for advocate booking
+                    // Existing logic for advocate booking  
+
+                    console.log('hello')
                     const booking = await this._bookSlot.execute(
                         session.metadata.advocate_id!,
                         session.metadata.slotId!,

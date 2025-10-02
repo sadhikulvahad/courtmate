@@ -267,11 +267,11 @@ export function Signup() {
         </div>
 
         {/* Mobile Logo - Only visible on mobile */}
-        <div className="flex flex-col items-center pt-8 pb-4 md:hidden">
+        <div className="flex flex-col items-center pt-4 pb-2 md:hidden bg-darkbluegray">
           <img
-            src="src/assets/COURTMATE_Black.png"
+            src={logo}
             alt="CourtMate Logo"
-            className="w-40 mb-2"
+            className="w-40"
             onClick={navigateHome}
           />
           <p className="text-sm font-semibold text-white font-poppins">
@@ -281,13 +281,13 @@ export function Signup() {
 
         {/* Right Panel - Adjusted for mobile */}
         <div
-          className={`md:absolute md:top-0 md:right-0 md:w-1/2 w-full h-full transition-transform duration-500 ease-in-out ${
+          className={ `bg-darkbluegray md:bg-white md:absolute md:top-0 md:right-0 md:w-1/2 w-full h-full transition-transform duration-500 ease-in-out ${
             step === 2 || step === 3
               ? "md:-translate-x-full"
               : "md:translate-x-0"
           }`}
         >
-          <div className="w-full h-full flex items-center justify-center px-4 md:px-0">
+          <div className="w-full h-full flex items-center justify-center px-8 md:px-0">
             <div className="bg-white p-6 md:p-10 rounded-xl shadow-lg w-full max-w-md md:w-96">
               {step === 2 ? (
                 <h2 className="text-xl md:text-2xl font-bold mb-6 md:mb-8 text-center text-gray-800 font-poppins">
@@ -443,12 +443,12 @@ export function Signup() {
 
           {/* Mobile Advocate Section - Only visible on mobile */}
           {(step === 1 || step === 2) && (
-            <div className="flex flex-col items-center mt-8 mb-12 md:hidden">
-              <p className="text-xl font-semibold text-black mb-2">
+            <div className="flex flex-col items-center mt-6 md:hidden">
+              <p className="text-lg font-semibold text-black">
                 ARE YOU AN ADVOCATE?
               </p>
               <p
-                className="text-xl text-black cursor-pointer flex items-center justify-center hover:underline"
+                className="text-lg text-black cursor-pointer flex items-center justify-center hover:underline mb-8"
                 onClick={() => setStep(3)}
               >
                 Register

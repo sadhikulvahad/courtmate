@@ -46,7 +46,7 @@ export class BookingExpirationJobService {
           bookingTime.getMinutes()
         );
 
-        if (isBefore(bookingDateTime, now) && booking.status !== 'expired' && booking.status !== 'confirmed') {
+        if (isBefore(bookingDateTime, now) && booking.status !== 'expired' && booking.status !== 'confirmed' && booking.status !== 'postponed') {
           await this.IBookingRepository.updateBooking(booking.id.toString(), { status: 'expired' });
           this.logger.info(`Updated booking ${booking.id} to expired`);
         }

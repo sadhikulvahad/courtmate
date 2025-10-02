@@ -27,12 +27,11 @@ router.use((req: Request, res: Response, next: NextFunction) => {
     next();
 });
 
+router.get('/', asyncHandler(filterController.getAllFilters.bind(filterController)))
 
 // router.use(authMiddleware.auth.bind(authMiddleware))
-// router.use(authMiddleware.authorizeRoles('admin', 'user', 'advocate'))
+// router.use(authMiddleware.authorizeRoles('admin'))
 
-
-router.get('/', asyncHandler(filterController.getAllFilters.bind(filterController)))
 
 router.post('/', asyncHandler(filterController.addFilter.bind(filterController)))
 
