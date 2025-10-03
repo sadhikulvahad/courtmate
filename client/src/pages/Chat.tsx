@@ -10,6 +10,7 @@ import {
   X,
   Image,
   FileText,
+  Trash,
 } from "lucide-react";
 import NavBar from "@/components/ui/NavBar";
 import { useNavigate } from "react-router-dom";
@@ -243,11 +244,14 @@ const Chat = () => {
       }
     });
 
+    socket.on("message-deleted", handleMessageDeleted);
+
     return () => {
       socket.off("new-message", handleNewMessage);
       socket.off("user-typing");
       socket.off("user-stop-typing");
       socket.off("message-read");
+      socket.off("message-deleted", handleMessageDeleted);
     };
   }, [selectedChat, user?.id]);
 
@@ -269,6 +273,22 @@ const Chat = () => {
       setPreviewUrl(null);
     }
   }, [selectedFile]);
+
+  const handleDeleteMessage = (messageId: string) => {
+    socket.emit("delete-message", {
+      messageId,
+      conversationId: selectedChat,
+      userId: user?.id,
+    });
+  };
+
+  const handleMessageDeleted = ({ messageId }: { messageId: string }) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg._id === messageId ? { ...msg, isDeleted: true, content: "" } : msg
+      )
+    );
+  };
 
   const getFileType = (file: File): "image" | "file" => {
     if (file.type.startsWith("image/")) return "image";
@@ -629,7 +649,6 @@ const Chat = () => {
                 <div className="bg-white border-b border-gray-200 p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="relative"></div>
                       <div>
                         <h3 className="font-semibold text-gray-900">
                           {otherParticipant?.userId.name}
@@ -669,64 +688,83 @@ const Chat = () => {
                           }`}
                         >
                           <div
-                            className={`max-w-[70%] px-2 py-1 rounded-lg ${
+                            className={`relative group max-w-[70%] px-2 py-1 rounded-lg ${
                               message.senderId === user?.id
-                                ? "bg-blue-500 text-white"
+                                ? "bg-gray-500 text-white"
                                 : "bg-white text-gray-800 shadow-sm"
                             }`}
                           >
-                            <p className="text-base">{message.content}</p>
-                            <span className="text-xs text-gray-500">
-                              {formatTime(message.timeStamp)}
-                            </span>
+                            {message.isDeleted ? (
+                              <p className="text-sm italic text-gray-400">
+                                This message was deleted
+                              </p>
+                            ) : (
+                              <>
+                                <p className="text-base">{message.content}</p>
+                                <span className="text-xs text-gray-700">
+                                  {formatTime(message.timeStamp)}
+                                </span>
 
-                            {message.attachments &&
-                            message.attachments.length > 0 ? (
-                              <div className="mt-2">
-                                {message.attachments.map(
-                                  (attachment, index) => {
-                                    const isImage =
-                                      attachment.fileType === "image";
-                                    const imageUrl = attachment.fileUrl;
-                                    return (
-                                      <div key={index} className="mb-2">
-                                        {isImage ? (
-                                          <img
-                                            src={imageUrl}
-                                            alt={
-                                              attachment.fileName ||
-                                              "Attachment"
-                                            }
-                                            className="max-w-full max-h-60 rounded-lg object-contain border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
-                                            onClick={() =>
-                                              openImageModal(
-                                                imageUrl,
-                                                attachment.fileName
-                                              )
-                                            }
-                                          />
-                                        ) : (
-                                          <a
-                                            href={attachment.fileUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                                          >
-                                            {getFileIcon(
-                                              attachment.fileType,
-                                              attachment.fileName
+                                {message.attachments &&
+                                message.attachments.length > 0 ? (
+                                  <div className="mt-2">
+                                    {message.attachments.map(
+                                      (attachment, index) => {
+                                        const isImage =
+                                          attachment.fileType === "image";
+                                        const imageUrl = attachment.fileUrl;
+                                        return (
+                                          <div key={index} className="mb-2">
+                                            {isImage ? (
+                                              <img
+                                                src={imageUrl}
+                                                alt={
+                                                  attachment.fileName ||
+                                                  "Attachment"
+                                                }
+                                                className="max-w-full max-h-60 rounded-lg object-contain border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                                onClick={() =>
+                                                  openImageModal(
+                                                    imageUrl,
+                                                    attachment.fileName
+                                                  )
+                                                }
+                                              />
+                                            ) : (
+                                              <a
+                                                href={attachment.fileUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                              >
+                                                {getFileIcon(
+                                                  attachment.fileType,
+                                                  attachment.fileName
+                                                )}
+                                                <span className="truncate max-w-xs">
+                                                  {attachment.fileName ||
+                                                    "File"}
+                                                </span>
+                                              </a>
                                             )}
-                                            <span className="truncate max-w-xs">
-                                              {attachment.fileName || "File"}
-                                            </span>
-                                          </a>
-                                        )}
-                                      </div>
-                                    );
-                                  }
-                                )}
-                              </div>
-                            ) : null}
+                                          </div>
+                                        );
+                                      }
+                                    )}
+                                  </div>
+                                ) : null}
+                              </>
+                            )}
+
+                            {/* Delete button only visible on hover */}
+                            {message.senderId === user?.id && !message.isDeleted &&(
+                              <button
+                                onClick={() => handleDeleteMessage(message._id)}
+                                className="absolute top-1 right-1 hidden group-hover:flex items-center justify-center w-6 h-6 text-xs bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                              >
+                                <Trash size={12} />
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}

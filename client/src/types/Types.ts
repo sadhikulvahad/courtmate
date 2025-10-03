@@ -299,6 +299,7 @@ export interface Message {
   content: string
   timeStamp: Date
   status: 'sent' | 'delivered' | 'read'
+  isDeleted : boolean
   attachments?: {
     fileUrl: string;
     fileName?: string;

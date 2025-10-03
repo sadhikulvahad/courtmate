@@ -7,6 +7,7 @@ import { MessageProps } from '../../domain/types/EntityProps';
 import userModel from '../../infrastructure/dataBase/models/UserModel';
 import { SocketServer } from './socketServer';
 import { IConversationRepository } from '../../domain/interfaces/ConversationRepository';
+import { IMessageRepository } from '../../domain/interfaces/MessageRepository';
 
 @injectable()
 export class SocketIOService {
@@ -16,7 +17,8 @@ export class SocketIOService {
     @inject(TYPES.SocketIOServer) private socketServer: SocketServer,
     @inject(TYPES.Logger) private logger: Logger,
     @inject(TYPES.ICreateMessage) private createMessage: CreateMessageUseCase,
-    @inject(TYPES.IConversationRepository) private updateConversation: IConversationRepository
+    @inject(TYPES.IConversationRepository) private _conversationRepo : IConversationRepository,
+    @inject(TYPES.IMessageRepository) private _messageRepo : IMessageRepository
   ) { }
 
   initialize() {
@@ -125,6 +127,7 @@ export class SocketIOService {
             timeStamp: new Date(),
             status: 'sent',
             attachments: validatedAttachments,
+            isDeleted: false
           });
 
           io.to(`chat_${data.conversationId}`).emit('new-message', savedMessage);
@@ -143,10 +146,44 @@ export class SocketIOService {
         }
       });
 
+      socket.on("delete-message", async ({ messageId, conversationId, userId }) => {
+        try {
+          // Find message
+          // const message = await MessageModel.findById(messageId);
+          // if (!message) {
+          //   return socket.emit("error", { message: "Message not found" });
+          // }
+
+          // Authorize: only sender can delete
+          // if (message.senderId.toString() !== userId) {
+          //   return socket.emit("error", { message: "Not authorized to delete this message" });
+          // }
+
+          // Mark as deleted (soft delete)
+          // message.isDeleted = true;
+          // message.content = ""; // Optional: clear text
+          // await message.save();
+
+          this._messageRepo.deleteMessage(messageId)
+
+          // Notify all participants in the conversation
+          io.to(`chat_${conversationId}`).emit("message-deleted", {
+            messageId,
+            conversationId,
+          });
+
+          this.logger.info("Message deleted", { messageId, conversationId, userId });
+        } catch (err) {
+          this.logger.error("Delete message error", { err });
+          socket.emit("error", { message: "Failed to delete message" });
+        }
+      });
+
+
       socket.on('message-read', async (data) => {
         const { conversationId, userId } = data;
 
-        this.updateConversation.updateUnreaadCount(conversationId)
+        this._conversationRepo.updateUnreaadCount(conversationId)
 
         io.to(`chat_${conversationId}`).emit('message-read', data);
       });

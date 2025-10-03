@@ -53,4 +53,12 @@ export class MessageRepositoryImplements implements IMessageRepository {
       throw new Error(`Failed to update message status: ${(error as Error).message}`);
     }
   }
+
+  async deleteMessage(messageId: string): Promise<void> {
+    try {
+      await MessageModel.findByIdAndUpdate(messageId, { $set: { isDeleted: true } })
+    } catch (error) {
+      throw new Error(`Failed to delete message : ${(error as Error).message}`);
+    }
+  }
 }

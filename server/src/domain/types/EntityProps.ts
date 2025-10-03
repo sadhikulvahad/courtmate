@@ -131,6 +131,7 @@ export interface MessageProps {
   senderName: string;
   timeStamp: Date;
   status: "sent" | "delivered" | "read";
+  isDeleted: Boolean
   attachments?: {
     fileUrl: string;
     fileName?: string;

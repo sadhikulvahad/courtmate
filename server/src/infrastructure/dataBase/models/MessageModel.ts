@@ -39,6 +39,10 @@ const MessageSchema = new Schema<MessageProps>({
         enum: ["sent", "delivered", "read"],
         default: "sent",
     },
+    isDeleted : {
+        type: Boolean,
+        default: false
+    },
     attachments: {
         type: [
             {
