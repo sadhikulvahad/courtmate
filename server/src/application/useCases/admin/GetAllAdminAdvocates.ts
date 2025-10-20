@@ -53,6 +53,7 @@ export class GetAllAdminAdvocates implements IGetAllAdminAdvocates {
   private toDomainEntity(mongooseUser: UserProps): User {
     return new User({
       _id: mongooseUser?._id?.toString(),
+      userId : mongooseUser?.userId,
       name: mongooseUser.name,
       email: mongooseUser.email,
       phone: mongooseUser.phone,

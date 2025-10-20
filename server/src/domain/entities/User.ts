@@ -23,6 +23,13 @@ export class User {
         return this.props._id;
     }
 
+    get userId(): string {
+        if (!this.props.userId) {
+            throw new Error("UserId is not available")
+        }
+        return this.props.userId
+    }
+
 
     get googleId(): string | null {
         return this.props.googleId || null
@@ -182,6 +189,13 @@ export class User {
         return this.props.typeOfAdvocate
     }
 
+    get certification(): string {
+        if (!this.props.certification) {
+            return ''
+        }
+        return this.props.certification
+    }
+
     get profilePhoto(): string {
         if (!this.props.profilePhoto) {
             return ''
@@ -219,6 +233,7 @@ export class User {
         return {
             id: this.props._id,
             name: this.props.name,
+            userId: this.props.userId,
             email: this.props.email,
             phone: this.props.phone,
             role: this.props.role,

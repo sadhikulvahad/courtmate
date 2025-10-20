@@ -5,13 +5,16 @@ import { ISlotRepository } from "../../../domain/interfaces/SlotRepository";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
 import { IWalletRepository } from "../../../domain/interfaces/WalletRepository";
+import { NotificationService } from "../../../infrastructure/services/notificationService";
+import { Types } from "mongoose";
 
 @injectable()
 export class CancelBooking implements ICancelBookingRepo {
     constructor(
         @inject(TYPES.IBookingRepository) private _bookingRepo: IBookingRepository,
         @inject(TYPES.ISlotRepository) private _slotRepo: ISlotRepository,
-        @inject(TYPES.IWalletRepository) private _walletRepo: IWalletRepository
+        @inject(TYPES.IWalletRepository) private _walletRepo: IWalletRepository,
+        @inject(TYPES.NotificationService) private _notificationService: NotificationService
     ) { }
 
     async execute(id: string): Promise<ReturnDTO> {
@@ -73,6 +76,24 @@ export class CancelBooking implements ICancelBookingRepo {
         }
         await this._walletRepo.creditAmount(wallet?._id!, 100);
 
+        await this._notificationService.sendNotification({
+            recieverId: new Types.ObjectId(booking.advocateId),
+            senderId: new Types.ObjectId(booking.userId),
+            message: `Your Booking "${booking.date}-"${booking.time}" with"${booking.user?.name}" is Cancelled`,
+            type: "Notification",
+            read: false,
+            createdAt: new Date()
+        })
+
+        await this._notificationService.sendNotification({
+            recieverId: new Types.ObjectId(booking.userId),
+            senderId: new Types.ObjectId(booking.advocateId),
+            message: `Your Booking "${booking.date}-"${booking.time}" with"${booking.advocate?.name}" is Cancelled`,
+            type: "Notification",
+            read: false,
+            createdAt: new Date()
+        })
+
         return { success: true, message: "Booking cancelled and refund processed" };
     }
 
@@ -94,8 +115,6 @@ export class CancelBooking implements ICancelBookingRepo {
         if (slot.isAvailable === false) {
             return { success: false, error: "This slot is already Disabled" };
         }
-
-        console.log(slot)
 
         await this._slotRepo.update(slotId, { isAvailable: false, status: 'cancelled' });
 

@@ -101,19 +101,39 @@ export class UserRepositoryImplement implements IUserRepository {
             ];
         }
 
+        const mutableQuery = query as Record<string, any>
+
         for (const [key, value] of Object.entries(dynamicFilters)) {
-            if (key === "location" && typeof value === "string") {
-                query["address.city"] = { $regex: value, $options: "i" };
+            if (key === 'location' && typeof value === 'string') {
+                mutableQuery['address.city'] = { $regex: value, $options: 'i' };
+
+            } else if (key === 'experience' && typeof value === 'string') {
+                const match = value.match(/^(\d+)(?:-(\d+))?/);
+                if (match) {
+                    const minExp = parseInt(match[1]);
+                    const maxExp = match[2] ? parseInt(match[2]) : null;
+
+                    if (maxExp) {
+                        mutableQuery['experience'] = { $gte: minExp, $lte: maxExp };
+                    } else {
+                        mutableQuery['experience'] = { $gte: minExp };
+                    }
+                }
+
             } else if (Array.isArray(value)) {
-                query[key] = { $in: value };
-            } else if (typeof value === "number") {
-                query[key] = value;
-            } else if (typeof value === "string") {
-                query[key] = { $regex: value.toLowerCase(), $options: "i" };
-            } else if (key === "language" && typeof value === "string") {
-                query["language"] = { $elemMatch: { $regex: value, $options: "i" } };
+                mutableQuery[key] = { $in: value };
+
+            } else if (typeof value === 'number') {
+                mutableQuery[key] = value;
+
+            } else if (typeof value === 'string') {
+                mutableQuery[key] = { $regex: value.toLowerCase(), $options: 'i' };
+
+            } else if (key === 'language' && typeof value === 'string') {
+                mutableQuery['language'] = { $elemMatch: { $regex: value, $options: 'i' } };
             }
         }
+
 
         const sortOptions: any = {
             isSponsored: -1,
@@ -122,7 +142,7 @@ export class UserRepositoryImplement implements IUserRepository {
 
         const skip = (page - 1) * limit;
         const [advocates, totalCount] = await Promise.all([
-            userModel.find(query)
+            userModel.find(mutableQuery)
                 .sort(sortOptions)
                 .skip(skip)
                 .limit(limit)
@@ -250,6 +270,7 @@ export class UserRepositoryImplement implements IUserRepository {
     private toDomainEntity(mongooseUser: UserProps): User {
         return new User({
             _id: mongooseUser?._id?.toString(),
+            userId : mongooseUser.userId,
             name: mongooseUser.name,
             email: mongooseUser.email,
             phone: mongooseUser.phone,
@@ -288,6 +309,7 @@ export class UserRepositoryImplement implements IUserRepository {
 
     private toMongooseModel(user: User): UserProps {
         return {
+            userId : user.userId,
             name: user.name,
             email: user.email,
             phone: user.phone as string,
