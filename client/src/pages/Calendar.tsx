@@ -48,18 +48,6 @@ import BookingSlotDialog from "@/components/Calendar/BookingSlotDialog";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { generateSignedUrl } from "@/utils/getSignUrl";
 
-const predefinedSlots = [
-  { id: 1, time: "09:00", label: "9:00 AM" },
-  { id: 2, time: "10:00", label: "10:00 AM" },
-  { id: 3, time: "11:00", label: "11:00 AM" },
-  { id: 4, time: "12:00", label: "12:00 PM" },
-  { id: 5, time: "13:00", label: "1:00 PM" },
-  { id: 6, time: "14:00", label: "2:00 PM" },
-  { id: 7, time: "15:00", label: "3:00 PM" },
-  { id: 8, time: "16:00", label: "4:00 PM" },
-  { id: 9, time: "17:00", label: "5:00 PM" },
-];
-
 const AdvocateProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -102,13 +90,6 @@ const AdvocateProfilePage = () => {
     return allowToday
       ? !isBefore(parsedDate, today)
       : isBefore(today, parsedDate);
-  };
-
-  const validateTimeSlot = (timeSlot: string): boolean => {
-    return (
-      /^\d{2}:\d{2}$/.test(timeSlot) &&
-      predefinedSlots.some((slot) => slot.time === timeSlot)
-    );
   };
 
   const generateSlotsFromRules = (
@@ -446,10 +427,7 @@ const AdvocateProfilePage = () => {
     }
     const [hours, minutes] = format(slotDate, "HH:mm").split(":");
     const timeSlot = `${hours}:${minutes}`;
-    if (!validateTimeSlot(timeSlot)) {
-      toast.error("Custom slot time is invalid or outside predefined slots.");
-      return;
-    }
+
     try {
       const slot = {
         date: format(slotDate, "yyyy-MM-dd"),
@@ -491,10 +469,7 @@ const AdvocateProfilePage = () => {
       toast.error("End date must be after start date.");
       return;
     }
-    if (!validateTimeSlot(rule.timeSlot)) {
-      toast.error("Recurring rule time slot is invalid.");
-      return;
-    }
+
     if (
       !rule.daysOfWeek.length ||
       rule.daysOfWeek.some((day) => day < 0 || day > 6)
@@ -602,11 +577,6 @@ const AdvocateProfilePage = () => {
 
     if (!validateDate(parsedDate) || !validateDate(parsedTime)) {
       toast.error("Postponed date or time is invalid or in the past.");
-      return;
-    }
-
-    if (!validateTimeSlot(time)) {
-      toast.error("Postponed time is invalid or outside predefined slots.");
       return;
     }
 
@@ -720,7 +690,6 @@ const AdvocateProfilePage = () => {
             calendarDates={calendarDates}
             availableSlots={availableSlots}
             selectedSlot={selectedSlot}
-            predefinedSlots={predefinedSlots}
             isAdvocate={isAdvocate}
             recurringRules={recurringRules || []}
             onDateSelect={handleDateSelect}
@@ -750,7 +719,6 @@ const AdvocateProfilePage = () => {
           currentMonth={currentMonth}
           calendarDates={calendarDates}
           availableSlots={availableSlots}
-          predefinedSlots={predefinedSlots}
           onMonthChange={handleMonthChange}
         />
       )}

@@ -27,6 +27,6 @@ const ReviewSchema = new Schema<ReviewProps>({
         type: Boolean,
         default: false
     }
-})
+}, { timestamps: true })
 
 export const ReviewModel = mongoose.model<ReviewProps>('Review', ReviewSchema)

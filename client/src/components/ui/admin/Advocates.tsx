@@ -24,14 +24,12 @@ const Advocates: React.FC = () => {
   useEffect(() => {
     const fetchAdvocates = async (page: number = 1) => {
       try {
-        const response = await getAllAdminAdvocates(
-          {
-            page: page,
-            limit: 10,
-            searchTerm: debouncedSearchTerm,
-            activeTab: selectedTab,
-          },
-        );
+        const response = await getAllAdminAdvocates({
+          page: page,
+          limit: 10,
+          searchTerm: debouncedSearchTerm,
+          activeTab: selectedTab,
+        });
 
         if (response?.status === 200) {
           setAdvocates(response.data.advocates);
@@ -57,6 +55,8 @@ const Advocates: React.FC = () => {
       setPagination({ ...pagination, currentPage: newPage });
     }
   };
+
+  console.log(advocates);
 
   return (
     <div className="space-y-4">
@@ -111,31 +111,40 @@ const Advocates: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {advocates?.map((advocate) => (
-                <tr key={advocate.id} className="hover:bg-gray-50">
+                <tr key={advocate?.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <div className="font-medium">{advocate.name}</div>
+                      <div className="font-medium">{advocate?.name}</div>
                     </div>
                   </td>
-                  <td className="p-4">{advocate.email}</td>
-                  <td className="p-4">{advocate.category || "Not Provided"}</td>
+                  <td className="p-4">{advocate?.email}</td>
+                  <td className="p-4">
+                    {advocate?.category || "Not Provided"}
+                  </td>
                   <td className="p-4">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        advocate.isVerified
+                        advocate?.isAdminVerified === "Accepted"
                           ? "bg-green-100 text-green-900"
+                          : advocate.isAdminVerified === "Rejected"
+                          ? "bg-red-100 text-red-900"
+                          : advocate.isAdminVerified === "Request"
+                          ? "bg-blue-100 text-blue-900"
                           : "bg-yellow-100 text-yellow-900"
                       }`}
                     >
-                      {advocate.isVerified ? "Verified" : "Pending"}
+                      {advocate?.isAdminVerified}
                     </span>
                   </td>
                   <td className="p-4">
-                    {new Date(advocate.verifiedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {new Date(advocate?.verifiedAt).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
                   </td>
                   <td className="p-4">
                     <button
@@ -155,43 +164,50 @@ const Advocates: React.FC = () => {
         <div className="md:hidden space-y-3">
           {advocates?.map((advocate) => (
             <div
-              key={advocate.id}
+              key={advocate?.id}
               className="bg-white rounded-lg shadow p-3 border border-gray-200"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div>
-                    <div className="font-medium">{advocate.name}</div>
+                    <div className="font-medium">{advocate?.name}</div>
                     <div className="text-sm text-gray-500">
-                      {advocate.email}
+                      {advocate?.email}
                     </div>
                   </div>
                 </div>
                 <span
                   className={`(px-3 py-1 rounded-full text-sm font-semibold ${
-                    advocate.isVerified
+                    advocate?.isAdminVerified === "Accepted"
                       ? "bg-green-100 text-green-900"
+                      : advocate.isAdminVerified === "Rejected"
+                      ? "bg-red-100 text-red-900"
+                      : advocate.isAdminVerified === "Request"
+                      ? "bg-blue-100 text-blue-900"
                       : "bg-yellow-100 text-yellow-900"
                   }`}
                 >
-                  {advocate.isVerified ? "Verified" : "Pending"}
+                  {advocate?.isAdminVerified}
                 </span>
               </div>
               <div className="text-sm text-gray-600 space-y-2">
                 <div className="flex">
                   <span>Category:</span>
                   <span className="px-2">
-                    {advocate.category || "Not Provided"}
+                    {advocate?.category || "Not Provided"}
                   </span>
                 </div>
                 <div className="flex">
                   <span>Joined:</span>
                   <span className="px-2">
-                    {new Date(advocate.verifiedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {new Date(advocate?.verifiedAt).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
                   </span>
                 </div>
               </div>

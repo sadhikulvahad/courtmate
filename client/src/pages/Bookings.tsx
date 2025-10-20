@@ -32,18 +32,6 @@ import Loader from "@/components/ui/Loading";
 import NavBar from "@/components/ui/NavBar";
 import ConfirmationModal from "@/components/ConfirmationModal";
 
-const predefinedSlots = [
-  { id: 1, time: "09:00", label: "9:00 AM" },
-  { id: 2, time: "10:00", label: "10:00 AM" },
-  { id: 3, time: "11:00", label: "11:00 AM" },
-  { id: 4, time: "12:00", label: "12:00 PM" },
-  { id: 5, time: "13:00", label: "1:00 PM" },
-  { id: 6, time: "14:00", label: "2:00 PM" },
-  { id: 7, time: "15:00", label: "3:00 PM" },
-  { id: 8, time: "16:00", label: "4:00 PM" },
-  { id: 9, time: "17:00", label: "5:00 PM" },
-];
-
 // Error Boundary Component
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -90,12 +78,7 @@ const Bookings = () => {
       : isBefore(today, parsedDate);
   };
 
-  const validateTimeSlot = (timeSlot: string): boolean => {
-    return (
-      /^\d{2}:\d{2}$/.test(timeSlot) &&
-      predefinedSlots.some((slot) => slot.time === timeSlot)
-    );
-  };
+
 
   const generateCalendarDates = (
     month: Date,
@@ -353,11 +336,6 @@ const Bookings = () => {
       return;
     }
 
-    if (!validateTimeSlot(time)) {
-      toast.error("Postponed time is invalid or outside predefined slots.");
-      return;
-    }
-
     const postponedDate = parsedDate.toISOString();
     const postponedTime = parsedTime.toISOString();
 
@@ -439,7 +417,6 @@ const Bookings = () => {
             currentMonth={currentMonth}
             calendarDates={calendarDates}
             availableSlots={availableSlots}
-            predefinedSlots={predefinedSlots}
             onMonthChange={handleMonthChange}
           />
         </ErrorBoundary>

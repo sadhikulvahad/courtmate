@@ -18,6 +18,7 @@ import {
   Award,
   Check,
   Share2,
+  Briefcase,
 } from "lucide-react";
 import {
   Advocate,
@@ -37,19 +38,19 @@ import SearchBar from "@/components/SearchBar";
 
 const RatingStars = ({ rating }: { rating: number }) => {
   return (
-    <div className="flex items-center">
+    <div className="flex items-center gap-1">
       {[...Array(5)].map((_, i) => (
         <Star
           key={i}
-          size={16}
+          size={14}
           className={
             i < Math.floor(rating)
-              ? "text-yellow-400 fill-yellow-400"
-              : "text-gray-200"
+              ? "text-amber-400 fill-amber-400"
+              : "text-gray-300"
           }
         />
       ))}
-      <span className="ml-2 text-sm font-medium text-gray-700">
+      <span className="ml-1.5 text-sm font-semibold text-gray-900">
         {rating.toFixed(1)}
       </span>
     </div>
@@ -63,17 +64,17 @@ interface BadgeProps {
 
 const Badge = ({ children, color = "gray" }: BadgeProps) => {
   const colorClasses = {
-    gray: "bg-gray-100 text-gray-600",
-    red: "bg-red-50 text-red-600",
-    blue: "bg-blue-50 text-blue-600",
-    green: "bg-green-50 text-green-600",
-    purple: "bg-purple-50 text-purple-600",
-    indigo: "bg-indigo-50 text-indigo-600",
+    gray: "bg-gray-100 text-gray-700 border-gray-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    purple: "bg-purple-50 text-purple-700 border-purple-200",
+    indigo: "bg-indigo-50 text-indigo-700 border-indigo-200",
   };
 
   return (
     <span
-      className={`px-3 py-1 rounded-full text-xs font-medium ${colorClasses[color]}`}
+      className={`px-2.5 py-1 rounded-md text-xs font-medium border ${colorClasses[color]}`}
     >
       {children}
     </span>
@@ -86,7 +87,6 @@ interface Ad {
 }
 
 const AdvocateList = () => {
-  // Backend filtering approach - only store what comes from API
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -96,10 +96,7 @@ const AdvocateList = () => {
     (state: RootState) => state.auth
   );
 
-  // Move filters to parent component to persist state
   const [currentFilters, setCurrentFilters] = useState<FilterOptions>({});
-
-  // Pagination states - these come from backend
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
@@ -107,7 +104,6 @@ const AdvocateList = () => {
 
   const navigate = useNavigate();
 
-  // Memoize the API parameters to prevent unnecessary re-renders
   const apiParams: GetAllUserAdvocatesParams = useMemo(() => {
     return {
       page: currentPage,
@@ -117,12 +113,10 @@ const AdvocateList = () => {
     };
   }, [itemsPerPage, debouncedSearchTerm, currentFilters, currentPage]);
 
-  // Single API call function with proper error handling
   const fetchAdvocates = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await getAllUserAdvocates(apiParams);
-
       setAdvocates(response.advocates || []);
       setTotalItems(response.pagination?.totalItems || 0);
       setTotalPages(response.pagination?.totalPages || 1);
@@ -135,15 +129,13 @@ const AdvocateList = () => {
       setIsLoading(false);
     }
   }, [apiParams]);
-  console.log(isAuthenticated);
+
   useEffect(() => {
     const getSavedAdvocates = async () => {
       try {
         const response = await GetSavedAdvocates();
         const saved = response?.data?.advocates || [];
-
         const savedIds = saved.map((adv: Ad) => adv._id || adv.id);
-
         setSavedAdvocates(savedIds);
       } catch (error) {
         console.error("Failed to fetch saved advocates:", error);
@@ -151,7 +143,6 @@ const AdvocateList = () => {
       }
     };
     if (isAuthenticated) {
-      console.log("hol");
       getSavedAdvocates();
     }
   }, []);
@@ -160,7 +151,6 @@ const AdvocateList = () => {
     setCurrentPage(1);
   }, [currentFilters, debouncedSearchTerm]);
 
-  // Main effect to fetch data - only runs when relevant params change
   useEffect(() => {
     fetchAdvocates();
   }, [
@@ -173,7 +163,6 @@ const AdvocateList = () => {
 
   const handleFilterChange = useCallback((filters: FilterOptions) => {
     setCurrentFilters(filters);
-    // setCurrentPage(1);
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
@@ -189,9 +178,7 @@ const AdvocateList = () => {
 
   const toggleSaved = useCallback(async (advocateId: string) => {
     try {
-      // Call API
       const response = await toggleSaveAdvocate(advocateId);
-
       if (response?.data?.success) {
         setSavedAdvocates((prev) => {
           if (prev.includes(advocateId)) {
@@ -250,7 +237,6 @@ const AdvocateList = () => {
       }
     } catch (error) {
       console.error("Share failed:", error);
-      toast.error("Sharing failed");
     }
   };
 
@@ -293,24 +279,34 @@ const AdvocateList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <NavBar />
       <div className="max-w-7xl mx-auto px-4 py-4">
-        {/* Top bar with result count + search */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <p className="text-gray-600 font-medium text-sm sm:text-base text-center sm:text-left">
-            Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}{" "}
-            to {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
-            {totalItems} advocates
-          </p>
+        {/* Header Section */}
+        <div className="mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-shrink-0">
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                Find Your Advocate
+              </h1>
+              <p className="text-sm text-gray-600">
+                {totalItems} legal professionals available
+              </p>
+            </div>
 
-          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+            <div className="flex justify-end sm:w-auto w-full">
+              <SearchBar
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[16rem_1fr] gap-6">
-          {/* Sidebar (hidden on mobile) */}
-          <div className="hidden md:block">
-            <div className="sticky top-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+          {/* Sidebar */}
+          <div className="hidden lg:block">
+            <div className="sticky top-6">
               <Sidebar
                 onFilterChange={handleFilterChange}
                 initialFilters={currentFilters}
@@ -321,252 +317,210 @@ const AdvocateList = () => {
 
           {/* Advocates List */}
           {advocates.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-md p-8 sm:p-12 text-center">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
-                No advocates found
-              </h3>
-              <p className="text-gray-500 mt-2 max-w-md mx-auto text-sm sm:text-base">
-                We couldn't find any advocates matching your criteria. Try
-                adjusting your search or filter options.
-              </p>
-              <button
-                onClick={clearAllFilters}
-                className="mt-6 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                Clear filters
-              </button>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+              <div className="max-w-md mx-auto">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Briefcase className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No advocates found
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  We couldn't find any advocates matching your criteria. Try
+                  adjusting your filters.
+                </p>
+                <button
+                  onClick={clearAllFilters}
+                  className="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Clear all filters
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="flex-1 space-y-6">
+            <div className="space-y-4">
               {advocates.map((advocate) => (
                 <div
                   key={advocate.id}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-100"
+                  className="bg-white rounded-xl border border-gray-200 hover:border-indigo-200 hover:shadow-md transition-all duration-200 overflow-hidden group"
                 >
                   <div
-                    className="p-4 sm:p-6 flex flex-col md:flex-row gap-4 sm:gap-6 cursor-pointer"
+                    className="p-6 cursor-pointer"
                     onClick={() => navigate(`/adProfile/${advocate.id}`)}
                   >
-                    {/* Left: Photo */}
-                    <div className="flex-shrink-0 flex justify-center md:justify-start">
-                      <div className="relative w-28 h-36 sm:w-32 sm:h-40 overflow-hidden rounded-xl shadow-sm">
-                        <img
-                          src={`${advocate.profilePhoto}`}
-                          alt={advocate.name}
-                          className="w-full h-full object-cover"
-                        />
-                        {advocate.isSponsored && (
-                          <div className="absolute top-0 left-0 bg-gray-600 text-white px-2 py-1 text-xs font-bold rounded-br-lg flex items-center z-10">
-                            <Star size={12} className="mr-1" />
-                            Sponsored
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Middle: Details */}
-                    <div className="flex-grow space-y-4">
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
-                              {advocate.name}
-                            </h2>
-                            {advocate.onlineConsultation && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-800 text-xs">
-                                <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                                Online
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-gray-600 font-medium text-sm sm:text-base">
-                            {advocate.typeOfAdvocate}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge color={getCategoryColor(advocate.category)}>
-                            {advocate.category}
-                          </Badge>
-
-                          {advocate.rating && (
-                            <div className="flex items-center">
-                              <RatingStars rating={advocate.rating} />
+                    <div className="flex flex-col md:flex-row gap-6">
+                      {/* Profile Image */}
+                      <div className="flex-shrink-0">
+                        <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-100">
+                          <img
+                            src={advocate.profilePhoto}
+                            alt={advocate.name}
+                            className="w-full h-full object-cover"
+                          />
+                          {advocate.isSponsored && (
+                            <div className="absolute top-0 right-0 bg-amber-500 text-white px-2 py-0.5 text-xs font-semibold rounded-bl-lg">
+                              Featured
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {/* Experience / BCI / Location */}
-                      <div className="flex flex-col sm:flex-row flex-wrap gap-y-3 gap-x-8">
-                        <div className="flex items-center">
-                          <div className="p-2 bg-indigo-50 rounded-full mr-3">
-                            <Award size={16} className="text-indigo-600" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Experience</p>
-                            <p className="font-medium text-gray-800">
-                              {advocate.experience} Years
+                      {/* Main Content */}
+                      <div className="flex-grow min-w-0">
+                        {/* Header Row */}
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div className="flex-grow">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h2 className="text-xl font-bold text-gray-900">
+                                {advocate.name}
+                              </h2>
+                              {advocate.onlineConsultation && (
+                                <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-200">
+                                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                  Available
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 font-medium mb-2">
+                              {advocate.typeOfAdvocate}
                             </p>
+                            <div className="flex items-center gap-3">
+                              <Badge
+                                color={getCategoryColor(advocate.category)}
+                              >
+                                {advocate.category}
+                              </Badge>
+                              {advocate.rating && (
+                                <RatingStars rating={advocate.rating} />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSaved(advocate.id);
+                              }}
+                              className={`p-2 rounded-lg border transition-all ${
+                                savedAdvocates.includes(advocate.id)
+                                  ? "border-indigo-300 bg-indigo-50 text-indigo-600"
+                                  : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                              }`}
+                            >
+                              <Bookmark
+                                size={18}
+                                className={
+                                  savedAdvocates.includes(advocate.id)
+                                    ? "fill-indigo-600"
+                                    : ""
+                                }
+                              />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShare();
+                              }}
+                              className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-all"
+                            >
+                              <Share2 size={18} />
+                            </button>
                           </div>
                         </div>
 
-                        <div className="flex items-center">
-                          <div className="p-2 bg-blue-50 rounded-full mr-3">
-                            <Check size={16} className="text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">
-                              BCI Registration
-                            </p>
-                            <p className="font-medium text-gray-800">
-                              {advocate.barCouncilRegisterNumber}
-                            </p>
-                          </div>
-                        </div>
-
-                        {advocate.address && (
-                          <div className="flex items-center">
-                            <div className="p-2 bg-purple-50 rounded-full mr-3">
-                              <MapPin size={16} className="text-purple-600" />
+                        {/* Key Info Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                              <Award size={18} className="text-indigo-600" />
                             </div>
                             <div>
-                              <p className="text-xs text-gray-500">Location</p>
-                              <p className="font-medium text-gray-800">
-                                {advocate.address.city},{" "}
-                                {advocate.address.state}
+                              <p className="text-xs text-gray-500 font-medium">
+                                Experience
+                              </p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {advocate.experience} Years
                               </p>
                             </div>
                           </div>
-                        )}
-                      </div>
 
-                      {/* Certifications */}
-                      {advocate.cirtification && (
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">
-                            Certifications
-                          </p>
-                          <p className="text-sm text-gray-700 font-medium">
-                            {advocate.cirtification}
-                          </p>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                              <Check size={18} className="text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 font-medium">
+                                BCI Number
+                              </p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {advocate.barCouncilRegisterNumber}
+                              </p>
+                            </div>
+                          </div>
+
+                          {advocate.address && (
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                                <MapPin size={18} className="text-purple-600" />
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500 font-medium">
+                                  Location
+                                </p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {advocate.address.city},{" "}
+                                  {advocate.address.state}
+                                </p>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
 
-                      {/* Languages */}
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {advocate.languages?.map((language, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-                          >
-                            {language}
-                          </span>
-                        ))}
+                        {/* Languages */}
+                        {advocate.languages &&
+                          advocate.languages.length > 0 && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs text-gray-500 font-medium">
+                                Languages:
+                              </span>
+                              {advocate.languages.map((language, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-1 bg-gray-50 text-gray-700 text-xs rounded-md border border-gray-200"
+                                >
+                                  {language}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                       </div>
                     </div>
 
-                    {/* Right: Actions */}
-                    <div className="space-y-3 flex-shrink-0 w-full md:w-48">
+                    {/* Action Buttons Row */}
+                    <div className="grid grid-cols-2 gap-6 mt-6 pt-6  border-t border-gray-100">
                       <button
-                        className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 shadow-sm"
+                        className="flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/booking/${advocate.id}`);
                         }}
                       >
                         <Calendar size={18} />
-                        <span>Booking</span>
+                        <span>Book Appointment</span>
                       </button>
 
                       <button
-                        className="w-full flex items-center justify-center gap-2 border border-gray-200 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                        className="flex items-center justify-center gap-2 bg-white border-2 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 text-gray-900 font-semibold py-2 px-3 rounded-lg transition-all"
                         onClick={(e) => {
                           e.stopPropagation();
                           startChat(advocate?.id);
                         }}
                       >
                         <MessageSquare size={18} className="text-indigo-600" />
-                        <span>Chat</span>
+                        <span>Start Chat</span>
                       </button>
-
-                      <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleSaved(advocate.id);
-                          }}
-                          className={`flex-1 flex items-center justify-center gap-1 border ${
-                            savedAdvocates.includes(advocate.id)
-                              ? "border-indigo-200 bg-indigo-50 text-indigo-600"
-                              : "border-gray-200 bg-white text-gray-700"
-                          } hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition-colors duration-200`}
-                        >
-                          <Bookmark
-                            size={16}
-                            className={
-                              savedAdvocates.includes(advocate.id)
-                                ? "fill-indigo-600"
-                                : ""
-                            }
-                          />
-                          <span className="text-sm">
-                            {savedAdvocates.includes(advocate.id)
-                              ? "Saved"
-                              : "Save"}
-                          </span>
-                        </button>
-
-                        <button
-                          className="flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-3 rounded-lg transition-colors duration-200"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleShare();
-                          }}
-                        >
-                          <Share2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* About + Address */}
-                  <div className="bg-gray-50 p-4 border-t border-gray-100">
-                    <div className="flex flex-col lg:flex-row gap-6">
-                      <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                          About {advocate.name.split(" ")[0]}
-                        </h4>
-                        <p
-                          className="
-      text-sm text-gray-600 
-      line-clamp-2 md:line-clamp-none
-    "
-                        >
-                          {advocate.bio ||
-                            `${advocate.name} is a ${
-                              advocate.experience
-                            } year experienced ${
-                              advocate.typeOfAdvocate
-                            } specializing in ${
-                              advocate.category
-                            } law. Based in ${
-                              advocate.address?.city || "your city"
-                            }, they provide expert legal advice and representation.`}
-                        </p>
-                      </div>
-
-                      {advocate.address && (
-                        <div className="w-full lg:w-64">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                            Address
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {advocate.address.street}, {advocate.address.city},{" "}
-                            {advocate.address.state} {advocate.address.pincode}
-                          </p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -574,14 +528,16 @@ const AdvocateList = () => {
 
               {/* Pagination */}
               {totalItems > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                  itemsPerPage={itemsPerPage}
-                  totalItems={totalItems}
-                  onItemsPerPageChange={handleItemsPerPageChange}
-                />
+                <div className="mt-8">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={totalItems}
+                    onItemsPerPageChange={handleItemsPerPageChange}
+                  />
+                </div>
               )}
             </div>
           )}

@@ -162,6 +162,7 @@ export class advProfileController {
         barCouncilNumber,
         yearsOfPractice,
         bio,
+        certification
       } = req.body;
 
       if (!id) {
@@ -208,6 +209,7 @@ export class advProfileController {
         onlineConsultation,
         barCouncilNumber,
         yearsOfPractice: yearsOfPracticeInt,
+        certification
       };
 
       const result = await this._updateAdvocate.execute(updatePayload);

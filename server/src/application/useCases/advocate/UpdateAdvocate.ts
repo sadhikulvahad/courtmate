@@ -41,6 +41,7 @@ export class UpdateAdvocate implements IUpdateAdvocate {
         if (data.typeOfAdvocate) updatePayload.typeOfAdvocate = data.typeOfAdvocate;
         if (data.category) updatePayload.category = data.category;
         if (data.practicingField) updatePayload.practicingField = data.practicingField;
+        if (data.certification) updatePayload.certification = data.certification;
 
         if (data.onlineConsultation !== undefined) {
             updatePayload.onlineConsultation = data.onlineConsultation === 'true';

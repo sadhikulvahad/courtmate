@@ -7,7 +7,6 @@ import {
   Phone,
   MapPin,
   Briefcase,
-  Star,
 } from "lucide-react";
 import { AdvocateProps } from "@/types/Types";
 import { SendVerificaton } from "@/api/admin/advocatesApi";
@@ -139,33 +138,45 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
             </div>
 
             <div className="p-6">
-              <div className="flex gap-6 mb-6">
-                <img
-                  // src={`${import.meta.env.VITE_API_URL}/uploads/${
-                  //   localAdvocate.profilePhoto
-                  // }`}
-                  src={`${localAdvocate.profilePhoto}`}
-                  alt="profile"
-                  className="object-cover w-32 h-32 rounded-lg"
-                />
+              <div className="flex justify-between items-start mb-6">
+                {/* Left section (image + details) */}
+                <div className="flex gap-6">
+                  <img
+                    src={`${localAdvocate?.profilePhoto}`}
+                    alt="profile"
+                    className="object-cover w-32 h-32 rounded-lg"
+                  />
 
-                <div>
-                  <h3 className="text-2xl font-bold">{localAdvocate.name}</h3>
-                  <p className="text-gray-600">{localAdvocate.category}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                    <span className="font-medium">4.8</span>
-                    <span className="text-gray-500">(124 reviews)</span>
+                  <div>
+                    <h3 className="text-2xl font-bold">
+                      {localAdvocate?.name}
+                    </h3>
+                    <p className="text-gray-600">{localAdvocate?.category}</p>
+                    <div className="flex items-center gap-1 mt-2">
+                      {/* <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                      <span className="font-medium">4.8</span>
+                      <span className="text-gray-500">(124 reviews)</span> */}
+                    </div>
+                    <span
+                      className={`inline-block px-3 py-1 mt-2 text-sm rounded-full ${
+                        localAdvocate?.isAdminVerified === "Accepted"
+                          ? "bg-green-100 text-green-900"
+                          : localAdvocate.isAdminVerified === "Rejected"
+                          ? "bg-red-100 text-red-900"
+                          : localAdvocate.isAdminVerified === "Request"
+                          ? "bg-blue-100 text-blue-900"
+                          : "bg-yellow-100 text-yellow-900"
+                      }`}
+                    >
+                      {localAdvocate?.isAdminVerified}
+                    </span>
                   </div>
-                  <span
-                    className={`inline-block px-3 py-1 mt-2 text-sm rounded-full ${
-                      localAdvocate.isAdminVerified === "Accepted"
-                        ? "bg-green-100 text-green-700"
-                        : localAdvocate.isAdminVerified === "Pending"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  ></span>
+                </div>
+
+                {/* Right section (user ID) */}
+                <div className="text-right">
+                  <span className="text-gray-500 text-sm">User ID: </span>
+                  <span className="font-semibold">{localAdvocate?.userId}</span>
                 </div>
               </div>
 
@@ -175,7 +186,7 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
                     <Mail className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">{localAdvocate.email}</p>
+                      <p className="font-medium">{localAdvocate?.email}</p>
                     </div>
                   </div>
 
@@ -183,7 +194,11 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
                     <Calendar className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-500">Join Date</p>
-                      <p className="font-medium">{localAdvocate.verifiedAt}</p>
+                      <p className="font-medium">
+                        {new Date(
+                          localAdvocate?.verifiedAt
+                        ).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
 
@@ -192,7 +207,7 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
                     <div>
                       <p className="text-sm text-gray-500">Experience</p>
                       <p className="font-medium">
-                        {localAdvocate.experience} Years
+                        {localAdvocate?.experience} Years
                       </p>
                     </div>
                   </div>
@@ -203,7 +218,7 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
                     <Phone className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-500">Phone</p>
-                      <p className="font-medium">+91 {localAdvocate.phone}</p>
+                      <p className="font-medium">+91 {localAdvocate?.phone}</p>
                     </div>
                   </div>
 
@@ -212,12 +227,12 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
                     <div>
                       <p className="text-sm text-gray-500">Location</p>
                       <p className="font-medium">
-                        {localAdvocate.address.state},{" "}
-                        {localAdvocate.address.city}
+                        {localAdvocate?.address?.state},{" "}
+                        {localAdvocate?.address?.city}
                       </p>
                       <p className="font-medium">
-                        {localAdvocate.address.street},{" "}
-                        {localAdvocate.address.pincode}
+                        {localAdvocate?.address?.street},{" "}
+                        {localAdvocate?.address?.pincode}
                       </p>
                     </div>
                   </div>
@@ -226,23 +241,18 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
 
               <div className="mt-6">
                 <h4 className="mb-2 font-medium">About</h4>
-                <p className="text-gray-600">
-                  Experienced corporate lawyer specializing in mergers and
-                  acquisitions, contract law, and business litigation. Proven
-                  track record of successfully handling complex legal matters
-                  for both domestic and international clients.
-                </p>
+                <p className="text-gray-600">{localAdvocate.bio}</p>
               </div>
             </div>
 
             <div className="flex justify-end bg-gray-50">
               <div className="flex gap-3 p-6 rounded-b-lg">
-                {localAdvocate.isAdminVerified === "Pending" && (
+                {localAdvocate?.isAdminVerified === "Pending" && (
                   <>
                     <Button
                       className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
                       onClick={() =>
-                        handleVerification("Accepted", localAdvocate.id)
+                        handleVerification("Accepted", localAdvocate?.id)
                       }
                       label={"Approve"}
                       variant="primary"
@@ -250,23 +260,23 @@ const AdvocateModal: React.FC<AdvocateModalProps> = ({
                     <Button
                       className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
                       onClick={() =>
-                        handleVerification("Rejected", localAdvocate.id)
+                        handleVerification("Rejected", localAdvocate?.id)
                       }
                       label={"Reject"}
                       variant="primary"
                     />
                   </>
                 )}
-                {localAdvocate.isAdminVerified === "Accepted" && (
+                {localAdvocate?.isAdminVerified === "Accepted" && (
                   <>
                     <Button
-                      label={localAdvocate.isBlocked ? "UnBlock" : "Block"}
+                      label={localAdvocate?.isBlocked ? "UnBlock" : "Block"}
                       onClick={(e) => {
                         e.stopPropagation();
                         setConfirmationModal(true);
                       }}
                       className={`px-4 py-2 text-sm font-medium text-white ${
-                        !localAdvocate.isBlocked
+                        !localAdvocate?.isBlocked
                           ? "bg-red-600 rounded-md hover:bg-red-700"
                           : "bg-green-600 rounded-md hover:bg-green-700"
                       }`}

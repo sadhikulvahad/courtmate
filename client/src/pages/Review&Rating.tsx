@@ -64,15 +64,6 @@ const AdvocateReviewsPage = () => {
     setFilteredReviews(filtered);
   }, [reviews, searchTerm, ratingFilter]);
 
-  const formatDate = (dateString: Date) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
@@ -227,7 +218,7 @@ const AdvocateReviewsPage = () => {
                           {review.userId.name}
                         </h4>
                         <span className="text-sm text-gray-500">
-                          {formatDate(new Date(review.date))}
+                          {new Date(review.createdAt).toLocaleDateString()}
                         </span>
                       </div>
 

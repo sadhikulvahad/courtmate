@@ -10,7 +10,6 @@ interface UserBookingsViewProps {
   calendarDates: CalendarDate[];
   availableSlots: Slot[];
   selectedSlot: Slot | null;
-  predefinedSlots: { id: number; time: string; label: string }[];
   isAdvocate: boolean | null;
   recurringRules: RecurringRule[];
   onDateSelect: (date: Date | null) => void;
@@ -27,8 +26,7 @@ const UserBookingsView = ({
   selectedDate,
   calendarDates,
   availableSlots,
-  selectedSlot,
-  predefinedSlots,
+  selectedSlot,  
   isAdvocate,
   recurringRules,
   onDateSelect,
@@ -249,6 +247,7 @@ const UserBookingsView = ({
           <div className="rounded bg-white p-6 shadow">
             <h3 className="mb-4 text-lg font-semibold">Add One-Time Slot</h3>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+              {/* Date picker */}
               <input
                 type="date"
                 value={newSlotDate}
@@ -256,18 +255,16 @@ const UserBookingsView = ({
                 className="rounded border p-2 w-full sm:w-auto"
                 min={format(new Date(), "yyyy-MM-dd")}
               />
-              <select
+
+              {/* Time picker */}
+              <input
+                type="time"
                 value={newSlotTime}
                 onChange={(e) => setNewSlotTime(e.target.value)}
                 className="rounded border p-2 w-full sm:w-auto"
-              >
-                <option value="">Select Time</option>
-                {predefinedSlots.map((slot) => (
-                  <option key={slot.id} value={slot.time}>
-                    {slot.label}
-                  </option>
-                ))}
-              </select>
+              />
+
+              {/* Add Slot button */}
               <button
                 onClick={handleAddSlot}
                 className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
@@ -323,21 +320,16 @@ const UserBookingsView = ({
               </div>
               <div>
                 <label className="block text-sm font-medium">Time Slot</label>
-                <select
+                <input
+                  type="time"
                   value={newRule.timeSlot}
                   onChange={(e) =>
                     setNewRule({ ...newRule, timeSlot: e.target.value })
                   }
                   className="rounded border p-2 w-full"
-                >
-                  <option value="">Select Time</option>
-                  {predefinedSlots.map((slot) => (
-                    <option key={slot.id} value={slot.time}>
-                      {slot.label}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
+
               <div>
                 <label className="block text-sm font-medium">Start Date</label>
                 <input

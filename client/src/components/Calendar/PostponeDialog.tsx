@@ -23,7 +23,6 @@ interface PostponeDialogProps {
   currentMonth: Date;
   calendarDates: CalendarDate[];
   availableSlots: Slot[];
-  predefinedSlots: { id: number; time: string; label: string }[];
   onMonthChange?: (newMonth: Date) => void;
 }
 

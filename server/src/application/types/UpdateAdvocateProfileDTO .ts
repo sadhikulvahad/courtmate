@@ -21,6 +21,7 @@ export interface UpdateAdvocateProfileDTO {
   onlineConsultation?: string;
   profilePhotoPath?: string;
   bciCertificatePath?: string;
+  certification ?: string
 }
 
 

@@ -695,7 +695,7 @@ const Chat = () => {
                             }`}
                           >
                             {message.isDeleted ? (
-                              <p className="text-sm italic text-gray-400">
+                              <p className="text-sm italic text-gray-500">
                                 This message was deleted
                               </p>
                             ) : (

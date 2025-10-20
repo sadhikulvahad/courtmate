@@ -503,12 +503,12 @@ const AdvocateProfile = () => {
                     </div>
                   </div>
 
-                  {advocate?.cirtification && (
+                  {advocate?.certification && (
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold text-gray-800 mb-2">
                         Certifications
                       </h3>
-                      <p className="text-gray-700">{advocate.cirtification}</p>
+                      <p className="text-gray-700">{advocate.certification}</p>
                     </div>
                   )}
 
@@ -572,12 +572,21 @@ const AdvocateProfile = () => {
             {activeTab === "experience" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  <h2 className="text-xl font-bold text-gray-800 mb-1">
                     Experience
                   </h2>
-
+                  <p className="mb-4">
+                    <strong>
+                      {advocate.experience} Years in{" "}
+                      {advocate.category
+                        ? advocate.category.charAt(0).toUpperCase() +
+                          advocate.category.slice(1)
+                        : ""}{" "}
+                      Category
+                    </strong>
+                  </p>
                   {/* This is mock data - in a real app, you'd fetch this from the API */}
-                  <div className="mb-8">
+                  {/* <div className="mb-8">
                     <div className="relative pl-8 pb-6 border-l border-gray-200">
                       <div className="absolute left-0 top-0 w-6 h-6 bg-indigo-100 border-2 border-indigo-500 rounded-full -translate-x-1/2"></div>
                       <div className="mb-1">
@@ -632,14 +641,24 @@ const AdvocateProfile = () => {
                         preparation.
                       </p>
                     </div>
-                  </div>
+                  </div> */}
 
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  <h2 className="text-xl font-bold text-gray-800 mb-1">
                     Education
                   </h2>
 
+                  <p className="mb-4">
+                    <strong>
+                      {advocate.certification}
+                      {/* {advocate.cirtification
+                        ? advocate.cirtification.charAt(0).toUpperCase() +
+                          advocate.cirtification.slice(1)
+                        : ""}{" "}
+                      Category */}
+                    </strong>
+                  </p>
                   {/* This is mock data - in a real app, you'd fetch this from the API */}
-                  <div>
+                  {/* <div>
                     <div className="relative pl-8 pb-6 border-l border-gray-200">
                       <div className="absolute left-0 top-0 w-6 h-6 bg-indigo-100 border-2 border-indigo-500 rounded-full -translate-x-1/2"></div>
                       <div className="mb-1">
@@ -677,7 +696,7 @@ const AdvocateProfile = () => {
                         national moot court competitions.
                       </p>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             )}
@@ -713,7 +732,7 @@ const AdvocateProfile = () => {
                           Consultation Duration
                         </h4>
                         <p className="text-gray-600 text-sm mt-1">
-                          Each consultation session is typically 45 minutes.
+                          Each consultation session is typically 1 hour.
                           Extended consultations available upon request.
                         </p>
                       </div>

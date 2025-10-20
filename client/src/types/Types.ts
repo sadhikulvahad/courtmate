@@ -23,7 +23,7 @@ export interface Advocate {
   bio?: string;
   address: Address
   barCouncilRegisterNumber: string;
-  cirtification?: string;
+  certification?: string;
   onlineConsultation?: boolean;
   proBonoService?: boolean;
   availability?: string[]; // Added this field for availability filtering
@@ -89,6 +89,7 @@ export type NotificationTabs = 'all' | 'pending' | 'seen'
 export interface AdvocateProps {
   id: string
   name: string;
+  userId : string
   email: string;
   category: string;
   phone: string
@@ -238,7 +239,7 @@ export interface GetAllUserAdvocatesParams {
   minRating?: number;
   availability?: string[];
   specializations?: string[];
-  certifications?: string[];
+  certifications?: string
 }
 
 

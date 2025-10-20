@@ -227,7 +227,7 @@ export function Signup() {
 
   return (
     <>
-      <div className="w-full min-h-screen relative overflow-hidden bg-gradient-to-r from-blue-50 to-gray-100">
+      <div className="w-full min-h-screen relative overflow-hidden bg-darkbluegray">
         {/* Left Panel - Hidden on mobile */}
         <div
           className={`absolute top-0 left-0 w-1/2 h-full bg-darkbluegray transition-transform duration-500 ease-in-out hidden md:block ${
@@ -443,12 +443,12 @@ export function Signup() {
 
           {/* Mobile Advocate Section - Only visible on mobile */}
           {(step === 1 || step === 2) && (
-            <div className="flex flex-col items-center mt-6 md:hidden">
-              <p className="text-lg font-semibold text-black">
+            <div className="flex flex-col items-center mt-6 md:hidden bg-darkbluegray">
+              <p className="text-lg font-semibold text-white">
                 ARE YOU AN ADVOCATE?
               </p>
               <p
-                className="text-lg text-black cursor-pointer flex items-center justify-center hover:underline mb-8"
+                className="text-lg text-white cursor-pointer flex items-center justify-center hover:underline mb-8"
                 onClick={() => setStep(3)}
               >
                 Register
