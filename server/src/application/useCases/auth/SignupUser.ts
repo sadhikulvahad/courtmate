@@ -49,7 +49,6 @@ export class SignupUser implements ISignupUser {
             password: hashedPassword,
             isActive: false,
             isBlocked: false,
-            _id: undefined,
             isVerified: false,
             authMethod: 'local',
             isAdminVerified: 'Request'

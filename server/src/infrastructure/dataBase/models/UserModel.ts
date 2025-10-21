@@ -1,7 +1,6 @@
 
 import mongoose, { Schema, Document, Types } from "mongoose";
 import { UserProps } from "../../../domain/types/EntityProps";
-import { v4 as uuidv4 } from "uuid";
 
 const userSchema = new Schema<UserProps>(
     {
@@ -145,13 +144,6 @@ const userSchema = new Schema<UserProps>(
     },
     { timestamps: true }
 )
-
-userSchema.pre("validate", function (next) {
-    if (!this.userId) {
-        this.userId = `case-${uuidv4().split("-")[0]}`;
-    }
-    next();
-});
 
 export default mongoose.model<UserProps>("User", userSchema)
 

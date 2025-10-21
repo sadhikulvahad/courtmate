@@ -4,6 +4,7 @@ import { UserProps } from "../types/EntityProps";
 import { Status } from "../types/status";
 import { Types } from "mongoose";
 import { AuthMethod } from "../types/AuthMethod";
+import { v4 as uuidv4 } from "uuid";
 
 
 export class User {
@@ -13,7 +14,11 @@ export class User {
         if (!props.name || !props.email || !props.role) {
             throw new Error("Required fields: name, email, role.");
         }
-        this.props = { ...props, isActive: props.isActive ?? false }
+        this.props = {
+            ...props,
+            userId: props.userId ?? `case-${uuidv4().split("-")[0]}`,
+            isActive: props.isActive ?? false
+        };
     }
 
     get id(): string {
