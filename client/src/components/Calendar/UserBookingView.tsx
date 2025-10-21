@@ -9,6 +9,11 @@ import {
   Check,
   X,
 } from "lucide-react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { CreateConversation } from "@/api/chatApi";
 
 // Mock types based on your code
 interface Booking {
@@ -49,6 +54,9 @@ export default function UserBookingView({
   // const [view, setView] = useState<"month" | "week" | "day">("month");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const navigate = useNavigate()
 
   // Get calendar data
   const { calendarDays, monthName, year } = useMemo(() => {
@@ -163,8 +171,30 @@ export default function UserBookingView({
     setShowUserModal(true);
   };
 
-  const handleStartChat = () => {
-    alert("Start chat functionality - integrate with your chat system");
+  const handleStartChat = async () => {
+    if (!user) {
+      toast.error("Please log in to start a chat");
+      navigate("/signup");
+      return;
+    }
+
+    if (!selectedBooking?.advocateId) {
+      toast.error("Invalid advocate ID");
+      return;
+    }
+
+    try {
+      const conversation = await CreateConversation(
+        selectedBooking.advocateId,
+        "advocate"
+      );
+      navigate(
+        `/chat?conversationId=${conversation?.data._id}&advocateId=${conversation?.data.participants[1].userId}`
+      );
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      toast.error("Failed to start chat. Please try again.");
+    }
   };
 
   return (
