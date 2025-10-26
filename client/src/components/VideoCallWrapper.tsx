@@ -33,6 +33,7 @@ const VideoCallWrapper = () => {
           setErrorMessage(message);
           toast.error(message);
         }
+
       } catch (error: unknown) {
         console.error("Error verifying booking:", error);
 

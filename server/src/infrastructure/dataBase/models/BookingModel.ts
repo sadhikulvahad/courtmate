@@ -20,6 +20,7 @@ const bookingSchema = new Schema<BookingProps>(
         },
         notes: { type: String },
         postponeReason: { type: String },
+        isVideoCall : {type: Boolean},
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
         caseId: {

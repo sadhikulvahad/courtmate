@@ -25,7 +25,8 @@ export const API_ENDPOINTS = {
         BOOKING_GETBOOK: '/booking/getBook',
         SLOT_PUT: `/slot`,
         HISTORY: '/booking/callHistory',
-        BOOKING_CANCEL: '/booking/cancel'
+        BOOKING_CANCEL: '/booking/cancel',
+        VIDEO_Call : '/booking/video-call'
     },
     ADMIN: {
         GET_ADMIN_ADVOCATES: "/admin/advocate/getAdvocates",

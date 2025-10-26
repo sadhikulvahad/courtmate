@@ -44,5 +44,6 @@ router.get('/callHistory', asyncHandler(bookingController.callHistory.bind(booki
 
 router.put('/cancel', asyncHandler(bookingController.cancelBooking.bind(bookingController)))
 
+router.put('/video-call', asyncHandler(bookingController.markVideoCall.bind(bookingController)))
 
 export default router

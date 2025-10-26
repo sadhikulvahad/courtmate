@@ -17,8 +17,8 @@ export class SocketIOService {
     @inject(TYPES.SocketIOServer) private socketServer: SocketServer,
     @inject(TYPES.Logger) private logger: Logger,
     @inject(TYPES.ICreateMessage) private createMessage: CreateMessageUseCase,
-    @inject(TYPES.IConversationRepository) private _conversationRepo : IConversationRepository,
-    @inject(TYPES.IMessageRepository) private _messageRepo : IMessageRepository
+    @inject(TYPES.IConversationRepository) private _conversationRepo: IConversationRepository,
+    @inject(TYPES.IMessageRepository) private _messageRepo: IMessageRepository
   ) { }
 
   initialize() {
@@ -35,6 +35,7 @@ export class SocketIOService {
     this.logger.info('Sending general notification', { receiverId, message, metadata });
     try {
       this.io.to(`user_${receiverId}`).emit('notification', {
+        id: metadata.id,
         receiverId,
         message,
         type: metadata.type || 'general',

@@ -649,7 +649,7 @@ const AdvocateProfile = () => {
 
                   <p className="mb-4">
                     <strong>
-                      {advocate.certification}
+                      {advocate.certification ? advocate.certification : "N/A"}
                       {/* {advocate.cirtification
                         ? advocate.cirtification.charAt(0).toUpperCase() +
                           advocate.cirtification.slice(1)

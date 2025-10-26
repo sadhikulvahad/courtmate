@@ -103,37 +103,57 @@ export class UserRepositoryImplement implements IUserRepository {
 
         const mutableQuery = query as Record<string, any>
 
-        for (const [key, value] of Object.entries(dynamicFilters)) {
-            if (key === 'location' && typeof value === 'string') {
-                mutableQuery['address.city'] = { $regex: value, $options: 'i' };
+        const normalizedFilters = Object.entries(dynamicFilters).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+                acc[key] = value.split(',').map(v => v.trim()).filter(Boolean);
+            } else if (Array.isArray(value)) {
+                acc[key] = value.map(v => String(v));
+            } else {
+                acc[key] = [];
+            }
+            return acc;
+        }, {} as Record<string, string[]>);
 
-            } else if (key === 'experience' && typeof value === 'string') {
-                const match = value.match(/^(\d+)(?:-(\d+))?/);
-                if (match) {
+
+        for (const [key, values] of Object.entries(normalizedFilters)) {
+            if (!Array.isArray(values) || values.length === 0) continue;
+
+            if (key === 'location') {
+                mutableQuery['address.city'] = {
+                    $in: values.map(v => new RegExp(v, 'i')),
+                };
+                continue;
+            }
+
+            if (key === 'languages' || key === 'language') {
+                mutableQuery['language'] = {
+                    $in: values.map(v => new RegExp(v, 'i')),
+                };
+                continue;
+            }
+
+            if (key === 'experience') {
+                const experienceConditions = values.map((exp) => {
+                    const match = exp.match(/^(\d+)(?:-(\d+))?/);
+                    if (!match) return null;
+
                     const minExp = parseInt(match[1]);
                     const maxExp = match[2] ? parseInt(match[2]) : null;
 
-                    if (maxExp) {
-                        mutableQuery['experience'] = { $gte: minExp, $lte: maxExp };
-                    } else {
-                        mutableQuery['experience'] = { $gte: minExp };
-                    }
+                    return maxExp
+                        ? { experience: { $gte: minExp, $lte: maxExp } }
+                        : { experience: { $gte: minExp } };
+                }).filter(Boolean) as { experience: { $gte: number; $lte?: number } }[];
+
+                if (experienceConditions.length > 0) {
+                    mutableQuery.$or = [...(mutableQuery.$or || []), ...experienceConditions];
                 }
-
-            } else if (Array.isArray(value)) {
-                mutableQuery[key] = { $in: value };
-
-            } else if (typeof value === 'number') {
-                mutableQuery[key] = value;
-
-            } else if (typeof value === 'string') {
-                mutableQuery[key] = { $regex: value.toLowerCase(), $options: 'i' };
-
-            } else if (key === 'language' && typeof value === 'string') {
-                mutableQuery['language'] = { $elemMatch: { $regex: value, $options: 'i' } };
+                continue;
             }
-        }
 
+            // Default (e.g. category)
+            mutableQuery[key] = { $in: values.map(v => new RegExp(v, 'i')) };
+        }
 
         const sortOptions: any = {
             isSponsored: -1,
@@ -270,7 +290,7 @@ export class UserRepositoryImplement implements IUserRepository {
     private toDomainEntity(mongooseUser: UserProps): User {
         return new User({
             _id: mongooseUser?._id?.toString(),
-            userId : mongooseUser.userId,
+            userId: mongooseUser.userId,
             name: mongooseUser.name,
             email: mongooseUser.email,
             phone: mongooseUser.phone,
@@ -309,7 +329,7 @@ export class UserRepositoryImplement implements IUserRepository {
 
     private toMongooseModel(user: User): UserProps {
         return {
-            userId : user.userId,
+            userId: user.userId,
             name: user.name,
             email: user.email,
             phone: user.phone as string,

@@ -206,6 +206,8 @@ import { IGetWallet } from '../../application/interface/Wallet/GetWalletRepo';
 import { GetWallet } from '../../application/useCases/Wallet/GetWalletUsecase';
 import { IUpdateUnreadCountRepo } from '../../application/interface/messages/UpdateUnreadCountRepo';
 import { UpdateUnreadCount } from '../../application/useCases/messages/UpdateUnreadCount';
+import { IMarkVideoCall } from '../../application/interface/booking/MarkVideoCallRepo';
+import { MarkVideoCall } from '../../application/useCases/Booking/MarkVideoCall';
 
 type EmailConfig = {
     service: string;
@@ -349,6 +351,7 @@ container.bind<IDeleteCaseHearingRepo>(TYPES.IDeleteCaseHearingRepo).to(DeleteCa
 container.bind<ICancelBookingRepo>(TYPES.ICancelBookingRepo).to(CancelBooking).inSingletonScope()
 container.bind<IGetWallet>(TYPES.IGetWallet).to(GetWallet).inSingletonScope()
 container.bind<IUpdateUnreadCountRepo>(TYPES.IUpdateUnreadCount).to(UpdateUnreadCount).inSingletonScope()
+container.bind<IMarkVideoCall>(TYPES.IMarkVideoCall).to(MarkVideoCall).inSingletonScope()
 
 // Middleware
 container.bind<AuthMiddleware>(TYPES.AuthMiddleware).toDynamicValue(() => {

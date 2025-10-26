@@ -7,6 +7,7 @@ import { TYPES } from "../../../types";
 import { IWalletRepository } from "../../../domain/interfaces/WalletRepository";
 import { NotificationService } from "../../../infrastructure/services/notificationService";
 import { Types } from "mongoose";
+import { IUserRepository } from "../../../domain/interfaces/UserRepository";
 
 @injectable()
 export class CancelBooking implements ICancelBookingRepo {
@@ -14,7 +15,8 @@ export class CancelBooking implements ICancelBookingRepo {
         @inject(TYPES.IBookingRepository) private _bookingRepo: IBookingRepository,
         @inject(TYPES.ISlotRepository) private _slotRepo: ISlotRepository,
         @inject(TYPES.IWalletRepository) private _walletRepo: IWalletRepository,
-        @inject(TYPES.NotificationService) private _notificationService: NotificationService
+        @inject(TYPES.NotificationService) private _notificationService: NotificationService,
+        @inject(TYPES.IUserRepository) private _userRepository: IUserRepository
     ) { }
 
     async execute(id: string): Promise<ReturnDTO> {
@@ -76,19 +78,25 @@ export class CancelBooking implements ICancelBookingRepo {
         }
         await this._walletRepo.creditAmount(wallet?._id!, 100);
 
+        const user = await this._userRepository.findById(booking.userId)
+
         await this._notificationService.sendNotification({
             recieverId: new Types.ObjectId(booking.advocateId),
             senderId: new Types.ObjectId(booking.userId),
-            message: `Your Booking "${booking.date}-"${booking.time}" with"${booking.user?.name}" is Cancelled`,
+            message: `Your Booking on ${new Date(booking.date).toLocaleDateString()} at ${new Date(booking.time).toLocaleTimeString([],
+                { hour: '2-digit', minute: '2-digit' })} with ${user?.name} is Cancelled`,
             type: "Notification",
             read: false,
             createdAt: new Date()
         })
 
+        const advocate = await this._userRepository.findById(booking.advocateId)
+
         await this._notificationService.sendNotification({
             recieverId: new Types.ObjectId(booking.userId),
             senderId: new Types.ObjectId(booking.advocateId),
-            message: `Your Booking "${booking.date}-"${booking.time}" with"${booking.advocate?.name}" is Cancelled`,
+            message: `Your Booking on ${new Date(booking.date).toLocaleDateString()} at ${new Date(booking.time).toLocaleTimeString([],
+                { hour: '2-digit', minute: '2-digit' })} with ${advocate?.name} is Cancelled`,
             type: "Notification",
             read: false,
             createdAt: new Date()

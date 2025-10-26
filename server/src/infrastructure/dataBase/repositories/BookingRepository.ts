@@ -92,8 +92,6 @@ export class BookingRepositoryImplements implements IBookingRepository {
   async getBook(advocateId: Types.ObjectId, userId: Types.ObjectId): Promise<Booking | null> {
     const now = new Date();
 
-    console.log(new Date(now.getTime() - 60 * 60 * 1000))
-
     const booking = await BookingModel.findOne({
       advocateId,
       userId,
@@ -129,6 +127,7 @@ export class BookingRepositoryImplements implements IBookingRepository {
 
     const pastBookings = await BookingModel.find({
       userId,
+      isVideoCall: true,
       time: { $lt: now },
     })
       .populate("userId", "name email phone role")
@@ -145,6 +144,7 @@ export class BookingRepositoryImplements implements IBookingRepository {
 
     const pastBookings = await BookingModel.find({
       advocateId: userId,
+      isVideoCall: true, 
       time: { $lt: now },
     })
       .populate("userId", "name email phone role")

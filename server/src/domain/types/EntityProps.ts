@@ -73,6 +73,7 @@ export interface BookingProps {
   notes?: string;
   postponeReason?: string;
   caseId?: Types.ObjectId | string;
+  isVideoCall ?: boolean
 }
 
 export interface SlotProps {

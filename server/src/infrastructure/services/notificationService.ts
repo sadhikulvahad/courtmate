@@ -12,16 +12,22 @@ export class NotificationService {
     @inject(TYPES.SocketIOService) private socketIOService: SocketIOService
   ) { }
 
-  async sendNotification(props: Omit<NotificationProps, '_id'>): Promise<Notification> {
+  async sendNotification(props: Omit<NotificationProps, ''>): Promise<Notification> {
     const notification = new Notification(props);
     const savedNotification = await this.INotificationRepository.save(notification);
 
-    this.socketIOService.sendGeneralNotification(props.recieverId.toString(), props.message, {
-      type: props.type,
-      senderId: props.senderId,
-      createdAt: props.createdAt,
-      read: props.read,
-    });
+    this.socketIOService.sendGeneralNotification(
+      savedNotification.recieverId.toString(),
+      savedNotification.message,
+      {
+        id: savedNotification.id,
+        type: savedNotification.type,
+        senderId: savedNotification.senderId,
+        createdAt: savedNotification.createdAt,
+        read: savedNotification.read,
+      }
+    );
+
 
     return savedNotification;
   }

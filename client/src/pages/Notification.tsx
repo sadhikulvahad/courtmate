@@ -108,7 +108,7 @@ const NotificationItem = ({
 
 const Notification = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm, 500)
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [activeTab, setActiveTab] = useState<NotificationTabs>("all");
   const [activeSubTab, setActiveSubTab] = useState<NotificationType>("All");
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -123,6 +123,31 @@ const Notification = () => {
     };
     fetchNotification();
   }, [user?.id]);
+
+  useEffect(() => {
+    const handleNewNotification = (event: CustomEvent<Notification>) => {
+      const newNotification = event.detail;
+
+      setNotifications((prev) => [
+        {
+          id: newNotification.id,
+          message: newNotification.message,
+          type: newNotification.type,
+          read: newNotification.read,
+          createdAt: newNotification.createdAt,
+          senderId: newNotification.senderId,
+          recieverId: newNotification.recieverId,
+        },
+        ...prev,
+      ]);
+    };
+
+    window.addEventListener("new-notification", handleNewNotification as EventListener);
+
+    return () => {
+      window.removeEventListener("new-notification", handleNewNotification as EventListener);
+    };
+  });
 
   const filteredNotifications = notifications.filter(
     (notification: Notification) => {
@@ -209,7 +234,11 @@ const Notification = () => {
           </div>
         </>
       )}
-      <div className={`bg-white rounded-lg shadow-md ${user?.role === 'user' ? 'max-w-7xl mx-auto px-4 py8' : ''}`}>
+      <div
+        className={`bg-white rounded-lg shadow-md ${
+          user?.role === "user" ? "max-w-7xl mx-auto px-4 py8" : ""
+        }`}
+      >
         <div className="p-4 md:p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
             <div className="flex items-center">

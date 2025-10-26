@@ -14,28 +14,29 @@ import { RootState } from "@/redux/store";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { CreateConversation } from "@/api/chatApi";
+import { Booking } from "@/types/Types";
 
 // Mock types based on your code
-interface Booking {
-  id: string;
-  date: string;
-  time: string;
-  status: string;
-  notes?: string;
-  postponeReason?: string;
-  isAvailable?: boolean;
-  advocateId?: string;
-  advocate?: {
-    name?: string;
-    email?: string;
-  };
-  user?: {
-    id: string;
-    email: string;
-    name: string;
-    phone?: string;
-  };
-}
+// interface Booking {
+//   id: string;
+//   date: string;
+//   time: string;
+//   status: string;
+//   notes?: string;
+//   postponeReason?: string;
+//   isAvailable?: boolean;
+//   advocateId?: string;
+//   advocate?: {
+//     name?: string;
+//     email?: string;
+//   };
+//   user?: {
+//     id: string;
+//     email: string;
+//     name: string;
+//     phone?: string;
+//   };
+// }
 
 interface UserBookingViewProps {
   bookings: Booking[];
@@ -56,7 +57,7 @@ export default function UserBookingView({
   const [showUserModal, setShowUserModal] = useState(false);
   const { user } = useSelector((state: RootState) => state.auth);
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   // Get calendar data
   const { calendarDays, monthName, year } = useMemo(() => {
@@ -129,8 +130,8 @@ export default function UserBookingView({
     }
   };
 
-  const formatTime = (time: string) => {
-    const date = new Date(time);
+  const formatTime = (time: string | Date) => {
+    const date = time instanceof Date ? time : new Date(time);
     return date.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
@@ -138,8 +139,9 @@ export default function UserBookingView({
     });
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
+  const formatDate = (date: string | Date) => {
+    const d = date instanceof Date ? date : new Date(date);
+    return d.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",

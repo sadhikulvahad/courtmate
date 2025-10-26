@@ -111,7 +111,7 @@ const MyActivityPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4" />
-                            <span>Video call / Chat</span>
+                            <span>Video call</span>
                           </div>
 
                           <div className="flex items-center gap-2">

@@ -18,7 +18,7 @@ export class Postpone implements IPostpone {
     async execute(date: string, time: string, reason: string, bookId: string): Promise<Booking | null> {
 
         if (!bookId) {
-            throw new Error('bookId is bookId');
+            throw new Error('bookId is missing');
         }
         const booking = await this._bookingRepository.findByBookId(bookId)
 

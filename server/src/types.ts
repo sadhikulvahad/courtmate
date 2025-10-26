@@ -109,6 +109,7 @@ export const TYPES = {
     ICancelBookingRepo : Symbol.for('ICancelBookingRepo'),
     IGetWallet :Symbol.for('IGetWallet'),
     IUpdateUnreadCount : Symbol.for('IUpdateUnreadCount'),
+    IMarkVideoCall : Symbol.for('IMarkVideoCall'),
 
     // Controllers
     AdvocateController: Symbol.for('AdvocateController'),

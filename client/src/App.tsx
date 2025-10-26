@@ -79,6 +79,10 @@ function App() {
               data.type === "chat" ? "New chat message" : "System notification",
             duration: 5000,
           });
+
+          window.dispatchEvent(
+            new CustomEvent("new-notification", { detail: data })
+          );
         }
       });
     } else {

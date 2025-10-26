@@ -10,6 +10,7 @@ import { IPostpone } from "../../application/interface/booking/PostponeRepo";
 import { IGetBookingThisHour } from "../../application/interface/booking/GetBookRepo";
 import { IGetCallHistoryUsecase } from "../../application/interface/booking/GetCallHistoryUsecaseRepo";
 import { ICancelBookingRepo } from "../../application/interface/booking/CancelBookingRepo";
+import { IMarkVideoCall } from "../../application/interface/booking/MarkVideoCallRepo";
 
 
 @injectable()
@@ -21,6 +22,7 @@ export class BookingController {
     @inject(TYPES.IGetBookingThisHourUseCase) private _getBook: IGetBookingThisHour,
     @inject(TYPES.IGetCallHistoryUseCase) private _getCallHistoryUseCase: IGetCallHistoryUsecase,
     @inject(TYPES.ICancelBookingRepo) private _cancelBookingRepo: ICancelBookingRepo,
+    @inject(TYPES.IMarkVideoCall) private _markVideoCall : IMarkVideoCall,
     @inject(TYPES.Logger) private _logger: Logger
   ) { }
 
@@ -167,7 +169,7 @@ export class BookingController {
       if (!bookingId) {
         return res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: 'BookingId is missing' })
       }
-      
+
       const data = await this._cancelBookingRepo.execute(bookingId.toString())
 
       if (!data.success) {
@@ -176,6 +178,23 @@ export class BookingController {
       return res.status(HttpStatus.OK).json({ success: true, message: data.message })
     } catch (error) {
       this._logger.error("Error callHistory:", { error })
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ status: false, message: "Server error" });
+    }
+  }
+
+  async markVideoCall(req: Request, res: Response) {
+    try {
+      const {roomId} = req.body
+
+      if (!roomId) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Room Id required' });
+      }
+
+      const result = await this._markVideoCall.execute(roomId)
+
+      return res.status(HttpStatus.CREATED).json({message :"Marked as attended"})
+    } catch (error) {
+      this._logger.error("Error marking video call:", { error })
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ status: false, message: "Server error" });
     }
   }
